@@ -138,7 +138,7 @@ void MyGLCanvas::resize(int x, int y, int w, int h) {
 }
 
 void MyGLCanvas::initShaders() {
-	myShaderManager->initShader("shaders/330/test.vert", "shaders/330/test.frag");
+	myShaderManager->initShader("./shaders/330/test.vert", "./shaders/330/test.frag");
 
 	myPLY->buildArrays(); 
 	myPLY->bindVBO(myShaderManager->program);
@@ -147,7 +147,7 @@ void MyGLCanvas::initShaders() {
 void MyGLCanvas::reloadShaders() {
 	myShaderManager->resetShaders();
 
-	myShaderManager->initShader("shaders/330/test.vert", "shaders/330/test.frag");
+	myShaderManager->initShader("./shaders/330/test.vert", "./shaders/330/test.frag");
 
 	myPLY->bindVBO(myShaderManager->program);
 	invalidate();
