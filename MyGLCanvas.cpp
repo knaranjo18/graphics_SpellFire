@@ -9,6 +9,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	prevY = 0;
 	rotX = 0;
 	rotY = 0;
+	moveOn = false;
 	glm::vec3 eyePosition = glm::vec3(0.0f, 0.0f, 3.0f);
 	glm::vec3 lookatPoint = glm::vec3(0.0f, 0.0f, 0.0f);
 	lightPos = eyePosition;
@@ -102,9 +103,19 @@ int MyGLCanvas::handle(int e) {
 #endif	
 
 	int button;
-	printf("Event was %s (%d)\n", fl_eventnames[e], e);
+	//printf("Event was %s (%d)\n", fl_eventnames[e], e);
 	switch (e) {
 	case FL_MOVE:
+		if (moveOn) {
+			rotX += (Fl::event_x() - prevX);
+			rotY += (Fl::event_y() - prevY);
+			camera->setRotUVW(rotY / 10.0, rotX / 10.0, 0);
+
+			prevX = Fl::event_x();
+			prevY = Fl::event_y();
+		}
+
+		break;
 	case FL_RELEASE:
 	case FL_KEYUP:
 	case FL_MOUSEWHEEL:
@@ -114,19 +125,23 @@ int MyGLCanvas::handle(int e) {
 		if (button == FL_RIGHT_MOUSE) {
 			prevX = Fl::event_x();
 			prevY = Fl::event_y();
-			printf("pushing\n");
+
 			return 1;
+		}
+		else if (button == FL_LEFT_MOUSE) {
+			prevX = Fl::event_x();
+			prevY = Fl::event_y();
+			moveOn = !moveOn;
 		}
 		break;
 	case FL_DRAG:
 		rotX += (Fl::event_x() - prevX);
 		rotY += (Fl::event_y() - prevY);
-		camera->setRotUVW(0, rotX / 10.0, 0);
+		camera->setRotUVW(rotY / 10.0, rotX / 10.0, 0);
 
 		prevX = Fl::event_x();
 		prevY = Fl::event_y();
-		printf("x position is %d\n", Fl::event_x());
-		printf("y position is %d\n", Fl::event_y());
+
 		break;
 }
 	return Fl_Gl_Window::handle(e);

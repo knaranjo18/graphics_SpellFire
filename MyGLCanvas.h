@@ -52,6 +52,7 @@ private:
 	bool firstTime;
 
 	int prevX, prevY, rotY, rotX;
+	bool moveOn;
 };
 
 #endif // !MYGLCANVAS_H

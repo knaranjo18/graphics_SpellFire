@@ -26,9 +26,8 @@ void Camera::setRotUVW(float u, float v, float w) {
 	float diffU = u - rotU;
 	float diffV = v - rotV;
 	float diffW = w - rotW;
-	rotateU(diffU);
-	rotateV(diffV);
-	rotateW(diffW);
+	fullRotation(diffU, diffV, diffW);
+	
 	rotU = u;
 	rotV = v;
 	rotW = w;
@@ -202,68 +201,33 @@ void Camera::translate(glm::vec3 v) {
 //		Rotation						  //
 //***************************************//
 
-void Camera::rotateV(float degrees) {
+void Camera::fullRotation(float uDeg, float vDeg, float wDeg) {
 	glm::mat4 yRotate(1.0f);
-	float theta = glm::radians(degrees);
-
-
-	yRotate[0][0] = cos(theta);
-	yRotate[0][2] = sin(theta);
-
-	yRotate[2][0] = -sin(theta);
-	yRotate[2][2] = cos(theta);
-
-	rotationMat4 = yRotate * rotationMat4;
-	lookV.x = -rotationMat4[0][2];
-	lookV.y = -rotationMat4[1][2];
-	lookV.z = -rotationMat4[2][2];
-
-	upV.x = rotationMat4[0][1];
-	upV.y = rotationMat4[1][1];
-	upV.z = rotationMat4[2][1];
-}
-
-void Camera::rotateU(float degrees) {
 	glm::mat4 xRotate(1.0f);
-	float theta = glm::radians(degrees);
-
-
-	xRotate[1][1] = cos(theta);
-	xRotate[2][1] = sin(theta);
-
-	xRotate[1][2] = -sin(theta);
-	xRotate[2][2] = cos(theta);
-
-	rotationMat4 = xRotate * rotationMat4;
-	lookV.x = -rotationMat4[0][2];
-	lookV.y = -rotationMat4[1][2];
-	lookV.z = -rotationMat4[2][2];
-
-	upV.x = rotationMat4[0][1];
-	upV.y = rotationMat4[1][1];
-	upV.z = rotationMat4[2][1];
-	
-}
-
-void Camera::rotateW(float degrees) {
 	glm::mat4 zRotate(1.0f);
-	float theta = -glm::radians(degrees);
+	float thetaX = glm::radians(uDeg), thetaY = glm::radians(vDeg), thetaZ = glm::radians(wDeg);
 
+	yRotate[0][0] = cos(thetaY);
+	yRotate[0][2] = -sin(thetaY);
 
-	zRotate[0][0] = cos(theta);
-	zRotate[1][0] = sin(theta);
+	yRotate[2][0] = sin(thetaY);
+	yRotate[2][2] = cos(thetaY);
 
-	zRotate[0][1] = -sin(theta);
-	zRotate[1][1] = cos(theta);
+	xRotate[1][1] = cos(thetaX);
+	xRotate[2][1] = -sin(thetaX);
 
-	rotationMat4 = zRotate * rotationMat4;
-	lookV.x = -rotationMat4[0][2];
-	lookV.y = -rotationMat4[1][2];
-	lookV.z = -rotationMat4[2][2];
+	xRotate[1][2] = sin(thetaX);
+	xRotate[2][2] = cos(thetaX);
 
-	upV.x = rotationMat4[0][1];
-	upV.y = rotationMat4[1][1];
-	upV.z = rotationMat4[2][1];
+	zRotate[0][0] = cos(thetaZ);
+	zRotate[1][0] = -sin(thetaZ);
+
+	zRotate[0][1] = sin(thetaZ);
+	zRotate[1][1] = cos(thetaZ);
+
+	glm::mat4 rotation = zRotate * yRotate * xRotate;
+	lookV = glm::vec4(lookV, 0.0) * rotation;
+	makeRotationMatrix();
 }
 
 // Rotates a point around an arbritrary axis

@@ -41,10 +41,8 @@ public:
 	glm::mat4 getModelViewMatrix();
 	glm::mat4 getInverseModelViewMatrix();
 
-	void rotateV(float degree);
-	void rotateU(float degree);
-	void rotateW(float degree);
 	void rotate(glm::vec3 point, glm::vec3 axis, float degree);
+	void fullRotation(float uDeg, float vDeg, float wDeg);
 
 	void translate(glm::vec3 v);
 
