@@ -17,16 +17,23 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	firstTime = true;
 
 	myObject = new SceneObject(175);
-	myShaderManager = new ShaderManager();
-	myPLY = new ply("./data/bunny.ply");
+
+	shader1 = new ShaderManager();
+	myPLY1 = new ply("./data/teapot.ply");
+	
+	shader2 = new ShaderManager();
+	myPLY2 = new ply("./data/bunny.ply");
+
 	camera = new Camera();
 	camera->orientLookAt(eyePosition, lookatPoint, glm::vec3(0, 1, 0));
 }
 
 MyGLCanvas::~MyGLCanvas() {
 	delete myObject;
-	delete myShaderManager;
-	delete myPLY;
+	delete shader1;
+	delete shader2;
+	delete myPLY1;
+	delete myPLY2;
 
 	if (camera != NULL)
 		delete camera;
@@ -58,14 +65,38 @@ void MyGLCanvas::draw() {
 }
 
 void MyGLCanvas::drawScene() {
+
 	//setting up camera info
 	glm::mat4 modelViewMatrix = camera->getModelViewMatrix();
-	GLint modelView_id = glGetUniformLocation(myShaderManager->program, "myModelviewMatrix");
+
+	shader1->useShader();
+	GLint modelView_id = glGetUniformLocation(shader1->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+
+	glm::mat4 transMat4(1.0f);
+	transMat4 = glm::translate(transMat4, glm::vec3(0.0, 1.0, 0.0));
+	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
+	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
 	//renders the object
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	myPLY->renderVBO();
+
+	myPLY1->renderVBO();
+
+
+	shader2->useShader();
+	modelView_id = glGetUniformLocation(shader2->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+
+	transMat4 = glm::mat4(1.0f);
+	transMat4 = glm::translate(transMat4, glm::vec3(0.0, -1.0, 0.0));
+	trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
+	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
+
+	//renders the object
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	myPLY2->renderVBO();
 }
 
 
@@ -75,8 +106,13 @@ void MyGLCanvas::updateCamera(int width, int height) {
 
 	camera->setScreenSize(width, height);
 
+	shader1->useShader();
 	glm::mat4 perspectiveMatrix = camera->getProjectionMatrix();
-	GLint projection_id = glGetUniformLocation(myShaderManager->program, "myProjectionMatrix");
+	GLint projection_id = glGetUniformLocation(shader1->program, "myProjectionMatrix");
+	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
+
+	shader2->useShader();
+	projection_id = glGetUniformLocation(shader2->program, "myProjectionMatrix");
 	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
 }
 
@@ -150,17 +186,23 @@ void MyGLCanvas::resize(int x, int y, int w, int h) {
 }
 
 void MyGLCanvas::initShaders() {
-	myShaderManager->initShader("./shaders/330/test.vert", "./shaders/330/test.frag");
+	shader1->initShader("./shaders/330/test.vert", "./shaders/330/test.frag");
+	myPLY1->buildArrays(); 
+	myPLY1->bindVBO(shader1->program);
 
-	myPLY->buildArrays(); 
-	myPLY->bindVBO(myShaderManager->program);
+	shader2->initShader("./shaders/330/test2.vert", "./shaders/330/test2.frag");
+	myPLY2->buildArrays();
+	myPLY2->bindVBO(shader2->program);
 }
 
 void MyGLCanvas::reloadShaders() {
-	myShaderManager->resetShaders();
+	shader1->resetShaders();
+	shader1->initShader("./shaders/330/test.vert", "./shaders/330/test.frag");
+	myPLY1->bindVBO(shader1->program);
 
-	myShaderManager->initShader("./shaders/330/test.vert", "./shaders/330/test.frag");
+	shader2->resetShaders();
+	shader2->initShader("./shaders/330/test2.vert", "./shaders/330/test2.frag");
+	myPLY2->bindVBO(shader2->program);
 
-	myPLY->bindVBO(myShaderManager->program);
 	invalidate();
 }

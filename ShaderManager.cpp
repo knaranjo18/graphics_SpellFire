@@ -157,7 +157,9 @@ void ShaderManager::initShader(const char* vertexShaderName, const char* fragmen
 	// Finally we link them, this is the same as the linking process for C++
 	// with a library file
 	glLinkProgram(program);
-	// Now we finally decide to use the program
-	glUseProgram(program);
+	useShader();
 }
 
+void ShaderManager::useShader() {
+	glUseProgram(program);
+}

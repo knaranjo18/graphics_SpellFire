@@ -47,8 +47,10 @@ private:
 	void updateCamera(int width, int height);
 
 	SceneObject* myObject;
-	ShaderManager* myShaderManager;
-	ply* myPLY;
+	ShaderManager* shader1;
+	ShaderManager* shader2;
+	ply* myPLY1;
+	ply* myPLY2;
 	bool firstTime;
 
 	int prevX, prevY, rotY, rotX;
