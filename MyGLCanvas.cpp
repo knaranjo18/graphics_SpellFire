@@ -2,13 +2,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define SENSITIVITY 0.3
+
 MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 	
-	prevX = 0;
-	prevY = 0;
-	rotX = 0;
-	rotY = 0;
+	prevX = prevY = yaw = pitch = 0;
 	moveOn = false;
 	glm::vec3 eyePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 lookatPoint = glm::vec3(0.0f, 0.5f, 1.0f);
@@ -151,12 +150,26 @@ int MyGLCanvas::handle(int e) {
 	case FL_MOVE:
 		if (moveOn) {
 			cursor(FL_CURSOR_NONE);
-			rotX += (Fl::event_x() - prevX);
-			rotY -= (Fl::event_y() - prevY);
-			camera->setRotUVW(rotY / 15.0, rotX / 15.0, 0);
-
+			float x_offset = (Fl::event_x() - prevX);
+			float y_offset = (prevY - Fl::event_y()); 
 			prevX = Fl::event_x();
-			prevY = Fl::event_y();	
+			prevY = Fl::event_y();
+
+			x_offset *= SENSITIVITY;
+			y_offset *= SENSITIVITY;
+
+			yaw += x_offset;
+			pitch += y_offset;
+
+
+			if (pitch > 89.0f)
+				pitch = 89.0f;
+			else if (pitch < -89.0f)
+				pitch = -89.0f;
+
+			camera->rotateView(yaw, pitch);
+
+			
 		}
 		else {
 			cursor(FL_CURSOR_CROSS);
@@ -169,12 +182,6 @@ int MyGLCanvas::handle(int e) {
 		break;
 	case FL_PUSH:
 		button = Fl::event_button();
-		//if (button == FL_RIGHT_MOUSE) {
-		//	prevX = Fl::event_x();
-			//prevY = Fl::event_y();
-
-			//return 1;
-		//}
 		if (button == FL_LEFT_MOUSE) {
 			prevX = Fl::event_x();
 			prevY = Fl::event_y();
@@ -182,14 +189,6 @@ int MyGLCanvas::handle(int e) {
 		}
 		break;
 	case FL_DRAG:
-		break;
-		rotX += (Fl::event_x() - prevX);
-		rotY += (Fl::event_y() - prevY);
-		camera->setRotUVW(rotY, rotX, 0);
-
-		prevX = Fl::event_x();
-		prevY = Fl::event_y();
-
 		break;
 }
 	return Fl_Gl_Window::handle(e);

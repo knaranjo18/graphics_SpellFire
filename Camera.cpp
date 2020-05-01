@@ -17,9 +17,17 @@ void Camera::reset() {
 	setFarPlane(FAR_PLANE);
 	screenWidth = screenHeight = 200;
 	screenWidthRatio = 1.0f;
-	rotU = rotV = rotW = 0;
 }
 
+void Camera::rotateView(float yaw, float pitch) {
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	lookV = glm::normalize(direction);
+}
+
+/*
 //called by main.cpp as a part of the slider callback for controlling rotation
 // the reason for computing the diff is to make sure that we are only incrementally rotating the camera
 void Camera::setRotUVW(float u, float v, float w) {
@@ -27,11 +35,15 @@ void Camera::setRotUVW(float u, float v, float w) {
 	float diffV = v - rotV;
 	float diffW = w - rotW;
 	fullRotation(diffU, diffV, diffW);
+
+	glm::vec3 tempU, tempV, tempW;
+	makeuvw(tempU, tempV, tempW);
+	printf("LookVec : (%f, %f, %f) \n u : (%f, %f, %f) \n v : (%f, %f, %f) \n w : (%f, %f, %f) \n\n", lookV.x, lookV.y, lookV.z, tempU.x, tempU.y, tempU.z, tempV.x, tempV.y, tempV.z, tempW.x, tempW.y, tempW.z);
 	
 	rotU = u;
 	rotV = v;
 	rotW = w;
-}
+}*/
 
 
 // Sets where the camera is looking using a point
@@ -40,7 +52,6 @@ void Camera::orientLookAt(glm::vec3 eyePoint, glm::vec3 lookatPoint, glm::vec3 u
 	lookAtP = lookatPoint;
 	upV = glm::normalize(upVec);
 	lookV = glm::normalize(lookatPoint - eyePoint);
-	makeRotationMatrix();
 }
 
 // Sets where the camera is looking using a vector
@@ -49,7 +60,6 @@ void Camera::orientLookVec(glm::vec3 eyePoint, glm::vec3 lookVec, glm::vec3 upVe
 	lookAtP = eyePoint + lookVec;
 	upV = glm::normalize(upVec);
 	lookV = glm::normalize(lookVec);
-	makeRotationMatrix();
 }
 
 // Returns the scale matrix of the projection matrix
@@ -104,7 +114,19 @@ glm::mat4 Camera::getProjectionMatrix() {
 	return projMat4;
 }
 
+// Returns the model view matrix by multiplying (rotation * translate)
+glm::mat4 Camera::getModelViewMatrix() {
+	return glm::lookAt(eyeP, eyeP + lookV, upV);
+}
 
+// Returns the inverse of the model view matrix by multplying (invTrans * invRotat)
+glm::mat4 Camera::getInverseModelViewMatrix() {
+	glm::mat4 modelViewMatrix = getModelViewMatrix();
+	return glm::inverse(modelViewMatrix);
+}
+
+
+/*
 // Returns the translation matrix used in the model view matrix
 glm::mat4 Camera::getTranslateMatrix() {
 	glm::mat4 translateMat4(1.0);
@@ -115,7 +137,9 @@ glm::mat4 Camera::getTranslateMatrix() {
 
 	return translateMat4;
 }
+*/
 
+/*
 // Creates the rotation matrix used in the model view matrix
 void Camera::makeRotationMatrix() {
 	glm::vec3 u, v, w;
@@ -137,7 +161,10 @@ void Camera::makeRotationMatrix() {
 
 	rotationMat4 = tempRot;
 }
+*/
 
+
+/*
 // Returns the model view matrix by multiplying (rotation * translate)
 glm::mat4 Camera::getModelViewMatrix() {
 	glm::mat4 modelViewMat4(1.0);
@@ -147,8 +174,12 @@ glm::mat4 Camera::getModelViewMatrix() {
 	modelViewMat4 = rotationMat4 * translateMat4;
 
 	return modelViewMat4;
-}
+}*/
 
+
+
+
+/*
 // Returns the inverse of the model view matrix by multplying (invTrans * invRotat)
 glm::mat4 Camera::getInverseModelViewMatrix() {
 	glm::mat4 invModelViewMat4(1.0);
@@ -164,6 +195,7 @@ glm::mat4 Camera::getInverseModelViewMatrix() {
 
 	return invModelViewMat4;
 }
+*/
 
 
 
@@ -227,7 +259,7 @@ void Camera::fullRotation(float uDeg, float vDeg, float wDeg) {
 
 	glm::mat4 rotation = zRotate * yRotate * xRotate;
 	lookV = glm::vec4(lookV, 0.0) * rotation;
-	makeRotationMatrix();
+	//makeRotationMatrix();
 }
 
 // Rotates a point around an arbritrary axis

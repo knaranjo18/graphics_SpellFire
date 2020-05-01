@@ -32,7 +32,8 @@ public:
 	void setNearPlane(float _nearPlane);
 	void setFarPlane(float _farPlane);
 	void setScreenSize(int _screenWidth, int _screenHeight);
-	void setRotUVW(float u, float v, float w);  //called by main.cpp as a part of the slider callback
+	//void setRotUVW(float u, float v, float w);  //called by main.cpp as a part of the slider callback
+	void rotateView(float yaw, float pitch);
 
 	glm::mat4 getUnhingeMatrix();
 	glm::mat4 getProjectionMatrix();
@@ -66,9 +67,10 @@ private:
 	glm::mat4 rotationMat4;
 	glm::vec3 lookV, upV, eyeP, lookAtP;
 
-	glm::mat4 getTranslateMatrix();
-	void makeRotationMatrix();
+	//glm::mat4 getTranslateMatrix();
+	//void makeRotationMatrix();
 	float get_thetaW(float thetaH);
+
 	void makeuvw(glm::vec3 & u, glm::vec3 & v, glm::vec3 & w);
 };
 #endif

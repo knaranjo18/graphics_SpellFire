@@ -54,13 +54,13 @@ private:
 	static void reloadCB(Fl_Widget* w, void* userdata) {
 		win->canvas->reloadShaders();
 	}
-
+/*
 	static void cameraRotateCB(Fl_Widget* w, void* userdata) {
 		win->canvas->camera->setRotUVW(win->rotUSlider->value(), win->rotVSlider->value(), win->rotWSlider->value());
 		glm::vec3 lookV = win->canvas->camera->getLookVector();
 		lookV = glm::normalize(lookV);
 	}
-
+*/
 };
 
 
@@ -69,15 +69,15 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	// OpenGL window
 
 	canvas = new MyGLCanvas(10, 10, w() - 110, h() - 20);
-
+/*
 	Fl_Pack* pack = new Fl_Pack(w() - 100, 30, 100, h(), "Control Panel");
 	pack->box(FL_DOWN_FRAME);
 	pack->labelfont(1);
 	pack->type(Fl_Pack::VERTICAL);
 	pack->spacing(0);
 	pack->begin();
-
-
+	*/
+/*
 	Fl_Box *rotUTextBox = new Fl_Box(0, 0, pack->w() - 20, 20, "RotateU");
 	rotUSlider = new Fl_Value_Slider(0, 0, pack->w() - 20, 20, "");
 	rotUSlider->align(FL_ALIGN_TOP);
@@ -106,10 +106,10 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	rotWSlider->callback(cameraRotateCB);
 
 	pack->end();
-
+	*/
 	
 
-	Fl_Pack* packShaders = new Fl_Pack(w() - 100, 230, 100, h(), "Shaders");
+	Fl_Pack* packShaders = new Fl_Pack(w() - 100, 30, 100, h(), "Shaders");
 	packShaders->box(FL_DOWN_FRAME);
 	packShaders->labelfont(1);
 	packShaders->type(Fl_Pack::VERTICAL);
@@ -117,7 +117,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	packShaders->begin();
 
 
-	reloadButton = new Fl_Button(0, 0, pack->w() - 20, 20, "Reload");
+	reloadButton = new Fl_Button(0, 0, packShaders->w() - 20, 20, "Reload");
 	reloadButton->callback(reloadCB, (void*)this);
 
 	packShaders->end();

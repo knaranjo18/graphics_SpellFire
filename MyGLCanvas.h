@@ -54,7 +54,8 @@ private:
 	ply* myPLY2;
 	bool firstTime;
 
-	int prevX, prevY, rotY, rotX;
+	int prevX, prevY;
+	float yaw, pitch;
 	bool moveOn;
 };
 
