@@ -10,16 +10,16 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	rotX = 0;
 	rotY = 0;
 	moveOn = false;
-	glm::vec3 eyePosition = glm::vec3(0.0f, 0.0f, 3.0f);
-	glm::vec3 lookatPoint = glm::vec3(0.0f, 0.0f, 0.0f);
-	lightPos = eyePosition;
+	glm::vec3 eyePosition = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 lookatPoint = glm::vec3(0.0f, 0.5f, 1.0f);
+	lightPos = glm::vec3(0.0, 0.1, 0.0);
 
 	firstTime = true;
 
 	myObject = new SceneObject(175);
 
 	shader1 = new ShaderManager();
-	myPLY1 = new ply("./data/teapot.ply");
+	myPLY1 = new ply("./data/colosseum.ply");
 	
 	shader2 = new ShaderManager();
 	myPLY2 = new ply("./data/bunny.ply");
@@ -74,9 +74,13 @@ void MyGLCanvas::drawScene() {
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	glm::mat4 transMat4(1.0f);
-	transMat4 = glm::translate(transMat4, glm::vec3(0.0, 1.0, 0.0));
+	transMat4 = glm::rotate(transMat4, glm::radians(270.0f), glm::vec3(1.0, 0, 0));
+	//transMat4 = glm::translate(transMat4, glm::vec3(0.0, 1.0, 0.0));
 	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
+
+	GLint light_id = glGetUniformLocation(shader1->program, "lightPos");
+	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
 	//renders the object
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -90,7 +94,7 @@ void MyGLCanvas::drawScene() {
 
 	transMat4 = glm::mat4(1.0f);
 	transMat4 = glm::translate(transMat4, glm::vec3(0.0, -1.0, 0.0));
-	trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
+	trans_id = glGetUniformLocation(shader2->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
 	//renders the object
@@ -170,7 +174,7 @@ int MyGLCanvas::handle(int e) {
 	case FL_DRAG:
 		rotX += (Fl::event_x() - prevX);
 		rotY += (Fl::event_y() - prevY);
-		camera->setRotUVW(rotY / 10.0, rotX / 10.0, 0);
+		camera->setRotUVW(rotY, rotX, 0);
 
 		prevX = Fl::event_x();
 		prevY = Fl::event_y();
