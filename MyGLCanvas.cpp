@@ -60,9 +60,8 @@ void MyGLCanvas::draw() {
 void MyGLCanvas::drawScene() {
 	//setting up camera info
 	glm::mat4 modelViewMatrix = camera->getModelViewMatrix();
-	//SHADER: passing the projection matrix to the shader... the projection matrix will be called myProjectionMatrix in shader
-	glUniformMatrix4fv(glGetUniformLocation(myShaderManager->program, "myModelviewMatrix"), 1, false, glm::value_ptr(modelViewMatrix));
-
+	GLint modelView_id = glGetUniformLocation(myShaderManager->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	//renders the object
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -76,11 +75,9 @@ void MyGLCanvas::updateCamera(int width, int height) {
 
 	camera->setScreenSize(width, height);
 
-
-
-	//SHADER: passing the projection matrix to the shader... the projection matrix will be called myProjectionMatrix in shader
 	glm::mat4 perspectiveMatrix = camera->getProjectionMatrix();
-	glUniformMatrix4fv(glGetUniformLocation(myShaderManager->program, "myProjectionMatrix"), 1, false, glm::value_ptr(perspectiveMatrix));
+	GLint projection_id = glGetUniformLocation(myShaderManager->program, "myProjectionMatrix");
+	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
 }
 
 

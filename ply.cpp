@@ -1,11 +1,3 @@
-/*  =================== File Information =================
-File Name: ply.cpp
-Description:
-Author: (You)
-
-Purpose:
-Examples:
-===================================================== */
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <string>
@@ -19,11 +11,8 @@ Examples:
 
 using namespace std;
 
-/*  ===============================================
-Desc: Default constructor for a ply object
-Precondition:
-Postcondition:
-=============================================== */
+
+//Desc: Default constructor for a ply object
 ply::ply(){
 	vertexList = NULL;
 	faceList = NULL;
@@ -32,11 +21,8 @@ ply::ply(){
 	vertexCount = 0;
 }
 
-/*  ===============================================
-Desc: constructor for a ply object with a default path
-Precondition:
-Postcondition:
-=============================================== */
+
+//Desc: constructor for a ply object with a default path
 ply::ply(string filePath) {
 	vertexList = NULL;
 	faceList = NULL;
@@ -47,11 +33,7 @@ ply::ply(string filePath) {
 }
 
 
-/*  ===============================================
-Desc: Destructor for a ply object
-Precondition: Memory has been already allocated
-Postcondition:
-=============================================== */
+//Desc: Destructor for a ply object
 ply::~ply(){
 	// Delete the allocated arrays
 	if (vertexList != NULL)
@@ -89,22 +71,21 @@ ply::~ply(){
 	glDeleteBuffers(1, &normalVBO_id);
 }
 
-/*  ===============================================
-Desc: reloads the geometry for a 3D object
-Precondition:
-Postcondition:
-=============================================== */
+
+//Desc: reloads the geometry for a 3D object
 void ply::reload(string _filePath){
 	filePath = _filePath;
+
 	// reclaim memory allocated in each array
 	if (vertexList != NULL)
 		delete[] vertexList;
 	for (int i = 0; i < faceCount; i++) {
 		delete[] faceList[i].vertexList;
 	}
+
 	if (faceList != NULL)
 		delete[] faceList;
-	// Set pointers to array
+
 	vertexList = NULL;
 	faceList = NULL;
 	faceCount = 0;
@@ -114,23 +95,9 @@ void ply::reload(string _filePath){
 	loadGeometry();
 }
 
-/*  ===============================================
-Desc: You get to implement this
-Precondition:
-Postcondition:
-=============================================== */
+
+// Reads a ply file and extracts the vertex and face information
 void ply::loadGeometry(){
-
-	/* You will implement this section of code
-	1. Parse the header
-	2.) Update any private or helper variables in the ply.h private section
-	3.) allocate memory for the vertexList
-	3a.) Populate vertices
-	4.) allocate memory for the faceList
-	4a.) Populate faceList
-	*/
-
-
 	ifstream myfile(filePath.c_str()); // load the file
 	if (myfile.is_open()) { // if the file is accessable
 		properties = -2; // set the properties because there are extras labeled
@@ -220,11 +187,8 @@ void ply::loadGeometry(){
 	}
 };
 
-/*  ===============================================
-Desc: Moves all the geometry so that the object is centered at 0, 0, 0 and scaled to be between 0.5 and -0.5
-Precondition: after all the vetices and faces have been loaded in
-Postcondition:
-=============================================== */
+
+//Desc: Moves all the geometry so that the object is centered at 0, 0, 0 and scaled to be between 0.5 and -0.5
 void ply::scaleAndCenter() {
 	float avrg_x = 0.0;
 	float avrg_y = 0.0;
@@ -234,7 +198,6 @@ void ply::scaleAndCenter() {
 
 	//loop through each vertex in the given image
 	for (i = 0; i < vertexCount; i++){
-
 		// obtain the total for each property of the vertex
 		avrg_x += vertexList[i].x;
 		avrg_y += vertexList[i].y;
@@ -272,13 +235,8 @@ void ply::scaleAndCenter() {
 	}
 }
 
-/*  ===============================================
-Desc: Draws a filled 3D object
-Precondition:
-Postcondition:
-Error Condition: If we haven't allocated memory for our
-faceList or vertexList then do not attempt to render.
-=============================================== */
+//Not used
+/*
 // void ply::render(){
 // 	if (vertexList == NULL || faceList == NULL){
 // 		return;
@@ -316,14 +274,10 @@ faceList or vertexList then do not attempt to render.
 // 	}
 // 	glPopMatrix();
 // }
+*/
 
-/*  ===============================================
-Desc: Prints some statistics about the file you have read in
-This is useful for debugging information to see if we parse our file correctly.
-
-Precondition:
-Postcondition:
-=============================================== */
+/*Desc: Prints some statistics about the file you have read in
+This is useful for debugging information to see if we parse our file correctly.*/
 void ply::printAttributes(){
 	cout << "==== ply Mesh Attributes=====" << endl;
 	cout << "vertex count:" << vertexCount << endl;
@@ -331,12 +285,8 @@ void ply::printAttributes(){
 	cout << "properties:" << properties << endl;
 }
 
-/*  ===============================================
-Desc: Iterate through our array and print out each vertex.
 
-Precondition:
-Postcondition:
-=============================================== */
+//Desc: Iterate through our array and print out each vertex.
 void ply::printVertexList(){
 	if (vertexList == NULL){
 		return;
@@ -348,12 +298,8 @@ void ply::printVertexList(){
 	}
 }
 
-/*  ===============================================
-Desc: Iterate through our array and print out each face.
 
-Precondition:
-Postcondition:
-=============================================== */
+//Desc: Iterate through our array and print out each face.
 void ply::printFaceList(){
 	if (faceList == NULL){
 		return;
@@ -371,6 +317,8 @@ void ply::printFaceList(){
 	}
 }
 
+// Not used
+/*
 void ply::setNormal(float x1, float y1, float z1,
 	float x2, float y2, float z2,
 	float x3, float y3, float z3) {
@@ -403,13 +351,10 @@ void ply::setNormal(float x1, float y1, float z1,
 	cz = cz / length;
 
 	//glNormal3f(cx, cy, cz);
-}
+}*/
 
-/*  ===============================================
-Desc:   Finds the normal to three vertices(1 face making up a triangle)
-Precondition:
-Postcondition:  returns the normals as outputx, outputy, and outputz
-=============================================== */
+
+//Desc:   Finds the normal to three vertices(1 face making up a triangle)
 void ply::computeNormal(float x1, float y1, float z1,
 	float x2, float y2, float z2,
 	float x3, float y3, float z3,
@@ -446,19 +391,11 @@ void ply::computeNormal(float x1, float y1, float z1,
 	*outputx = cx;
 	*outputy = cy;
 	*outputz = cz;
-
-	//glNormal3f(cx, cy, cz);
 }
 
 
-/*  ===============================================
-  Desc: Simple function that builds all of the arrays to be used
-		in vertex buffer objects.
-
-
-  Precondition:
-  Postcondition:
-=============================================== */
+/*Desc: Simple function that builds all of the arrays to be used
+		in vertex buffer objects. */
 void ply::buildArrays() {
 	// allocate memory for our arrays
 	vertex_vao = new GLfloat[vertexCount * 3];
@@ -525,7 +462,7 @@ void ply::buildArrays() {
 		}
 	}
 
-	//this part is for building the vertex normals -- it looks complicated because 
+	/*This part is for building the vertex normals -- it looks complicated because 
 	// we are computing the "smooth" normals of a vertex, which is defined as the "average"
 	// of all the normals at a vertex. 
 	//That is, let's say that a vertex is at the intersection of 5 triangles, each triangle
@@ -534,7 +471,7 @@ void ply::buildArrays() {
 	// divide by 5.
 	//In order to do this, there are two steps:
 	//  1. we sum up all the normals. 
-	//  2. While we are doing that, we need to keep a counter for the number of normals at a vertex
+	//  2. While we are doing that, we need to keep a counter for the number of normals at a vertex */
 	for (int i = 0; i < faceCount * 3; i = i + 3) {
 		int index0 = indicies_vao[i];
 		int index1 = indicies_vao[i + 1];
@@ -569,7 +506,6 @@ void ply::buildArrays() {
 		normals_vao[i * 3 + 1] = normals_vao[i * 3 + 1] / (float)(numNormals[i]);
 		normals_vao[i * 3 + 2] = normals_vao[i * 3 + 2] / (float)(numNormals[i]);
 	}
-
 
 	delete[] numNormals;
 }
@@ -629,9 +565,8 @@ void ply::renderVBO() {
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
 
-
-
 	//************The following code is for using VBO but not shaders ****************//
+	/*
 	//glDrawArrays(GL_TRIANGLES, 0, faceCount);
 
 	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
@@ -642,10 +577,11 @@ void ply::renderVBO() {
 	//glDrawElements(GL_TRIANGLES, faceCount*3, GL_UNSIGNED_INT, 0);
 
 	//glDisableClientState(GL_VERTEX_ARRAY);
-
+	*/
 
 
 	//************The following code is for using the old fixed pipeline (so called immediate mode) ****************//
+	/*
 	//int i;
 
 	//glBegin(GL_TRIANGLES);
@@ -666,4 +602,5 @@ void ply::renderVBO() {
 	//}
 
 	//glEnd();
+	*/
 }
