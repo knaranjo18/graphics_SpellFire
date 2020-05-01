@@ -6,6 +6,12 @@ in vec3 lightVec;
 out vec4 outputColor; //this tells OpenGL that this variable is the output color
 void main()
 {
-    float dotProd = dot(norm, lightVec) * 8;
-	outputColor = vec4(dotProd * norm, 1.0);
+	vec3 newNorm = normalize(norm);
+	vec3 newLightVec = normalize(lightVec);
+    float diffuse = max(dot(newNorm, newLightVec), 0.0);
+	if (diffuse <= 0.0) {
+		outputColor = vec4(0.05, 0.05, 0.05, 1.0);
+	} else {
+		outputColor = vec4(diffuse, diffuse, diffuse, 1.0);
+	}
 }

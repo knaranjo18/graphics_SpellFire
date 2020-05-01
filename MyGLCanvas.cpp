@@ -13,6 +13,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	glm::vec3 eyePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 lookatPoint = glm::vec3(0.0f, 0.5f, 1.0f);
 	lightPos = glm::vec3(0.0, 0.1, 0.0);
+	//lightDir = glm::vec3()
 
 	firstTime = true;
 
@@ -74,20 +75,25 @@ void MyGLCanvas::drawScene() {
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	glm::mat4 transMat4(1.0f);
+	//transMat4 = glm::scale(transMat4, glm::vec3(25, 25, 25));
+	//transMat4 = glm::translate(transMat4, glm::vec3(0.0, 0.5, 0.0));
 	transMat4 = glm::rotate(transMat4, glm::radians(270.0f), glm::vec3(1.0, 0, 0));
-	//transMat4 = glm::translate(transMat4, glm::vec3(0.0, 1.0, 0.0));
 	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
-	GLint light_id = glGetUniformLocation(shader1->program, "lightPos");
-	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
+
+	//GLint lightDir_id = glGetUniformLocation(shader1->program, "lightDir");
+	//glUniform3f(lightDir_id, lightDir.x, lightDir.y, lightDir.z);
+
+	//GLint light_id = glGetUniformLocation(shader1->program, "lightPos");
+	//glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
 	//renders the object
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	myPLY1->renderVBO();
 
-
+	/*
 	shader2->useShader();
 	modelView_id = glGetUniformLocation(shader2->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
@@ -100,7 +106,7 @@ void MyGLCanvas::drawScene() {
 	//renders the object
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	myPLY2->renderVBO();
+	myPLY2->renderVBO(); */
 }
 
 
@@ -144,12 +150,16 @@ int MyGLCanvas::handle(int e) {
 	switch (e) {
 	case FL_MOVE:
 		if (moveOn) {
+			cursor(FL_CURSOR_NONE);
 			rotX += (Fl::event_x() - prevX);
-			rotY += (Fl::event_y() - prevY);
-			camera->setRotUVW(rotY / 10.0, rotX / 10.0, 0);
+			rotY -= (Fl::event_y() - prevY);
+			camera->setRotUVW(rotY / 15.0, rotX / 15.0, 0);
 
 			prevX = Fl::event_x();
-			prevY = Fl::event_y();
+			prevY = Fl::event_y();	
+		}
+		else {
+			cursor(FL_CURSOR_CROSS);
 		}
 
 		break;
@@ -159,19 +169,20 @@ int MyGLCanvas::handle(int e) {
 		break;
 	case FL_PUSH:
 		button = Fl::event_button();
-		if (button == FL_RIGHT_MOUSE) {
-			prevX = Fl::event_x();
-			prevY = Fl::event_y();
+		//if (button == FL_RIGHT_MOUSE) {
+		//	prevX = Fl::event_x();
+			//prevY = Fl::event_y();
 
-			return 1;
-		}
-		else if (button == FL_LEFT_MOUSE) {
+			//return 1;
+		//}
+		if (button == FL_LEFT_MOUSE) {
 			prevX = Fl::event_x();
 			prevY = Fl::event_y();
 			moveOn = !moveOn;
 		}
 		break;
 	case FL_DRAG:
+		break;
 		rotX += (Fl::event_x() - prevX);
 		rotY += (Fl::event_y() - prevY);
 		camera->setRotUVW(rotY, rotX, 0);
@@ -193,6 +204,7 @@ void MyGLCanvas::initShaders() {
 	shader1->initShader("./shaders/330/test.vert", "./shaders/330/test.frag");
 	myPLY1->buildArrays(); 
 	myPLY1->bindVBO(shader1->program);
+	myPLY1->printAttributes();
 
 	shader2->initShader("./shaders/330/test2.vert", "./shaders/330/test2.frag");
 	myPLY2->buildArrays();

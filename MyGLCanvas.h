@@ -28,6 +28,7 @@
 class MyGLCanvas : public Fl_Gl_Window {
 public:
 	glm::vec3 lightPos;
+	glm::vec3 lightDir;
 
 	Camera* camera;
 
