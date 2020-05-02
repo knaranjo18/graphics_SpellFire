@@ -13,6 +13,8 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	eyePosition = glm::vec3(0.0f, -0.2f, 0.0f);
 	glm::vec3 lookatPoint = glm::vec3(1.0f, 0.0f, 0.0f);
 	lightPos = glm::vec3(0.0, 10, 0.0);
+	enemyPos = glm::vec3(6.0, 0.0, 0.0);
+	enemySpeed = 0.05;
 	//lightDir = glm::vec3()
 
 	firstTime = true;
@@ -23,7 +25,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	myPLY1 = new ply("./data/arena.ply");
 	
 	shader2 = new ShaderManager();
-	myPLY2 = new ply("./data/bunny.ply");
+	myPLY2 = new ply("./data/bunny_low.ply");
 
 	camera = new Camera();
 	camera->orientLookAt(eyePosition, lookatPoint, glm::vec3(0, 1, 0));
@@ -70,6 +72,7 @@ void MyGLCanvas::drawScene() {
 	//setting up camera info
 	glm::mat4 modelViewMatrix = camera->getModelViewMatrix();
 
+	/*-----------------------For the scenery----------------------------------------*/
 	shader1->useShader();
 	GLint modelView_id = glGetUniformLocation(shader1->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
@@ -94,20 +97,36 @@ void MyGLCanvas::drawScene() {
 
 	myPLY1->renderVBO();
 
-	/*
+	/*--------------For the enemy---------------------------*/
 	shader2->useShader();
 	modelView_id = glGetUniformLocation(shader2->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	transMat4 = glm::mat4(1.0f);
-	transMat4 = glm::translate(transMat4, glm::vec3(0.0, -1.0, 0.0));
+	transMat4 = glm::scale(transMat4, glm::vec3(0.3, 0.3, 0.3));
+	transMat4 = glm::translate(transMat4, glm::vec3(0, -0.6, 0.0));
+	transMat4 = glm::translate(transMat4, enemyPos);
+	cout << "Enemy Start " << to_string(enemyPos) << endl;
+	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed;
+	enemyPos.x += enemyDir.x;
+	enemyPos.z += enemyDir.z;
+
+	cout << "Enemy Direction " << to_string(enemyDir) << endl;
+	cout << "Enemy End " << to_string(enemyPos) << endl;
+	cout << "Player " << to_string(eyePosition) << endl << endl;
+
+
+
 	trans_id = glGetUniformLocation(shader2->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
+
+    light_id = glGetUniformLocation(shader2->program, "lightPos");
+	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
 	//renders the object
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	myPLY2->renderVBO(); */
+	myPLY2->renderVBO(); 
 }
 
 
@@ -241,7 +260,7 @@ void MyGLCanvas::initShaders() {
 	myPLY1->bindVBO(shader1->program);
 	myPLY1->printAttributes();
 
-	shader2->initShader("./shaders/330/test2.vert", "./shaders/330/test2.frag");
+	shader2->initShader("./shaders/330/test.vert", "./shaders/330/test2.frag");
 	myPLY2->buildArrays();
 	myPLY2->bindVBO(shader2->program);
 }
@@ -252,7 +271,7 @@ void MyGLCanvas::reloadShaders() {
 	myPLY1->bindVBO(shader1->program);
 
 	shader2->resetShaders();
-	shader2->initShader("./shaders/330/test2.vert", "./shaders/330/test2.frag");
+	shader2->initShader("./shaders/330/test.vert", "./shaders/330/test2.frag");
 	myPLY2->bindVBO(shader2->program);
 
 	invalidate();

@@ -9,9 +9,9 @@ void main()
 	vec3 color = vec3(0.7, 0.4, 0.2);
 	vec3 newNorm = normalize(norm);
 	vec3 newLightVec = normalize(lightVec);
-    float diffuse = max(dot(newNorm, newLightVec), 0.0) * 0.3;
+    float diffuse = max(dot(newNorm, newLightVec), 0.0) * 0.2;
 	if (diffuse <= 0.0) {
-		outputColor = vec4(0.05, 0.05, 0.05, 1.0);
+		outputColor = vec4(.2, 0.2, 0.2, 1.0);
 	} else {
 		outputColor = vec4(diffuse + color.x, diffuse + color.y, diffuse + color.z, 1.0);
 	}

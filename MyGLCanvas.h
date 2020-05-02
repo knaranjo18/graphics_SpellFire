@@ -54,6 +54,8 @@ private:
 	ply* myPLY2;
 	bool firstTime;
 	glm::vec3 eyePosition;
+	glm::vec3 enemyPos;
+	float enemySpeed;
 
 	int prevX, prevY;
 	float yaw, pitch;
