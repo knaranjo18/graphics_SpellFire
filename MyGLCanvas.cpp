@@ -16,7 +16,6 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	enemyPos = glm::vec3(1.5, -0.20, 0.4);
 	enemySpeed = 0.001;
 	enemyLook = glm::vec3(1.0, 0.0, 0.0);
-	//lightDir = glm::vec3()
 
 	firstTime = true;
 
@@ -78,19 +77,16 @@ void MyGLCanvas::drawScene() {
 	GLint modelView_id = glGetUniformLocation(shader1->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
+	//Places the arena in the correct location
 	glm::mat4 transMat4(1.0f);
-     transMat4 = glm::scale(transMat4, glm::vec3(6.5, 4, 6.5));
+    transMat4 = glm::scale(transMat4, glm::vec3(6.5, 4, 6.5));
+	
 	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
-
-
-	//GLint lightDir_id = glGetUniformLocation(shader1->program, "lightDir");
-	//glUniform3f(lightDir_id, lightDir.x, lightDir.y, lightDir.z);
 
 	GLint light_id = glGetUniformLocation(shader1->program, "lightPos");
 	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
-	//renders the object
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	myPLY1->renderVBO();
@@ -102,17 +98,21 @@ void MyGLCanvas::drawScene() {
 
 	transMat4 = glm::mat4(1.0f);
 
+	// Calculates the location that enemy should move towards
 	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed;
 	enemyPos += enemyDir;
 
+	// Used for 2D angle calculations
 	glm::vec2 enemyDir2 = glm::normalize(glm::vec2(enemyDir.x, enemyDir.z));
 	glm::vec2 enemyLook2 = glm::vec2(enemyLook.x, enemyLook.z);
 
+	// Calculates angle that the enemy should rotate to face the player
 	float angle_offset = acos(glm::dot(glm::normalize(enemyDir2), glm::normalize(enemyLook2)));
 	if (enemyDir.z > 0) {
-		angle_offset = 2 * PI - angle_offset;
+		angle_offset = 2 * PI - angle_offset;  //Deals with some stupid loop in the angle
 	}
 
+	// Places enemy in the right position
 	transMat4 = glm::translate(transMat4, enemyPos);
 	transMat4 = glm::scale(transMat4, glm::vec3(0.3, 0.3, 0.3));
 	transMat4 = glm::rotate(transMat4, angle_offset, glm::vec3(0.0, 1.0, 0.0));
@@ -191,13 +191,10 @@ int MyGLCanvas::handle(int e) {
 				pitch = -89.0f;
 
 			camera->rotateView(yaw, pitch);
-
-			
 		}
 		else {
 			cursor(FL_CURSOR_CROSS);
 		}
-
 		break;
 	case FL_RELEASE:
 	case FL_KEYDOWN:
