@@ -32,6 +32,7 @@ public:
 	void setNearPlane(float _nearPlane);
 	void setFarPlane(float _farPlane);
 	void setScreenSize(int _screenWidth, int _screenHeight);
+	void setEyePoint(glm::vec3 eyePoint);
 	//void setRotUVW(float u, float v, float w);  //called by main.cpp as a part of the slider callback
 	void rotateView(float yaw, float pitch);
 

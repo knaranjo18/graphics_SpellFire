@@ -14,8 +14,8 @@ out vec3 lightVec;
 
 void main() {
     norm = myNormal;
-   // lightVec =   myPosition - lightPos;
-    lightVec = vec3(0.0, -1.0, 0.5);
+    //lightVec =   myPosition - lightPos;
+    lightVec = vec3(0.0, 1.0, 0.0);
 	vec4 position = myProjectionMatrix * myModelviewMatrix * translationMatrix * vec4(myPosition, 1.0);
     gl_Position = position;
 }

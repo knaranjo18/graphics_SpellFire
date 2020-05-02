@@ -27,6 +27,9 @@ void Camera::rotateView(float yaw, float pitch) {
 	lookV = glm::normalize(direction);
 }
 
+void Camera::setEyePoint(glm::vec3 eyePoint) {
+	eyeP = eyePoint;
+}
 /*
 //called by main.cpp as a part of the slider callback for controlling rotation
 // the reason for computing the diff is to make sure that we are only incrementally rotating the camera

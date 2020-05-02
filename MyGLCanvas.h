@@ -53,6 +53,7 @@ private:
 	ply* myPLY1;
 	ply* myPLY2;
 	bool firstTime;
+	glm::vec3 eyePosition;
 
 	int prevX, prevY;
 	float yaw, pitch;

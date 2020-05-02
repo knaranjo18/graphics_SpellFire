@@ -1,6 +1,7 @@
  #include "MyGLCanvas.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "glm/ext.hpp"
 
 #define SENSITIVITY 0.3
 
@@ -9,9 +10,9 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	
 	prevX = prevY = yaw = pitch = 0;
 	moveOn = false;
-	glm::vec3 eyePosition = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::vec3 lookatPoint = glm::vec3(0.0f, 0.5f, 1.0f);
-	lightPos = glm::vec3(0.0, 0.1, 0.0);
+	eyePosition = glm::vec3(-2.0f, 0.0f, 0.0f);
+	glm::vec3 lookatPoint = glm::vec3(1.0f, 0.0f, 0.0f);
+	lightPos = glm::vec3(0.0, 0.2, 0.0);
 	//lightDir = glm::vec3()
 
 	firstTime = true;
@@ -19,7 +20,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	myObject = new SceneObject(175);
 
 	shader1 = new ShaderManager();
-	myPLY1 = new ply("./data/colosseum.ply");
+	myPLY1 = new ply("./data/arena.ply");
 	
 	shader2 = new ShaderManager();
 	myPLY2 = new ply("./data/bunny.ply");
@@ -74,9 +75,10 @@ void MyGLCanvas::drawScene() {
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	glm::mat4 transMat4(1.0f);
-	//transMat4 = glm::scale(transMat4, glm::vec3(25, 25, 25));
+     transMat4 = glm::scale(transMat4, glm::vec3(10, 10, 10));
 	//transMat4 = glm::translate(transMat4, glm::vec3(0.0, 0.5, 0.0));
-	transMat4 = glm::rotate(transMat4, glm::radians(270.0f), glm::vec3(1.0, 0, 0));
+	//transMat4 = glm::rotate(transMat4, glm::radians(270.0f), glm::vec3(1.0, 0, 0));
+	//transMat4 = glm::rotate(transMat4, glm::radians(0.0f), glm::vec3(0, 0, 1));
 	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
@@ -84,8 +86,8 @@ void MyGLCanvas::drawScene() {
 	//GLint lightDir_id = glGetUniformLocation(shader1->program, "lightDir");
 	//glUniform3f(lightDir_id, lightDir.x, lightDir.y, lightDir.z);
 
-	//GLint light_id = glGetUniformLocation(shader1->program, "lightPos");
-	//glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
+	GLint light_id = glGetUniformLocation(shader1->program, "lightPos");
+	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
 	//renders the object
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -144,7 +146,8 @@ int MyGLCanvas::handle(int e) {
 	}
 #endif	
 
-	int button;
+	int button, key;
+	float speed = .05;
 	//printf("Event was %s (%d)\n", fl_eventnames[e], e);
 	switch (e) {
 	case FL_MOVE:
@@ -177,7 +180,29 @@ int MyGLCanvas::handle(int e) {
 
 		break;
 	case FL_RELEASE:
-	case FL_KEYUP:
+	case FL_KEYDOWN:
+		key = Fl::event_key();
+		switch (key) {
+		case 'w':
+			eyePosition += speed * camera->getLookVector();
+			break;
+		case 'a':
+			eyePosition -= glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector())) * speed;
+			break;
+		case 's':
+			eyePosition -= speed * camera->getLookVector();
+			break;
+		case 'd':
+			eyePosition += glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector())) * speed;
+			break;
+		case FL_Escape:
+			exit(1);
+			break;
+		}
+
+		camera->setEyePoint(eyePosition);
+		return 1;
+		break;
 	case FL_MOUSEWHEEL:
 		break;
 	case FL_PUSH:
@@ -189,6 +214,9 @@ int MyGLCanvas::handle(int e) {
 		}
 		break;
 	case FL_DRAG:
+		break;
+	case FL_FOCUS:
+		return 1;
 		break;
 }
 	return Fl_Gl_Window::handle(e);
