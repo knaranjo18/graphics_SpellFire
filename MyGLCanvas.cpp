@@ -15,7 +15,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	enemyPos = glm::vec3(1.5, -0.20, 0.4);
 	enemySpeed = 0.001;
-	enemyLook = glm::vec3(1.0, 0.0, -1.0);
+	enemyLook = glm::vec3(1.0, 0.0, 0.0);
 	//lightDir = glm::vec3()
 
 	firstTime = true;
@@ -26,7 +26,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	myPLY1 = new ply("./data/arena.ply");
 	
 	shader2 = new ShaderManager();
-	myPLY2 = new ply("./data/bunny_low.ply");
+	myPLY2 = new ply("./data/cow.ply");
 
 	camera = new Camera();
 	camera->orientLookAt(eyePosition, lookatPoint, glm::vec3(0, 1, 0));
@@ -102,31 +102,20 @@ void MyGLCanvas::drawScene() {
 
 	transMat4 = glm::mat4(1.0f);
 
-//	cout << "Enemy Start " << to_string(enemyPos) << endl;
-
 	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed;
-	//enemyPos += enemyDir;
+	enemyPos += enemyDir;
 
-	glm::vec2 enemyDir2 = glm::vec2(enemyDir.x, enemyDir.z);
+	glm::vec2 enemyDir2 = glm::normalize(glm::vec2(enemyDir.x, enemyDir.z));
 	glm::vec2 enemyLook2 = glm::vec2(enemyLook.x, enemyLook.z);
 
-	float angle_offset = acos(glm::dot(glm::normalize(enemyDir2), glm::normalize(enemyLook2))) - (PI);
-	cout << "Angle " << angle_offset << endl;
-	glm::mat4 rotation(1.0f);
-
-	cout << "Enemy Direction " << to_string(glm::normalize(enemyDir)) << endl;
-	cout << "Enemy Look Start " << to_string(glm::normalize(enemyLook)) << endl;
-	cout << "Enemy Look End " << to_string(glm::normalize(enemyLook)) << endl << endl;
+	float angle_offset = acos(glm::dot(glm::normalize(enemyDir2), glm::normalize(enemyLook2)));
+	if (enemyDir.z > 0) {
+		angle_offset = 2 * PI - angle_offset;
+	}
 
 	transMat4 = glm::translate(transMat4, enemyPos);
 	transMat4 = glm::scale(transMat4, glm::vec3(0.3, 0.3, 0.3));
 	transMat4 = glm::rotate(transMat4, angle_offset, glm::vec3(0.0, 1.0, 0.0));
-
-	//cout << "Enemy Direction " << to_string(enemyDir) << endl;
-	//cout << "Enemy End " << to_string(enemyPos) << endl;
-	//cout << "Player " << to_string(eyePosition) << endl << endl;
-
-
 
 	trans_id = glGetUniformLocation(shader2->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
