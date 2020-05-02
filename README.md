@@ -1,10 +1,12 @@
 # SpellFire 
 ##### By Kevin Naranjo and Will Rusk
 
+
 ## Controls
 Player Movement - *W, A, S, D*
 
 Camera Movement - *Mouse (__Left click to toggle camera movement__)*
+
 
 ## Todo
 - **Develop Enemies**
@@ -13,11 +15,13 @@ Camera Movement - *Mouse (__Left click to toggle camera movement__)*
 	- Make their movements less straightforward (wavey?)
 	- Randomize enemy spawn
 
+
 - **Scenery**
 	- Make better textures for arena
 	- Implement the complete Phong lighting model (Ambient, Diffuse, Specular)
 	- Add sky textures
 	- Improve arena model (Better stands, better gates)
+
 
 - **Game Mechanics**
 	- Add player and enemy health
@@ -30,6 +34,7 @@ Camera Movement - *Mouse (__Left click to toggle camera movement__)*
 	- Add mana restricton for player
 	- Add spell selection 
 	- Make different enemies
+
 
 - **Code improvement**
 	- Refactor a ton of stuff into functions and classes
