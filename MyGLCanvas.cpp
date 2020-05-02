@@ -10,9 +10,9 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	
 	prevX = prevY = yaw = pitch = 0;
 	moveOn = false;
-	eyePosition = glm::vec3(-2.0f, 0.0f, 0.0f);
+	eyePosition = glm::vec3(0.0f, -0.2f, 0.0f);
 	glm::vec3 lookatPoint = glm::vec3(1.0f, 0.0f, 0.0f);
-	lightPos = glm::vec3(0.0, 0.2, 0.0);
+	lightPos = glm::vec3(0.0, 10, 0.0);
 	//lightDir = glm::vec3()
 
 	firstTime = true;
@@ -75,7 +75,7 @@ void MyGLCanvas::drawScene() {
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	glm::mat4 transMat4(1.0f);
-     transMat4 = glm::scale(transMat4, glm::vec3(10, 10, 10));
+     transMat4 = glm::scale(transMat4, glm::vec3(6.5, 4, 6.5));
 	//transMat4 = glm::translate(transMat4, glm::vec3(0.0, 0.5, 0.0));
 	//transMat4 = glm::rotate(transMat4, glm::radians(270.0f), glm::vec3(1.0, 0, 0));
 	//transMat4 = glm::rotate(transMat4, glm::radians(0.0f), glm::vec3(0, 0, 1));
@@ -148,6 +148,7 @@ int MyGLCanvas::handle(int e) {
 
 	int button, key;
 	float speed = .05;
+	glm::vec3 tempVec = camera->getLookVector();
 	//printf("Event was %s (%d)\n", fl_eventnames[e], e);
 	switch (e) {
 	case FL_MOVE:
@@ -182,18 +183,25 @@ int MyGLCanvas::handle(int e) {
 	case FL_RELEASE:
 	case FL_KEYDOWN:
 		key = Fl::event_key();
+		
 		switch (key) {
 		case 'w':
-			eyePosition += speed * camera->getLookVector();
+			eyePosition.x += speed * tempVec.x;
+			eyePosition.z += speed * tempVec.z;
 			break;
 		case 'a':
-			eyePosition -= glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector())) * speed;
+			tempVec = glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector()));
+			eyePosition.x -= tempVec.x * speed;
+			eyePosition.z -= tempVec.z * speed;
 			break;
 		case 's':
-			eyePosition -= speed * camera->getLookVector();
+			eyePosition.x -= speed * tempVec.x;
+			eyePosition.z -= speed * tempVec.z;
 			break;
 		case 'd':
-			eyePosition += glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector())) * speed;
+			tempVec = glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector()));
+			eyePosition.x += tempVec.x * speed;
+			eyePosition.z += tempVec.z * speed;
 			break;
 		case FL_Escape:
 			exit(1);
