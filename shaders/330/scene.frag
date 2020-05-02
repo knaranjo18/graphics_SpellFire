@@ -3,6 +3,8 @@
 in vec3 norm;
 in vec3 lightVec;
 
+uniform sampler2D texture;
+
 out vec4 outputColor; //this tells OpenGL that this variable is the output color
 void main()
 {

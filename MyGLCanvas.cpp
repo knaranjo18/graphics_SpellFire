@@ -24,6 +24,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 
 	shader1 = new ShaderManager();
 	myPLY1 = new ply("./data/arena.ply");
+	myPLY1->applyTexture("./data/red_bricks.ppm");
 	
 	shader2 = new ShaderManager();
 	myPLY2 = new ply("./data/cow.ply");
@@ -79,11 +80,16 @@ void MyGLCanvas::drawScene() {
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	glm::mat4 transMat4(1.0f);
-     transMat4 = glm::scale(transMat4, glm::vec3(6.5, 4, 6.5));
+    transMat4 = glm::scale(transMat4, glm::vec3(6.5, 4, 6.5));
 	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
-
+	// Pass scenery texture to the shader
+	glEnable(GL_TEXTURE_2D);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, myPLY1->getTextureID());
+	glUniform1i(glGetUniformLocation(shader1->program, "texture"), 0);
+	
 	//GLint lightDir_id = glGetUniformLocation(shader1->program, "lightDir");
 	//glUniform3f(lightDir_id, lightDir.x, lightDir.y, lightDir.z);
 
@@ -255,23 +261,23 @@ void MyGLCanvas::resize(int x, int y, int w, int h) {
 }
 
 void MyGLCanvas::initShaders() {
-	shader1->initShader("./shaders/330/test.vert", "./shaders/330/test.frag");
+	shader1->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
 	myPLY1->buildArrays(); 
 	myPLY1->bindVBO(shader1->program);
 	myPLY1->printAttributes();
 
-	shader2->initShader("./shaders/330/test.vert", "./shaders/330/test2.frag");
+	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/test2.frag");
 	myPLY2->buildArrays();
 	myPLY2->bindVBO(shader2->program);
 }
 
 void MyGLCanvas::reloadShaders() {
 	shader1->resetShaders();
-	shader1->initShader("./shaders/330/test.vert", "./shaders/330/test.frag");
+	shader1->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
 	myPLY1->bindVBO(shader1->program);
 
 	shader2->resetShaders();
-	shader2->initShader("./shaders/330/test.vert", "./shaders/330/test2.frag");
+	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/test2.frag");
 	myPLY2->bindVBO(shader2->program);
 
 	invalidate();

@@ -11,6 +11,7 @@
 
 #include <string>
 #include "geometry.h"
+#include "ppm.h"
 #if defined(__APPLE__)
 #  include <OpenGL/gl3.h> // defines OpenGL 3.0+ functions
 #else
@@ -84,6 +85,9 @@ class ply {
 		void printVertexList();
 		void printFaceList();
 
+		void applyTexture(string);
+		unsigned int getTextureID();
+
 		GLuint vao;
 
 private:
@@ -130,6 +134,11 @@ private:
 		GLfloat* vertex_vao;
 		GLuint* indicies_vao;
 		GLfloat* normals_vao;
+
+		// holds texture colors as ppm
+		ppm* texture;
+		// gl ID of the texture of the ppm
+		unsigned int tex_id;
 };
 
 #endif
