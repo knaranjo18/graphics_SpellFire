@@ -7,19 +7,19 @@ Player Movement - *W, A, S, D*
 Camera Movement - *Mouse (__Left click to toggle camera movement__)*
 
 ## Todo
-- #Develop Enemies
+- # Develop Enemies
 	- Get enemy PLY models
 	- Apply textures
 	- Make their movements less straightforward (wavey?)
 	- Randomize enemy spawn
 
-- #Scenery
+- # Scenery
 	- Make better textures for arena
 	- Implement the complete Phong lighting model (Ambient, Diffuse, Specular)
 	- Add sky textures
 	- Improve arena model (Better stands, better gates)
 
-- #Game Mechanics
+- # Game Mechanics
 	- Add player and enemy health
 	- Add collision between player and wall
 	- Add collision between player and enemy
@@ -31,5 +31,5 @@ Camera Movement - *Mouse (__Left click to toggle camera movement__)*
 	- Add spell selection 
 	- Make different enemies
 
-- #Code improvement
+- # Code improvement
 	- Refactor a ton of stuff into functions and classes
