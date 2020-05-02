@@ -19,6 +19,8 @@ ply::ply(){
 	properties = 0;
 	faceCount = 0;
 	vertexCount = 0;
+	texture = NULL;
+	tex_id = -1;
 }
 
 
@@ -314,6 +316,20 @@ void ply::printFaceList(){
 				cout << vertexList[index].x << "," << vertexList[index].y << "," << vertexList[index].z << endl;
 			}
 		}
+	}
+}
+
+void ply::applyTexture(string filename) {
+	texture = new ppm(filename);
+	tex_id = texture->createAsTexture();
+}
+
+unsigned int ply::getTextureID() {
+	if (texture) {
+		return tex_id;
+	} else {
+		fprintf(stderr, "texture not initialized, cannot return id!");
+		exit(1);
 	}
 }
 
