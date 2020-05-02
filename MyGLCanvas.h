@@ -23,6 +23,7 @@
 #include "ply.h"
 #include "gfxDefs.h"
 #include "Camera.h"
+#include <time.h>
 
 
 class MyGLCanvas : public Fl_Gl_Window {
@@ -62,6 +63,8 @@ private:
 	int prevX, prevY;
 	float yaw, pitch;
 	bool moveOn;
+	time_t prevTime;
+	float deltaTime;
 };
 
 #endif // !MYGLCANVAS_H

@@ -68,7 +68,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	begin();
 	// OpenGL window
 
-	canvas = new MyGLCanvas(10, 10, w() - 110, h() - 20);
+	canvas = new MyGLCanvas(0, 0, w(), h());
 /*
 	Fl_Pack* pack = new Fl_Pack(w() - 100, 30, 100, h(), "Control Panel");
 	pack->box(FL_DOWN_FRAME);
@@ -108,7 +108,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	pack->end();
 	*/
 	
-
+	/*
 	Fl_Pack* packShaders = new Fl_Pack(w() - 100, 30, 100, h(), "Shaders");
 	packShaders->box(FL_DOWN_FRAME);
 	packShaders->labelfont(1);
@@ -123,6 +123,7 @@ MyAppWindow::MyAppWindow(int W, int H, const char*L) : Fl_Window(W, H, L) {
 	packShaders->end();
 
 	end();
+	*/
 }
 
 
@@ -132,5 +133,6 @@ int main(int argc, char **argv) {
 	win->resizable(win);
 	Fl::add_idle(MyAppWindow::idleCB);
 	win->show();
+	win->fullscreen();
 	return(Fl::run());
 }
