@@ -89,6 +89,7 @@ void MyGLCanvas::drawScene() {
 	// Pass scenery texture to the shader
 	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
+
 	glBindTexture(GL_TEXTURE_2D, myPLY1->getTextureID());
 	glUniform1i(glGetUniformLocation(shader1->program, "texture"), 0);
 
@@ -264,7 +265,6 @@ void MyGLCanvas::initShaders() {
 	shader1->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
 	myPLY1->buildArrays(); 
 	myPLY1->bindVBO(shader1->program);
-	myPLY1->printAttributes();
 
 	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/test2.frag");
 	myPLY2->buildArrays();

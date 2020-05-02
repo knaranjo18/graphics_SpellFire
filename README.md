@@ -41,3 +41,7 @@ Quit Game - *Escape Key*
 - **Code improvement**
 	- Refactor a ton of stuff into functions and classes
 	- Switch over from FLTK to GLFW for window (Makes for smoother gameplay)
+
+- **GUI**
+	- Add crosshair
+	- Health bar
