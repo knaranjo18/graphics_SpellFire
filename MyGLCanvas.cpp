@@ -13,8 +13,8 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	eyePosition = glm::vec3(0.0f, -0.2f, 0.0f);
 	glm::vec3 lookatPoint = glm::vec3(1.0f, 0.0f, 0.0f);
 	lightPos = glm::vec3(0.0, 10, 0.0);
-	enemyPos = glm::vec3(6.0, 0.0, 0.0);
-	enemySpeed = 0.05;
+	enemyPos = glm::vec3(1.5, -.20, 0.4);
+	enemySpeed = 0.003;
 	//lightDir = glm::vec3()
 
 	firstTime = true;
@@ -103,17 +103,16 @@ void MyGLCanvas::drawScene() {
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	transMat4 = glm::mat4(1.0f);
-	transMat4 = glm::scale(transMat4, glm::vec3(0.3, 0.3, 0.3));
-	transMat4 = glm::translate(transMat4, glm::vec3(0, -0.6, 0.0));
-	transMat4 = glm::translate(transMat4, enemyPos);
-	cout << "Enemy Start " << to_string(enemyPos) << endl;
-	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed;
-	enemyPos.x += enemyDir.x;
-	enemyPos.z += enemyDir.z;
 
-	cout << "Enemy Direction " << to_string(enemyDir) << endl;
-	cout << "Enemy End " << to_string(enemyPos) << endl;
-	cout << "Player " << to_string(eyePosition) << endl << endl;
+	cout << "Enemy Start " << to_string(enemyPos) << endl;
+	transMat4 = glm::translate(transMat4, enemyPos);
+	transMat4 = glm::scale(transMat4, glm::vec3(0.3, 0.3, 0.3));
+	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed;
+	enemyPos += enemyDir;
+
+	//cout << "Enemy Direction " << to_string(enemyDir) << endl;
+	//cout << "Enemy End " << to_string(enemyPos) << endl;
+	//cout << "Player " << to_string(eyePosition) << endl << endl;
 
 
 
