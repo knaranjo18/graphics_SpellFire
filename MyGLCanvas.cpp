@@ -13,8 +13,9 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	eyePosition = glm::vec3(0.0f, -0.2f, 0.0f);
 	glm::vec3 lookatPoint = glm::vec3(1.0f, 0.0f, 0.0f);
 	lightPos = glm::vec3(0.0, 10, 0.0);
-	enemyPos = glm::vec3(1.5, -.20, 0.4);
-	enemySpeed = 0.003;
+	enemyPos = glm::vec3(1.5, -0.20, 0.4);
+	enemySpeed = 0.001;
+	enemyLook = glm::vec3(1.0, 0.0, -1.0);
 	//lightDir = glm::vec3()
 
 	firstTime = true;
@@ -79,9 +80,6 @@ void MyGLCanvas::drawScene() {
 
 	glm::mat4 transMat4(1.0f);
      transMat4 = glm::scale(transMat4, glm::vec3(6.5, 4, 6.5));
-	//transMat4 = glm::translate(transMat4, glm::vec3(0.0, 0.5, 0.0));
-	//transMat4 = glm::rotate(transMat4, glm::radians(270.0f), glm::vec3(1.0, 0, 0));
-	//transMat4 = glm::rotate(transMat4, glm::radians(0.0f), glm::vec3(0, 0, 1));
 	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
@@ -104,11 +102,25 @@ void MyGLCanvas::drawScene() {
 
 	transMat4 = glm::mat4(1.0f);
 
-	cout << "Enemy Start " << to_string(enemyPos) << endl;
+//	cout << "Enemy Start " << to_string(enemyPos) << endl;
+
+	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed;
+	//enemyPos += enemyDir;
+
+	glm::vec2 enemyDir2 = glm::vec2(enemyDir.x, enemyDir.z);
+	glm::vec2 enemyLook2 = glm::vec2(enemyLook.x, enemyLook.z);
+
+	float angle_offset = acos(glm::dot(glm::normalize(enemyDir2), glm::normalize(enemyLook2))) - (PI);
+	cout << "Angle " << angle_offset << endl;
+	glm::mat4 rotation(1.0f);
+
+	cout << "Enemy Direction " << to_string(glm::normalize(enemyDir)) << endl;
+	cout << "Enemy Look Start " << to_string(glm::normalize(enemyLook)) << endl;
+	cout << "Enemy Look End " << to_string(glm::normalize(enemyLook)) << endl << endl;
+
 	transMat4 = glm::translate(transMat4, enemyPos);
 	transMat4 = glm::scale(transMat4, glm::vec3(0.3, 0.3, 0.3));
-	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed;
-	enemyPos += enemyDir;
+	transMat4 = glm::rotate(transMat4, angle_offset, glm::vec3(0.0, 1.0, 0.0));
 
 	//cout << "Enemy Direction " << to_string(enemyDir) << endl;
 	//cout << "Enemy End " << to_string(enemyPos) << endl;
