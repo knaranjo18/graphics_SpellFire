@@ -201,6 +201,7 @@ int MyGLCanvas::handle(int e) {
 			camera->rotateView(yaw, pitch);
 		}
 		else {
+			cout << Fl::event_x() << endl;
 			cursor(FL_CURSOR_CROSS);
 		}
 		break;
