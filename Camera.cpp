@@ -1,6 +1,4 @@
 #include "Camera.h"
-#include <iostream>
-using namespace std;
 
 Camera::Camera() {
 	reset();

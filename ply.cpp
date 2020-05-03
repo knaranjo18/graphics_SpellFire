@@ -1,16 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <stdio.h>
-#include <cstdlib>
+
 #include "ply.h"
-#include "geometry.h"
-#include <math.h>
-
-
-using namespace std;
-
 
 //Desc: Default constructor for a ply object
 ply::ply(){
@@ -237,46 +227,6 @@ void ply::scaleAndCenter() {
 	}
 }
 
-//Not used
-/*
-// void ply::render(){
-// 	if (vertexList == NULL || faceList == NULL){
-// 		return;
-// 	}
-
-// 	glPushMatrix();
-// 	// For each of our faces
-// 	for (int i = 0; i < faceCount; i++) {
-
-// 		// All of our faces are actually triangles for PLY files
-
-// 		glBegin(GL_TRIANGLES);
-
-// 		// Get the vertex list from the face list.  Each element is not the 
-// 		// vertex itself but the index of the vertex within the vertexList
-// 		// For this project we don't care about the intesity, confidence, 
-// 		// nx, ny or nz.
-
-// 		int index0 = faceList[i].vertexList[0];
-// 		int index1 = faceList[i].vertexList[1];
-// 		int index2 = faceList[i].vertexList[2];
-
-// 		// using the setNormal function from below we normalize the vectors
-// 		setNormal(vertexList[index0].x, vertexList[index0].y, vertexList[index0].z,
-// 			vertexList[index1].x, vertexList[index1].y, vertexList[index1].z,
-// 			vertexList[index2].x, vertexList[index2].y, vertexList[index2].z);
-
-
-// 		for (int j = 0; j < faceList[i].vertexCount; j++){
-// 			// Get each vertices x,y,z and draw them
-// 			int index = faceList[i].vertexList[j];
-// 			glVertex3f(vertexList[index].x, vertexList[index].y, vertexList[index].z);
-// 		}
-// 		glEnd();
-// 	}
-// 	glPopMatrix();
-// }
-*/
 
 /*Desc: Prints some statistics about the file you have read in
 This is useful for debugging information to see if we parse our file correctly.*/
@@ -332,42 +282,6 @@ unsigned int ply::getTextureID() {
 		exit(1);
 	}
 }
-
-// Not used
-/*
-void ply::setNormal(float x1, float y1, float z1,
-	float x2, float y2, float z2,
-	float x3, float y3, float z3) {
-
-	float v1x, v1y, v1z;
-	float v2x, v2y, v2z;
-	float cx, cy, cz;
-
-	//find vector between x2 and x1
-	v1x = x1 - x2;
-	v1y = y1 - y2;
-	v1z = z1 - z2;
-
-	//find vector between x3 and x2
-	v2x = x2 - x3;
-	v2y = y2 - y3;
-	v2z = z2 - z3;
-
-	//cross product v1xv2
-
-	cx = v1y * v2z - v1z * v2y;
-	cy = v1z * v2x - v1x * v2z;
-	cz = v1x * v2y - v1y * v2x;
-
-	//normalize
-
-	float length = sqrt(cx * cx + cy * cy + cz * cz);
-	cx = cx / length;
-	cy = cy / length;
-	cz = cz / length;
-
-	//glNormal3f(cx, cy, cz);
-}*/
 
 
 //Desc:   Finds the normal to three vertices(1 face making up a triangle)
@@ -580,43 +494,4 @@ void ply::bindVBO(unsigned int programID){
 void ply::renderVBO() {
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-
-	//************The following code is for using VBO but not shaders ****************//
-	/*
-	//glDrawArrays(GL_TRIANGLES, 0, faceCount);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eab);
-
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glVertexPointer(3, GL_FLOAT, 0, (char*)NULL + 0);
-	//glDrawElements(GL_TRIANGLES, faceCount*3, GL_UNSIGNED_INT, 0);
-
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	*/
-
-
-	//************The following code is for using the old fixed pipeline (so called immediate mode) ****************//
-	/*
-	//int i;
-
-	//glBegin(GL_TRIANGLES);
-
-	//for (i = 0; i < faceCount*3; i=i+3) {
-	//	int index0 = indicies_vao[i];
-	//	int index1 = indicies_vao[i+1];
-	//	int index2 = indicies_vao[i+2];
-
-	//	glNormal3f(normals_vao[index0 * 3], normals_vao[index0 * 3 + 1], normals_vao[index0 * 3 + 2]);
-	//	glVertex3f(vertex_vao[index0*3], vertex_vao[index0*3+1], vertex_vao[index0*3+2]);
-
-	//	glNormal3f(normals_vao[index1 * 3], normals_vao[index1 * 3 + 1], normals_vao[index1 * 3 + 2]);
-	//	glVertex3f(vertex_vao[index1 * 3], vertex_vao[index1 * 3 + 1], vertex_vao[index1 * 3 + 2]);
-
-	//	glNormal3f(normals_vao[index2 * 3], normals_vao[index2 * 3 + 1], normals_vao[index2 * 3 + 2]);
-	//	glVertex3f(vertex_vao[index2 * 3], vertex_vao[index2 * 3 + 1], vertex_vao[index2 * 3 + 2]);
-	//}
-
-	//glEnd();
-	*/
 }
