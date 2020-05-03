@@ -11,13 +11,13 @@ public:
 	Player();
 	~Player();
 
-	void setHealth(int _health);
+	void setHealth(float _health);
 	void setPoints(int _points);
-	void setMana(int _mana);
+	void setMana(float _mana);
 
-	int getHealth();
+	float getHealth();
 	int getPoints();
-	int getMana();
+	float getMana();
 
 
 	void moveForward();

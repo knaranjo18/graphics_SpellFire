@@ -9,11 +9,12 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	firstTime = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 
-	enemyPos = glm::vec3(1.5, -0.20, 0.4);
-	enemySpeed = 0.001;
-	enemyLook = glm::vec3(1.0, 0.0, 0.0);
-
 	player = new Player();
+
+	cowList.push_back(new Enemy(COW, glm::vec3(1.5, -0.2, 0.4)));
+	cowList.push_back(new Enemy(COW, glm::vec3(-1.5, -0.2, -0.4)));
+
+	bunnyList.push_back(new Enemy(BUNNY, glm::vec3(1.5, -0.2, -0.4)));
 
 	setupShaders();
 }
@@ -31,6 +32,10 @@ MyGLCanvas::~MyGLCanvas() {
 
 	for (int i = 0; i < cowList.size(); i++) {
 		delete cowList[i];
+	}
+
+	for (int i = 0; i < bunnyList.size(); i++) {
+		delete bunnyList[i];
 	}
 }
 
@@ -64,6 +69,7 @@ void MyGLCanvas::drawScene() {
 
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+	glm::vec3 playerPos = player->myCam->getEyePoint();
 
 	/*-----------------------For the scenery----------------------------------------*/
 	shaderList[ARENA]->useShader();
@@ -84,49 +90,18 @@ void MyGLCanvas::drawScene() {
 	glBindTexture(GL_TEXTURE_2D, plyList[ARENA]->getTextureID());
 	glUniform1i(glGetUniformLocation(shaderList[ARENA]->program, "texture"), 0);
 
-	GLint light_id = glGetUniformLocation(shaderList[ARENA]->program, "lightPos");
-	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
-
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	plyList[ARENA]->renderVBO();
 
 	/*--------------For the enemy---------------------------*/
-	shaderList[COW]->useShader();
-	modelView_id = glGetUniformLocation(shaderList[COW]->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-
-	transMat4 = glm::mat4(1.0f);
-
-	// Calculates the location that enemy should move towards
-	glm::vec3 enemyDir = glm::normalize(player->myCam->getEyePoint() -enemyPos) * enemySpeed;
-	enemyPos += enemyDir;
-
-	// Used for 2D angle calculations
-	glm::vec2 enemyDir2 = glm::normalize(glm::vec2(enemyDir.x, enemyDir.z));
-	glm::vec2 enemyLook2 = glm::vec2(enemyLook.x, enemyLook.z);
-
-	// Calculates angle that the enemy should rotate to face the player
-	float angle_offset = acos(glm::dot(glm::normalize(enemyDir2), glm::normalize(enemyLook2)));
-	if (enemyDir.z > 0) {
-		angle_offset = 2 * PI - angle_offset;  //Deals with some stupid loop in the angle
+	for (int i = 0; i < cowList.size(); i++) {
+		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW], playerPos);
 	}
 
-	// Places enemy in the right position
-	transMat4 = glm::translate(transMat4, enemyPos);
-	transMat4 = glm::scale(transMat4, glm::vec3(0.3, 0.3, 0.3));
-	transMat4 = glm::rotate(transMat4, angle_offset, glm::vec3(0.0, 1.0, 0.0));
-
-	trans_id = glGetUniformLocation(shaderList[COW]->program, "translationMatrix");
-	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
-
-    light_id = glGetUniformLocation(shaderList[COW]->program, "lightPos");
-	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
-
-	//renders the object
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	plyList[COW]->renderVBO();
+	for (int i = 0; i < bunnyList.size(); i++) {
+		bunnyList[i]->draw(modelViewMatrix, shaderList[BUNNY], plyList[BUNNY], playerPos);
+	}
 }
 
 
@@ -225,6 +200,9 @@ void MyGLCanvas::initShaders() {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
 		else
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/cowColor.frag");
+
+		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
+		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
 		plyList[i]->buildArrays();
 		plyList[i]->bindVBO(shaderList[i]->program);

@@ -53,17 +53,14 @@ private:
 	void moveSight();
 
 	vector<ShaderManager *> shaderList;
-	vector<Enemy *> cowList;
+	vector<Enemy *> cowList, bunnyList;
 	vector<ply *> plyList;
 
 	Player *player;
 
-	glm::vec3 enemyPos, enemyLook, lightPos, lightDir;
+	glm::vec3 lightPos;
 	int prevX, prevY;
-	float enemySpeed;
 	bool firstTime;
-
-	enum shaderType {COW, BUNNY, ARENA};
 };
 
 #endif 

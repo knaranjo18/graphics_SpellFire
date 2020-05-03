@@ -12,6 +12,7 @@ Player::Player() {
 	points = 0;
 	mana = 10.0;
 	speed = 0.05;
+	canMoveSight = false;
 }
 
 Player::~Player() {
@@ -22,22 +23,33 @@ Player::~Player() {
 void Player::moveForward() {
 	glm::vec3 eyeP = myCam->getEyePoint();
 	glm::vec3 lookV = myCam->getLookVector();
+	float distance;
 
 	eyeP.x += speed * lookV.x;
 	eyeP.z += speed * lookV.z;
 
-	myCam->setEyePoint(eyeP);
+	// Bounds player in arena
+	distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
+	if (distance < 1.9) {
+		myCam->setEyePoint(eyeP);
+	}
+
 }
 
 
 void Player::moveBackward() {
 	glm::vec3 eyeP = myCam->getEyePoint();
 	glm::vec3 lookV = myCam->getLookVector();
+	float distance;
 
 	eyeP.x -= speed * lookV.x;
 	eyeP.z -= speed * lookV.z;
 
-	myCam->setEyePoint(eyeP);
+	// Bounds player in arena
+    distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
+	if (distance < 1.9) {
+		myCam->setEyePoint(eyeP);
+	}
 }
 
 
@@ -46,11 +58,16 @@ void Player::moveLeft() {
 	glm::vec3 lookV = myCam->getLookVector();
 	glm::vec3 upV = myCam->getUpVector();
 	glm::vec3 tempV = glm::normalize(glm::cross(lookV, upV));
+	float distance;
 
 	eyeP.x -= speed * tempV.x;
 	eyeP.z -= speed * tempV.z;
 
-	myCam->setEyePoint(eyeP);
+	// Bounds player in arena
+	distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
+	if (distance < 1.9) {
+		myCam->setEyePoint(eyeP);
+	}
 }
 
 
@@ -59,11 +76,16 @@ void Player::moveRight() {
 	glm::vec3 lookV = myCam->getLookVector();
 	glm::vec3 upV = myCam->getUpVector();
 	glm::vec3 tempV = glm::normalize(glm::cross(lookV, upV));
+	float distance;
 
 	eyeP.x += speed * tempV.x;
 	eyeP.z += speed * tempV.z;
 
-	myCam->setEyePoint(eyeP);
+	// Bounds player in arena
+	distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
+	if (distance < 1.9) {
+		myCam->setEyePoint(eyeP);
+	}
 
 }
 
@@ -81,7 +103,7 @@ void Player::moveSight(int x_offset, int y_offset) {
 
 
 /*---------------Setters------------------*/
-void Player::setHealth(int _health) {
+void Player::setHealth(float _health) {
 	health = _health;
 }
 
@@ -91,13 +113,13 @@ void Player::setPoints(int _points) {
 }
 
 
-void Player::setMana(int _mana) {
+void Player::setMana(float _mana) {
 	mana = _mana;
 }
 
 
 /*------------Getters--------------------*/
-int Player::getHealth() {
+float Player::getHealth() {
 	return health;
 }
 
@@ -107,7 +129,7 @@ int Player::getPoints() {
 }
 
 
-int Player::getMana() {
+float Player::getMana() {
 	return mana;
 }
 
