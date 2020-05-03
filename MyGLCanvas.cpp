@@ -1,6 +1,6 @@
  #include "MyGLCanvas.h"
 
-#define SENSITIVITY 0.3
+#define SENSITIVITY 0.5
 
 
 MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l) {
@@ -12,7 +12,6 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	
 	player = new Player();
-
 }
 
 MyGLCanvas::~MyGLCanvas() {
