@@ -45,7 +45,6 @@ private:
 	void drawScene();
 	
 	void setupShaders();
-	void initShaders();
 	
 	int handle(int);
 	void resize(int x, int y, int w, int h);

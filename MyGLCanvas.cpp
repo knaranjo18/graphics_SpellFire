@@ -12,6 +12,11 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	
 	player = new Player();
+
+	for (int i = 0; i < 2; i++) {
+		spawnEnemy(COW);
+		spawnEnemy(BUNNY);
+	}
 }
 
 MyGLCanvas::~MyGLCanvas() {
@@ -33,7 +38,6 @@ void MyGLCanvas::draw() {
 		if (firstTime) {
 			firstTime = false;
 			setupShaders();
-			initShaders();
 			startTime = time(0);
 		}
 		// needs to be after so that shaders can setup
@@ -49,8 +53,8 @@ void MyGLCanvas::draw() {
 
 void MyGLCanvas::drawScene() {
 	double deltaTime = difftime(time(0), startTime);
-
-	if (deltaTime >= 2) {
+/*
+	if (deltaTime >= 3) {
 		startTime = time(0);
 		if (cowList.size() != 0) {
 			removeEnemy(COW, 0);
@@ -65,6 +69,7 @@ void MyGLCanvas::drawScene() {
 			}
 		}
 	}
+	*/
 
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
@@ -110,10 +115,10 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 
 	switch (enemyType) {
 	case(COW):
-		cowList.push_back(new Enemy(COW, glm::vec3(xPos, -0.2, zPos)));
+		cowList.push_back(new Enemy(COW, glm::vec3(xPos, -0.4, zPos)));
 		break;
 	case(BUNNY):
-		bunnyList.push_back(new Enemy(BUNNY, glm::vec3(xPos, -0.2, zPos)));
+		bunnyList.push_back(new Enemy(BUNNY, glm::vec3(xPos, -0.4, zPos)));
 		break;
 	}
 }
@@ -223,9 +228,6 @@ void MyGLCanvas::resize(int x, int y, int w, int h) {
 }
 
 
-void MyGLCanvas::initShaders() {
-}
-
 
 void MyGLCanvas::moveSight() {
 	float currX = Fl::event_x(), currY = Fl::event_y();
@@ -243,10 +245,7 @@ void MyGLCanvas::moveSight() {
 	player->moveSight(x_offset, y_offset);
 }
 
-void MyGLCanvas::setupShaders() {
-	//shaderList.resize(3);
-	//plyList.resize(3);
-	
+void MyGLCanvas::setupShaders() {	
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());

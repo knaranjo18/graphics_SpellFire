@@ -1,7 +1,7 @@
 #include "Player.h"
 
 Player::Player() {
-	glm::vec3 startPoint(0.0, -0.2, 0.0);
+	glm::vec3 startPoint(0.0, -0.4, 0.0);
 	glm::vec3 startLook(1.0, 0.0, 0.0);
 	glm::vec3 upVec(0.0, 1.0, 0.0);
 

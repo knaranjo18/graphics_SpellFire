@@ -28,7 +28,7 @@ public:
 	shaderType enemyType;
 	int pointValue;
 private:
-	float health, speed, initialAngle;
+	float health, speed, initialAngle, currAngle, angularSpeed;
 	glm::vec3 position, lookVector, scaleSize;
 
 	glm::mat4 moveEnemy(glm::vec3 playerPos);
