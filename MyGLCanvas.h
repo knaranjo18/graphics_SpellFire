@@ -61,6 +61,7 @@ private:
 	vector<ply *> plyList;
 
 	Player *player;
+	Scenery *arena;
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
