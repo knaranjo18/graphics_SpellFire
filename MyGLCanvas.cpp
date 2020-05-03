@@ -53,6 +53,8 @@ void MyGLCanvas::draw() {
 
 void MyGLCanvas::drawScene() {
 	double deltaTime = difftime(time(0), startTime);
+
+	doGameLogic();
 /*
 	if (deltaTime >= 3) {
 		startTime = time(0);
@@ -73,7 +75,6 @@ void MyGLCanvas::drawScene() {
 
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
-	glm::vec3 playerPos = player->myCam->getEyePoint();
 
 	/*-----------------------For the scenery----------------------------------------*/
 	shaderList[ARENA]->useShader();
@@ -99,11 +100,23 @@ void MyGLCanvas::drawScene() {
 
 	/*--------------For the enemy---------------------------*/
 	for (int i = 0; i < cowList.size(); i++) {
-		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW], playerPos);
+		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW]);
 	}
 
 	for (int i = 0; i < bunnyList.size(); i++) {
-		bunnyList[i]->draw(modelViewMatrix, shaderList[BUNNY], plyList[BUNNY], playerPos);
+		bunnyList[i]->draw(modelViewMatrix, shaderList[BUNNY], plyList[BUNNY]);
+	}
+}
+
+void MyGLCanvas::doGameLogic() {
+	// move enemies
+	glm::vec3 playerPos = player->myCam->getEyePoint();
+
+	for (int i = 0; i < cowList.size(); i++) {
+		cowList[i]->moveEnemy(playerPos);
+	}
+	for (int i = 0; i < bunnyList.size(); i++) {
+		bunnyList[i]->moveEnemy(playerPos);
 	}
 }
 

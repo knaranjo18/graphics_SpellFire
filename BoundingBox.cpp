@@ -11,11 +11,11 @@ BoundingBox::BoundingBox(glm::vec4 center, float radius) {
 	this->radius = radius;
 }
 
-glm::vec4 BoundingBox::getCenter() {
+glm::vec4 BoundingBox::getCenter() const {
 	return center;
 }
 
-float BoundingBox::getRadius() {
+float BoundingBox::getRadius()  const {
 	return radius;
 }
 
@@ -34,7 +34,7 @@ void BoundingBox::translate(glm::mat4 trans) {
 }
 
 // Returns true if the boxes collide, false otherwise
-bool BoundingBox::doesCollide(BoundingBox& other) {
+bool BoundingBox::doesCollide(const BoundingBox& other) const {
 	glm::vec4 closest_line = other.getCenter() - center;
 
 	return glm::length(closest_line) < (radius + other.getRadius());

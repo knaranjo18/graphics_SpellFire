@@ -56,6 +56,8 @@ private:
 	void spawnEnemy(shaderType enemyType);
 	void removeEnemy(shaderType enemyType, int index);
 
+	void doGameLogic();
+
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
 	vector<ply *> plyList;

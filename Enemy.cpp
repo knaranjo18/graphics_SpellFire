@@ -79,7 +79,7 @@ const BoundingBox* Enemy::getBox() {
 	return box;
 }
 
-void Enemy::draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly, glm::vec3 playerPos) {
+void Enemy::draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly) {
 	shader->useShader();
 	GLint modelView_id = glGetUniformLocation(shader->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelView));

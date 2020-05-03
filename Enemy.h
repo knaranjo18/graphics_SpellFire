@@ -24,7 +24,7 @@ public:
 	float getHealth();
 	const BoundingBox* getBox();
 
-	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly, glm::vec3 playerPos);
+	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly);
 	
 	void moveEnemy(glm::vec3 playerPos);
 	
