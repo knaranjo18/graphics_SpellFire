@@ -100,14 +100,49 @@ void MyGLCanvas::doGameLogic() {
 	// move enemies
 	glm::vec3 playerPos = player->myCam->getEyePoint();
 
+	handleMoveCollisions(playerPos);
+	/*
 	for (int i = 0; i < cowList.size(); i++) {
 		cowList[i]->moveEnemy(playerPos);
 	}
 	for (int i = 0; i < bunnyList.size(); i++) {
 		bunnyList[i]->moveEnemy(playerPos);
 	}
+	*/
+	
 	for (int i = 0; i < projectileList.size(); i++) {
 		projectileList[i]->moveProjectile();
+	}
+}
+
+void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos) {
+	vector<Enemy*> enemies;
+	for (int i = 0; i < cowList.size(); i++) {
+		enemies.push_back(cowList[i]);
+	}
+	for (int i = 0; i < bunnyList.size(); i++) {
+		enemies.push_back(bunnyList[i]);
+	}
+
+	// move either away from collision or towards player
+	for (int i = 0; i < enemies.size(); i++) {
+		bool moved = false;
+		for (int j = i + 1; j < enemies.size(); j++) {
+			const BoundingBox* box1 = enemies[i]->getBox();
+			const BoundingBox* box2 = enemies[j]->getBox();
+			if (box1->doesCollide(*box2) && !moved) {
+				glm::vec3 dir = box1->getCenter() - box2->getCenter();
+				// move enemies towards some faraway point in opposite directions
+				enemies[i]->moveEnemy((dir * 5.0f) + glm::vec3(box1->getCenter()));
+				enemies[j]->moveEnemy((-dir * 5.0f) + glm::vec3(box2->getCenter()));
+				box1 = enemies[i]->getBox();
+				box2 = enemies[j]->getBox();
+				moved = true;
+			}
+		}
+		if (!moved) {
+			enemies[i]->moveEnemy(playerPos);
+		}
 	}
 }
 
@@ -163,7 +198,7 @@ void MyGLCanvas::removeProjectile(shaderType projectileType, int index) {
 		projectileList.erase(projectileList.begin() + index);
 		break;
 	default:
-		printf("NOT A VALID ENEMY");
+		printf("NOT A VALID PROJECTILE");
 		exit(1);
 		break;
 	}
@@ -247,12 +282,13 @@ int MyGLCanvas::handle(int e) {
 			prevX = Fl::event_x();
 			prevY = Fl::event_y();
 			player->canMoveSight = !(player->canMoveSight);
-			return 1;
-		} else if (button == FL_RIGHT_MOUSE) {
-			fireProjectile(player->spellSelected, player->myCam->getEyePoint(), player->myCam->getLookVector());
-			return 1;
 		}
-		return 0;
+		else if (button == FL_RIGHT_MOUSE) {
+			fireProjectile(player->spellSelected, player->myCam->getEyePoint(), player->myCam->getLookVector());
+		}
+		else return 0;
+
+		return 1;
 		break;
 	case FL_FOCUS:
 		return 1;

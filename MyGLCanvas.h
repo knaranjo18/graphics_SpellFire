@@ -59,6 +59,7 @@ private:
 	void removeEnemy(shaderType enemyType, int index);
 
 	void doGameLogic();
+	void handleMoveCollisions(glm::vec3);
 
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
