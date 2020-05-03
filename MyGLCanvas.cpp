@@ -1,26 +1,19 @@
  #include "MyGLCanvas.h"
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include "glm/ext.hpp"
-
 
 #define SENSITIVITY 0.3
 
 MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 	
-	prevX = prevY = yaw = pitch = 0;
-	moveOn = false;
-	eyePosition = glm::vec3(0.0f, -0.2f, 0.0f);
-	glm::vec3 lookatPoint = glm::vec3(1.0f, 0.0f, 0.0f);
+	prevX = prevY = 0;
+	firstTime = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
+
 	enemyPos = glm::vec3(1.5, -0.20, 0.4);
 	enemySpeed = 0.001;
 	enemyLook = glm::vec3(1.0, 0.0, 0.0);
 
-	firstTime = true;
 
-	myObject = new SceneObject(175);
 
 	shader1 = new ShaderManager();
 	myPLY1 = new ply("./data/arena.ply");
@@ -29,19 +22,15 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	shader2 = new ShaderManager();
 	myPLY2 = new ply("./data/cow.ply");
 
-	camera = new Camera();
-	camera->orientLookAt(eyePosition, lookatPoint, glm::vec3(0, 1, 0));
+	player = new Player();
 }
 
 MyGLCanvas::~MyGLCanvas() {
-	delete myObject;
 	delete shader1;
 	delete shader2;
 	delete myPLY1;
 	delete myPLY2;
-
-	if (camera != NULL)
-		delete camera;
+	delete player;
 }
 
 
@@ -72,7 +61,7 @@ void MyGLCanvas::draw() {
 void MyGLCanvas::drawScene() {
 
 	//setting up camera info
-	glm::mat4 modelViewMatrix = camera->getModelViewMatrix();
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
 	/*-----------------------For the scenery----------------------------------------*/
 	shader1->useShader();
@@ -108,7 +97,7 @@ void MyGLCanvas::drawScene() {
 	transMat4 = glm::mat4(1.0f);
 
 	// Calculates the location that enemy should move towards
-	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed;
+	glm::vec3 enemyDir = glm::normalize(player->myCam->getEyePoint() -enemyPos) * enemySpeed;
 	enemyPos += enemyDir;
 
 	// Used for 2D angle calculations
@@ -143,10 +132,11 @@ void MyGLCanvas::updateCamera(int width, int height) {
 	float xy_aspect;
 	xy_aspect = (float)width / (float)height;
 
-	camera->setScreenSize(width, height);
+	player->myCam->setScreenSize(width, height);
+
 
 	shader1->useShader();
-	glm::mat4 perspectiveMatrix = camera->getProjectionMatrix();
+	glm::mat4 perspectiveMatrix = player->myCam->getProjectionMatrix();
 	GLint projection_id = glGetUniformLocation(shader1->program, "myProjectionMatrix");
 	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
 
@@ -157,109 +147,76 @@ void MyGLCanvas::updateCamera(int width, int height) {
 
 
 int MyGLCanvas::handle(int e) {
-	//static int first = 1;
-#ifndef __APPLE__
-	if (firstTime && e == FL_SHOW && shown()) {
-		firstTime = 0;
-		make_current();
-		GLenum err = glewInit(); // defines pters to functions of OpenGL V 1.2 and above
-		if (GLEW_OK != err)	{
-			/* Problem: glewInit failed, something is seriously wrong. */
-			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+	#ifndef __APPLE__
+		if (firstTime && e == FL_SHOW && shown()) {
+			firstTime = 0;
+			make_current();
+			GLenum err = glewInit(); // defines pters to functions of OpenGL V 1.2 and above
+			if (GLEW_OK != err)	{
+				/* Problem: glewInit failed, something is seriously wrong. */
+				fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+			}
+			else {
+				//SHADER: initialize the shader manager and loads the two shader programs
+				initShaders();
+			}
 		}
-		else {
-			//SHADER: initialize the shader manager and loads the two shader programs
-			initShaders();
-		}
-	}
-#endif	
+	#endif	
 
 	int button, key;
-	float speed = .05;
-	glm::vec3 tempVec = camera->getLookVector();
-	//printf("Event was %s (%d)\n", fl_eventnames[e], e);
+
 	switch (e) {
 	case FL_MOVE:
-		if (moveOn) {
-			cursor(FL_CURSOR_NONE);
-			float x_offset = (Fl::event_x() - prevX);
-			float y_offset = (prevY - Fl::event_y()); 
-			prevX = Fl::event_x();
-			prevY = Fl::event_y();
-
-			x_offset *= SENSITIVITY;
-			y_offset *= SENSITIVITY;
-
-			yaw += x_offset;
-			pitch += y_offset;
-
-
-			if (pitch > 89.0f)
-				pitch = 89.0f;
-			else if (pitch < -89.0f)
-				pitch = -89.0f;
-
-			camera->rotateView(yaw, pitch);
-		}
-		else {
-			cout << Fl::event_x() << endl;
+		if (player->canMoveSight) 
+			moveSight();
+		else 
 			cursor(FL_CURSOR_CROSS);
-		}
 		break;
-	case FL_RELEASE:
 	case FL_KEYDOWN:
 		key = Fl::event_key();
 		
 		switch (key) {
 		case 'w':
-			eyePosition.x += speed * tempVec.x;
-			eyePosition.z += speed * tempVec.z;
+			player->moveForward();
 			break;
 		case 'a':
-			tempVec = glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector()));
-			eyePosition.x -= tempVec.x * speed;
-			eyePosition.z -= tempVec.z * speed;
+			player->moveLeft();
 			break;
 		case 's':
-			eyePosition.x -= speed * tempVec.x;
-			eyePosition.z -= speed * tempVec.z;
+			player->moveBackward();
 			break;
 		case 'd':
-			tempVec = glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector()));
-			eyePosition.x += tempVec.x * speed;
-			eyePosition.z += tempVec.z * speed;
+			player->moveRight();
 			break;
 		case FL_Escape:
-			exit(1);
+			exit(0);
 			break;
 		}
 
-		camera->setEyePoint(eyePosition);
 		return 1;
-		break;
-	case FL_MOUSEWHEEL:
-		break;
 	case FL_PUSH:
 		button = Fl::event_button();
+		
 		if (button == FL_LEFT_MOUSE) {
 			prevX = Fl::event_x();
 			prevY = Fl::event_y();
-			moveOn = !moveOn;
+			player->canMoveSight = !(player->canMoveSight);
 		}
-		break;
-	case FL_DRAG:
+
 		break;
 	case FL_FOCUS:
 		return 1;
-		break;
-}
+	}
+
 	return Fl_Gl_Window::handle(e);
 }
+
 
 void MyGLCanvas::resize(int x, int y, int w, int h) {
 	Fl_Gl_Window::resize(x, y, w, h);
 	puts("resize called");
 }
+
 
 void MyGLCanvas::initShaders() {
 	shader1->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
@@ -271,14 +228,23 @@ void MyGLCanvas::initShaders() {
 	myPLY2->bindVBO(shader2->program);
 }
 
-void MyGLCanvas::reloadShaders() {
-	shader1->resetShaders();
-	shader1->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
-	myPLY1->bindVBO(shader1->program);
 
-	shader2->resetShaders();
-	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/cowColor.frag");
-	myPLY2->bindVBO(shader2->program);
+void MyGLCanvas::moveSight() {
+	float currX = Fl::event_x(), currY = Fl::event_y();
+	float x_offset = currX - prevX;
+	float y_offset = prevY - currY;
 
-	invalidate();
+	cursor(FL_CURSOR_NONE);
+
+	x_offset *= SENSITIVITY;
+	y_offset *= SENSITIVITY;
+
+	prevX = currX;
+	prevY = currY;
+
+	player->moveSight(x_offset, y_offset);
+}
+
+void printEvent(int e) {
+	printf("Event was %s (%d)\n", fl_eventnames[e], e);
 }

@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef MYGLCANVAS_H
 #define MYGLCANVAS_H
 
@@ -11,60 +9,56 @@
 #  endif
 #  include <GL/glew.h>
 #endif
+
 #include <FL/glut.h>
 #include <FL/glu.h>
 #include <FL/names.h>
+#include <FL/FL_Input_.H>
+
 #include <glm/glm.hpp>
-#include <time.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include "glm/ext.hpp"
+
 #include <iostream>
 
-#include "SceneObject.h"
+#include "Enemy.h"
+#include "Player.h"
+#include "Projectile.h"
+#include "Scenery.h"
+#include "BoundingBox.h"
 #include "ShaderManager.h"
 #include "ply.h"
 #include "gfxDefs.h"
 #include "Camera.h"
-#include <time.h>
 
 
 class MyGLCanvas : public Fl_Gl_Window {
 public:
-	glm::vec3 lightPos;
-	glm::vec3 lightDir;
-
-	Camera* camera;
-
 	MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
 	~MyGLCanvas();
-
-	void reloadShaders();
 
 private:
 	void draw();
 	void drawScene();
-
 	void initShaders();
-
+	
 	int handle(int);
 	void resize(int x, int y, int w, int h);
 	void updateCamera(int width, int height);
+	
+	void moveSight();
 
-	SceneObject* myObject;
+	Player *player;
 	ShaderManager* shader1;
 	ShaderManager* shader2;
 	ply* myPLY1;
 	ply* myPLY2;
-	bool firstTime;
-	glm::vec3 eyePosition;
 	
-	glm::vec3 enemyPos;
-	float enemySpeed;
-	glm::vec3 enemyLook;
-
+	glm::vec3 enemyPos, enemyLook, lightPos, lightDir;
 	int prevX, prevY;
-	float yaw, pitch;
-	bool moveOn;
-	time_t prevTime;
-	float deltaTime;
+	float enemySpeed;
+	bool firstTime;
 };
 
-#endif // !MYGLCANVAS_H
+#endif 
