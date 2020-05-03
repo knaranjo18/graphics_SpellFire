@@ -52,6 +52,8 @@ private:
 	void deallocate();
 	
 	void moveSight();
+	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
+	void removeProjectile(shaderType projectileType, int index);
 
 	void spawnEnemy(shaderType enemyType);
 	void removeEnemy(shaderType enemyType, int index);
@@ -61,6 +63,7 @@ private:
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
 	vector<ply *> plyList;
+	vector<Projectile *> projectileList;
 
 	Player *player;
 	Scenery *arena;

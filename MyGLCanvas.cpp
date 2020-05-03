@@ -90,6 +90,10 @@ void MyGLCanvas::drawScene() {
 	for (int i = 0; i < bunnyList.size(); i++) {
 		bunnyList[i]->draw(modelViewMatrix, shaderList[BUNNY], plyList[BUNNY]);
 	}
+
+	for (int i = 0; i < projectileList.size(); i++) {
+		projectileList[i]->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
+	}
 }
 
 void MyGLCanvas::doGameLogic() {
@@ -102,6 +106,16 @@ void MyGLCanvas::doGameLogic() {
 	for (int i = 0; i < bunnyList.size(); i++) {
 		bunnyList[i]->moveEnemy(playerPos);
 	}
+	for (int i = 0; i < projectileList.size(); i++) {
+		projectileList[i]->moveProjectile();
+	}
+}
+
+void MyGLCanvas::fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired) {
+	glm::vec3 startPoint = originPoint + (0.1f * glm::normalize(directionFired));
+	startPoint.y -= 0.08;
+
+	projectileList.push_back(new Projectile(projectileType, startPoint, directionFired));
 }
 
 void MyGLCanvas::spawnEnemy(shaderType enemyType) {
@@ -116,6 +130,10 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 		break;
 	case(BUNNY):
 		bunnyList.push_back(new Enemy(BUNNY, glm::vec3(xPos, HEIGHT, zPos)));
+		break;	
+	default:
+		printf("NOT A VALID ENEMY");
+		exit(1);
 		break;
 	}
 }
@@ -130,6 +148,23 @@ void MyGLCanvas::removeEnemy(shaderType enemyType, int index) {
 	case(BUNNY):
 		delete bunnyList[index];
 		bunnyList.erase(bunnyList.begin() + index);
+		break;
+	default:
+		printf("NOT A VALID ENEMY");
+		exit(1);
+		break;
+	} 
+}
+
+void MyGLCanvas::removeProjectile(shaderType projectileType, int index) {
+	switch (projectileType) {
+	case(FIREBALL):
+		delete projectileList[index];
+		projectileList.erase(projectileList.begin() + index);
+		break;
+	default:
+		printf("NOT A VALID ENEMY");
+		exit(1);
 		break;
 	}
 }
@@ -213,6 +248,9 @@ int MyGLCanvas::handle(int e) {
 			prevY = Fl::event_y();
 			player->canMoveSight = !(player->canMoveSight);
 			return 1;
+		} else if (button == FL_RIGHT_MOUSE) {
+			fireProjectile(player->spellSelected, player->myCam->getEyePoint(), player->myCam->getLookVector());
+			return 1;
 		}
 		return 0;
 		break;
@@ -249,19 +287,23 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
+	shaderList.push_back(new ShaderManager());
 
 	plyList.push_back(new ply("./data/cow.ply"));
 	plyList.push_back(new ply("./data/bunny.ply"));
 	
+	plyList.push_back(new ply("./data/fireball.ply"));
+	plyList[FIREBALL]->applyTexture("./data/fireball_256.ppm");
+
 	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_1024.ppm");
 
 	for (int i = COW; i <= ARENA; i++) {
-		if (i == ARENA) {
+		if (i == ARENA || i == FIREBALL) {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
 		}
 		else {
-			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/cowColor.frag");
+			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/enemyColor.frag");
 		}
 
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
@@ -278,6 +320,7 @@ void printEvent(int e) {
 
 void MyGLCanvas::deallocate() {
 	delete player;
+	delete arena;
 
 	for (int i = 0; i < shaderList.size(); i++) {
 		delete shaderList[i];
@@ -293,5 +336,9 @@ void MyGLCanvas::deallocate() {
 
 	for (int i = 0; i < bunnyList.size(); i++) {
 		delete bunnyList[i];
+	}
+
+	for (int i = 0; i < projectileList.size(); i++) {
+		delete projectileList[i];
 	}
 }

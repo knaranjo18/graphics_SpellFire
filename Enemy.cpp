@@ -1,6 +1,5 @@
 #include "Enemy.h"
-#define ACCEPTANCE (PI / 10)
-#define PLYSIZE 0.5f
+
 #define COWSIZE 0.3f
 #define BUNNYSIZE 0.5f
 
@@ -52,6 +51,10 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 		angularSpeed = PI / 600.0;
 		enemyType = _enemyType;
 		modelSize = PLYSIZE * BUNNYSIZE;
+		break;
+	default:
+		printf("NOT A VALID ENEMY");
+		exit(1);
 		break;
 	}
 	box = new BoundingBox(glm::vec4(startPoint, 1.0f), modelSize);
@@ -108,7 +111,6 @@ float boundAngle(float angle) {
 
 void Enemy::moveEnemy(glm::vec3 playerPos) {
 	glm::vec3 direction = glm::normalize(playerPos - position) * speed;
-	//position += direction;
 
 	// Used for 2D angle calculations
 	glm::vec2 direction2 = glm::normalize(glm::vec2(direction.x, direction.z));

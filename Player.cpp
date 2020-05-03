@@ -13,6 +13,7 @@ Player::Player() {
 	mana = 10.0;
 	speed = 0.05;
 	canMoveSight = false;
+	spellSelected = FIREBALL;
 }
 
 Player::~Player() {

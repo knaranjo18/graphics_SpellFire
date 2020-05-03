@@ -7,6 +7,8 @@ Player Movement - *W, A, S, D*
 
 Camera Movement - *Mouse (__Left click to toggle camera movement__)*
 
+Debug Hitbox Toggle - *M*
+
 Quit Game - *Escape Key*
 
 
@@ -14,14 +16,11 @@ Quit Game - *Escape Key*
 - **Develop Enemies**
 	- Get enemy PLY models
 	- Apply textures
-	- Make their movements less straightforward (wavey?)
 
 
 - **Scenery**
-	- Make better textures for arena
 	- Implement the complete Phong lighting model (Ambient, Diffuse, Specular)
 	- Add sky textures
-	- Improve arena model (Better stands, better gates)
 
 
 - **Game Mechanics**
