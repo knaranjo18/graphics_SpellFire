@@ -19,36 +19,6 @@ void Camera::reset() {
 	screenWidthRatio = 1.0f;
 }
 
-void Camera::rotateView(float yaw, float pitch) {
-	glm::vec3 direction;
-	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	direction.y = sin(glm::radians(pitch));
-	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	lookV = glm::normalize(direction);
-}
-
-void Camera::setEyePoint(glm::vec3 eyePoint) {
-	eyeP = eyePoint;
-}
-/*
-//called by main.cpp as a part of the slider callback for controlling rotation
-// the reason for computing the diff is to make sure that we are only incrementally rotating the camera
-void Camera::setRotUVW(float u, float v, float w) {
-	float diffU = u - rotU;
-	float diffV = v - rotV;
-	float diffW = w - rotW;
-	fullRotation(diffU, diffV, diffW);
-
-	glm::vec3 tempU, tempV, tempW;
-	makeuvw(tempU, tempV, tempW);
-	printf("LookVec : (%f, %f, %f) \n u : (%f, %f, %f) \n v : (%f, %f, %f) \n w : (%f, %f, %f) \n\n", lookV.x, lookV.y, lookV.z, tempU.x, tempU.y, tempU.z, tempV.x, tempV.y, tempV.z, tempW.x, tempW.y, tempW.z);
-	
-	rotU = u;
-	rotV = v;
-	rotW = w;
-}*/
-
-
 // Sets where the camera is looking using a point
 void Camera::orientLookAt(glm::vec3 eyePoint, glm::vec3 lookatPoint, glm::vec3 upVec) {
 	eyeP = eyePoint;
@@ -129,79 +99,6 @@ glm::mat4 Camera::getInverseModelViewMatrix() {
 }
 
 
-/*
-// Returns the translation matrix used in the model view matrix
-glm::mat4 Camera::getTranslateMatrix() {
-	glm::mat4 translateMat4(1.0);
-
-	translateMat4[3][0] = -eyeP.x;
-	translateMat4[3][1] = -eyeP.y;
-	translateMat4[3][2] = -eyeP.z;
-
-	return translateMat4;
-}
-*/
-
-/*
-// Creates the rotation matrix used in the model view matrix
-void Camera::makeRotationMatrix() {
-	glm::vec3 u, v, w;
-	glm::mat4 tempRot(1.0);
-
-	makeuvw(u, v, w);
-
-	tempRot[0][0] = u.x;
-	tempRot[1][0] = u.y;
-	tempRot[2][0] = u.z;
-
-	tempRot[0][1] = v.x;
-	tempRot[1][1] = v.y;
-	tempRot[2][1] = v.z;
-
-	tempRot[0][2] = w.x;
-	tempRot[1][2] = w.y;
-	tempRot[2][2] = w.z;
-
-	rotationMat4 = tempRot;
-}
-*/
-
-
-/*
-// Returns the model view matrix by multiplying (rotation * translate)
-glm::mat4 Camera::getModelViewMatrix() {
-	glm::mat4 modelViewMat4(1.0);
-
-	glm::mat4 translateMat4 = getTranslateMatrix();
-
-	modelViewMat4 = rotationMat4 * translateMat4;
-
-	return modelViewMat4;
-}*/
-
-
-
-
-/*
-// Returns the inverse of the model view matrix by multplying (invTrans * invRotat)
-glm::mat4 Camera::getInverseModelViewMatrix() {
-	glm::mat4 invModelViewMat4(1.0);
-
-	glm::mat4 invTranslate = getTranslateMatrix();
-	glm::mat4 invRotation = glm::transpose(rotationMat4);
-
-	invTranslate[3][0] *= -1.0;
-	invTranslate[3][1] *= -1.0;
-	invTranslate[3][2] *= -1.0;
-
-	invModelViewMat4 = invTranslate * invRotation;
-
-	return invModelViewMat4;
-}
-*/
-
-
-
 // Calculates thetaW from thetaH to do the scaling in the projection matrix
 float Camera::get_thetaW(float thetaH) {
 	float thetaW = 2.0 * atan(screenWidthRatio * tan(thetaH / 2.0));
@@ -232,64 +129,16 @@ void Camera::translate(glm::vec3 v) {
 	eyeP = glm::vec3(translateMat4 * glm::vec4(eyeP, 1.0));
 }
 
-//*****************************************//
-//		Rotation						  //
-//***************************************//
 
-void Camera::fullRotation(float uDeg, float vDeg, float wDeg) {
-	glm::mat4 yRotate(1.0f);
-	glm::mat4 xRotate(1.0f);
-	glm::mat4 zRotate(1.0f);
-	float thetaX = glm::radians(uDeg), thetaY = glm::radians(vDeg), thetaZ = glm::radians(wDeg);
-
-	yRotate[0][0] = cos(thetaY);
-	yRotate[0][2] = -sin(thetaY);
-
-	yRotate[2][0] = sin(thetaY);
-	yRotate[2][2] = cos(thetaY);
-
-	xRotate[1][1] = cos(thetaX);
-	xRotate[2][1] = -sin(thetaX);
-
-	xRotate[1][2] = sin(thetaX);
-	xRotate[2][2] = cos(thetaX);
-
-	zRotate[0][0] = cos(thetaZ);
-	zRotate[1][0] = -sin(thetaZ);
-
-	zRotate[0][1] = sin(thetaZ);
-	zRotate[1][1] = cos(thetaZ);
-
-	glm::mat4 rotation = zRotate * yRotate * xRotate;
-	lookV = glm::vec4(lookV, 0.0) * rotation;
-	//makeRotationMatrix();
+// Rotates the camera by the yaw (around v) and pitch (around u)
+void Camera::rotateView(float yaw, float pitch) {
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	lookV = glm::normalize(direction);
 }
 
-// Rotates a point around an arbritrary axis
-void Camera::rotate(glm::vec3 point, glm::vec3 axis, float degrees) {
-	float rotRadY, rotRadZ, rotRadX;
-	glm::mat4 bigMatrix(1.0f);
-
-	rotRadY = atan(axis.z / axis.x);
-
-	glm::mat4 M1 = glm::rotate(glm::mat4(1.0), rotRadY, glm::vec3(0.0, 1.0, 0.0));
-
-	rotRadZ = -asin(axis.y / glm::length(axis));
-
-	glm::mat4 M2 = glm::rotate(glm::mat4(1.0), rotRadZ, glm::vec3(0.0, 0.0, 1.0));
-
-	rotRadX = glm::radians(degrees);
-	
-	glm::mat4 M3 = glm::rotate(glm::mat4(1.0), rotRadX, glm::vec3(1.0, 0.0, 0.0));
-
-	bigMatrix = glm::transpose(M1) * glm::transpose(M2) * M3 * M2 * M1;
-
-	point = glm::vec3(bigMatrix * glm::vec4(point, 0));
-}
-
-//**************************************//
-//			End of Rotation			   //
-//************************************//
 
 //***********************************//
 //		Simple Setters				//
@@ -310,6 +159,11 @@ void Camera::setScreenSize(int _screenWidth, int _screenHeight) {
 	screenWidth = _screenWidth;
 	screenHeight = _screenHeight;
 	screenWidthRatio = (float)screenWidth / (float)screenHeight;
+}
+
+
+void Camera::setEyePoint(glm::vec3 eyePoint) {
+	eyeP = eyePoint;
 }
 
 //***********************************//
