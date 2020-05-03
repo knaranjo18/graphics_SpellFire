@@ -21,6 +21,7 @@
 #include "glm/ext.hpp"
 
 #include <iostream>
+#include <vector>
 
 #include "Enemy.h"
 #include "Player.h"
@@ -41,6 +42,8 @@ public:
 private:
 	void draw();
 	void drawScene();
+	
+	void setupShaders();
 	void initShaders();
 	
 	int handle(int);
@@ -49,16 +52,18 @@ private:
 	
 	void moveSight();
 
+	vector<ShaderManager *> shaderList;
+	vector<Enemy *> cowList;
+	vector<ply *> plyList;
+
 	Player *player;
-	ShaderManager* shader1;
-	ShaderManager* shader2;
-	ply* myPLY1;
-	ply* myPLY2;
-	
+
 	glm::vec3 enemyPos, enemyLook, lightPos, lightDir;
 	int prevX, prevY;
 	float enemySpeed;
 	bool firstTime;
+
+	enum shaderType {COW, BUNNY, ARENA};
 };
 
 #endif 

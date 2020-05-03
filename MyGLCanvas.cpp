@@ -13,24 +13,25 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	enemySpeed = 0.001;
 	enemyLook = glm::vec3(1.0, 0.0, 0.0);
 
-
-
-	shader1 = new ShaderManager();
-	myPLY1 = new ply("./data/arena.ply");
-	myPLY1->applyTexture("./data/red_bricks.ppm");
-	
-	shader2 = new ShaderManager();
-	myPLY2 = new ply("./data/cow.ply");
-
 	player = new Player();
+
+	setupShaders();
 }
 
 MyGLCanvas::~MyGLCanvas() {
-	delete shader1;
-	delete shader2;
-	delete myPLY1;
-	delete myPLY2;
 	delete player;
+
+	for (int i = 0; i < shaderList.size(); i++) {
+		delete shaderList[i];
+	}
+
+	for (int i = 0; i < plyList.size(); i++) {
+		delete plyList[i];
+	}
+
+	for (int i = 0; i < cowList.size(); i++) {
+		delete cowList[i];
+	}
 }
 
 
@@ -45,6 +46,7 @@ void MyGLCanvas::draw() {
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glPolygonOffset(1, 1);
+		
 		if (firstTime == true) {
 			firstTime = false;
 			initShaders();
@@ -64,34 +66,34 @@ void MyGLCanvas::drawScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
 	/*-----------------------For the scenery----------------------------------------*/
-	shader1->useShader();
-	GLint modelView_id = glGetUniformLocation(shader1->program, "myModelviewMatrix");
+	shaderList[ARENA]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[ARENA]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	//Places the arena in the correct location
 	glm::mat4 transMat4(1.0f);
     transMat4 = glm::scale(transMat4, glm::vec3(6.5, 4, 6.5));
 
-	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
+	GLint trans_id = glGetUniformLocation(shaderList[ARENA]->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
 	// Pass scenery texture to the shader
 	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 
-	glBindTexture(GL_TEXTURE_2D, myPLY1->getTextureID());
-	glUniform1i(glGetUniformLocation(shader1->program, "texture"), 0);
+	glBindTexture(GL_TEXTURE_2D, plyList[ARENA]->getTextureID());
+	glUniform1i(glGetUniformLocation(shaderList[ARENA]->program, "texture"), 0);
 
-	GLint light_id = glGetUniformLocation(shader1->program, "lightPos");
+	GLint light_id = glGetUniformLocation(shaderList[ARENA]->program, "lightPos");
 	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	myPLY1->renderVBO();
+	plyList[ARENA]->renderVBO();
 
 	/*--------------For the enemy---------------------------*/
-	shader2->useShader();
-	modelView_id = glGetUniformLocation(shader2->program, "myModelviewMatrix");
+	shaderList[COW]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[COW]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	transMat4 = glm::mat4(1.0f);
@@ -115,34 +117,33 @@ void MyGLCanvas::drawScene() {
 	transMat4 = glm::scale(transMat4, glm::vec3(0.3, 0.3, 0.3));
 	transMat4 = glm::rotate(transMat4, angle_offset, glm::vec3(0.0, 1.0, 0.0));
 
-	trans_id = glGetUniformLocation(shader2->program, "translationMatrix");
+	trans_id = glGetUniformLocation(shaderList[COW]->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
-    light_id = glGetUniformLocation(shader2->program, "lightPos");
+    light_id = glGetUniformLocation(shaderList[COW]->program, "lightPos");
 	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
 	//renders the object
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	myPLY2->renderVBO(); 
+	plyList[COW]->renderVBO();
 }
 
 
 void MyGLCanvas::updateCamera(int width, int height) {
 	float xy_aspect;
+	GLint projection_id;
 	xy_aspect = (float)width / (float)height;
 
 	player->myCam->setScreenSize(width, height);
 
-
-	shader1->useShader();
 	glm::mat4 perspectiveMatrix = player->myCam->getProjectionMatrix();
-	GLint projection_id = glGetUniformLocation(shader1->program, "myProjectionMatrix");
-	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
 
-	shader2->useShader();
-	projection_id = glGetUniformLocation(shader2->program, "myProjectionMatrix");
-	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
+	for (int i = COW; i <= ARENA; i++) {
+		shaderList[i]->useShader();
+		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
+		glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
+	}
 }
 
 
@@ -219,13 +220,15 @@ void MyGLCanvas::resize(int x, int y, int w, int h) {
 
 
 void MyGLCanvas::initShaders() {
-	shader1->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
-	myPLY1->buildArrays(); 
-	myPLY1->bindVBO(shader1->program);
+	for (int i = COW; i <= ARENA; i++) {
+		if (i == ARENA)
+			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
+		else
+			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/cowColor.frag");
 
-	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/cowColor.frag");
-	myPLY2->buildArrays();
-	myPLY2->bindVBO(shader2->program);
+		plyList[i]->buildArrays();
+		plyList[i]->bindVBO(shaderList[i]->program);
+	}
 }
 
 
@@ -243,6 +246,21 @@ void MyGLCanvas::moveSight() {
 	prevY = currY;
 
 	player->moveSight(x_offset, y_offset);
+}
+
+void MyGLCanvas::setupShaders() {
+	shaderList.resize(3);
+	plyList.resize(3);
+	
+	shaderList[COW] = new ShaderManager();
+	shaderList[ARENA] = new ShaderManager();
+	shaderList[BUNNY] = new ShaderManager();
+
+	plyList[COW] = new ply("./data/cow.ply");
+	plyList[ARENA] = new ply("./data/arena.ply");
+	plyList[BUNNY] = new ply("./data/bunny.ply");
+	
+	plyList[ARENA]->applyTexture("./data/red_bricks.ppm");
 }
 
 void printEvent(int e) {
