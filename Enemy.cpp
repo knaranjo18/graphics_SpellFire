@@ -79,7 +79,7 @@ const BoundingBox* Enemy::getBox() {
 	return box;
 }
 
-void Enemy::draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly) {
+void Enemy::draw(glm::mat4 modelView, ShaderManager* shader, ply* myPly) {
 	shader->useShader();
 	GLint modelView_id = glGetUniformLocation(shader->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelView));
@@ -92,7 +92,9 @@ void Enemy::draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly) {
 
 	myPly->renderVBO();
 
-	if (debug_draw_hitbox) glutSolidSphere(0.5, 15, 15);
+	if (debug_draw_hitbox) {
+		glutSolidSphere(0.5, 15, 15);
+	}
 }
 
 float boundAngle(float angle) {
