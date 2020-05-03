@@ -266,7 +266,7 @@ void MyGLCanvas::initShaders() {
 	myPLY1->buildArrays(); 
 	myPLY1->bindVBO(shader1->program);
 
-	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/test2.frag");
+	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/cowColor.frag");
 	myPLY2->buildArrays();
 	myPLY2->bindVBO(shader2->program);
 }
@@ -277,7 +277,7 @@ void MyGLCanvas::reloadShaders() {
 	myPLY1->bindVBO(shader1->program);
 
 	shader2->resetShaders();
-	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/test2.frag");
+	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/cowColor.frag");
 	myPLY2->bindVBO(shader2->program);
 
 	invalidate();
