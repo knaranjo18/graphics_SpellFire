@@ -1,5 +1,10 @@
 #include "Enemy.h"
 #define ACCEPTANCE (PI / 10)
+#define PLYSIZE 0.5f
+#define COWSIZE 0.3f
+#define BUNNYSIZE 0.5f
+
+bool Enemy::debug_draw_hitbox = false;
 
 Enemy::Enemy() {
 	health = 100.0;
@@ -12,6 +17,8 @@ Enemy::Enemy() {
 	currAngle = 0;
 	angularSpeed = PI / 1080.0;
 	enemyType = COW;
+	modelSize = COWSIZE * PLYSIZE;
+	box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
 }
 
 Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
@@ -21,31 +28,35 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 		speed = 0.001;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
-		scaleSize = glm::vec3(0.3, 0.3, 0.3);
+		scaleSize = glm::vec3(1, 1, 1) * COWSIZE;
 		pointValue = 1;
 		initialAngle = 0;
 		currAngle = 0;
 		angularSpeed = PI / 600.0;
 		enemyType = _enemyType;
+		modelSize = PLYSIZE * COWSIZE;
 		break;
 	case(BUNNY):
 		health = 200.0;
 		speed = 0.002;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
-		scaleSize = glm::vec3(0.5, 0.5, 0.5);
+		scaleSize = glm::vec3(1, 1, 1) * BUNNYSIZE;
 		pointValue = 2;
 		initialAngle = PI;
 		currAngle = 0;
 		angularSpeed = PI / 600.0;
 		enemyType = _enemyType;
+		modelSize = PLYSIZE * BUNNYSIZE;
 		break;
 	}
+	box = new BoundingBox(glm::vec4(startPoint, 1.0f), modelSize);
 }
 
 
 Enemy::~Enemy() {
-
+	if (box)
+		delete box;
 }
 
 void Enemy::setHealth(float _health) {
@@ -70,6 +81,8 @@ void Enemy::draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly, glm::ve
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	myPly->renderVBO();
+
+	if (debug_draw_hitbox) glutSolidSphere(0.5, 15, 15);
 }
 
 float boundAngle(float angle) {
@@ -109,6 +122,8 @@ glm::mat4 Enemy::moveEnemy(glm::vec3 playerPos) {
 
 	glm::vec3 newLook(cos(currAngle), 0.0, -sin(currAngle));
 	position += glm::normalize(newLook) * speed;
+
+	box->setCenter(glm::vec4(position, 1.0f));
 
 	glm::mat4 transMat4(1.0f);
 	transMat4 = glm::translate(transMat4, position);

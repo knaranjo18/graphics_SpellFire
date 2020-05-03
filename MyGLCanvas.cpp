@@ -197,6 +197,10 @@ int MyGLCanvas::handle(int e) {
 		case 'd':
 			player->moveRight();
 			break;
+		// toggle debug mode
+		case 'm':
+			Enemy::debug_draw_hitbox = !Enemy::debug_draw_hitbox;
+			break;
 		case FL_Escape:
 			deallocate();
 			exit(0);

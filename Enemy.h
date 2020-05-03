@@ -27,9 +27,13 @@ public:
 
 	shaderType enemyType;
 	int pointValue;
+
+	static bool debug_draw_hitbox;
 private:
-	float health, speed, initialAngle, currAngle, angularSpeed;
+	float health, speed, initialAngle, currAngle, angularSpeed, modelSize;
 	glm::vec3 position, lookVector, scaleSize;
+
+	BoundingBox *box;
 
 	glm::mat4 moveEnemy(glm::vec3 playerPos);
 };
