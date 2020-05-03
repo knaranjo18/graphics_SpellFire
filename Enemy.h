@@ -22,9 +22,12 @@ public:
 	void setHealth(float _health);
 	
 	float getHealth();
+	const BoundingBox* getBox();
 
 	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly, glm::vec3 playerPos);
-
+	
+	void moveEnemy(glm::vec3 playerPos);
+	
 	shaderType enemyType;
 	int pointValue;
 
@@ -35,6 +38,6 @@ private:
 
 	BoundingBox *box;
 
-	glm::mat4 moveEnemy(glm::vec3 playerPos);
+	glm::mat4 transMat4;
 };
 #endif

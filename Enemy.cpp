@@ -19,6 +19,10 @@ Enemy::Enemy() {
 	enemyType = COW;
 	modelSize = COWSIZE * PLYSIZE;
 	box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
+	transMat4 = glm::mat4(1.0f);
+	transMat4 = glm::translate(transMat4, position);
+	transMat4 = glm::scale(transMat4, scaleSize);
+	transMat4 = glm::rotate(transMat4, currAngle + initialAngle, glm::vec3(0.0, 1.0, 0.0));
 }
 
 Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
@@ -51,6 +55,10 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 		break;
 	}
 	box = new BoundingBox(glm::vec4(startPoint, 1.0f), modelSize);
+	transMat4 = glm::mat4(1.0f);
+	transMat4 = glm::translate(transMat4, position);
+	transMat4 = glm::scale(transMat4, scaleSize);
+	transMat4 = glm::rotate(transMat4, currAngle + initialAngle, glm::vec3(0.0, 1.0, 0.0));
 }
 
 
@@ -67,12 +75,14 @@ float Enemy::getHealth() {
 	return health;
 }
 
+const BoundingBox* Enemy::getBox() {
+	return box;
+}
+
 void Enemy::draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly, glm::vec3 playerPos) {
 	shader->useShader();
 	GLint modelView_id = glGetUniformLocation(shader->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelView));
-
-	glm::mat4 transMat4 = moveEnemy(playerPos);
 
 	GLint trans_id = glGetUniformLocation(shader->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
@@ -96,7 +106,7 @@ float boundAngle(float angle) {
 	return angle;
 }
 
-glm::mat4 Enemy::moveEnemy(glm::vec3 playerPos) {
+void Enemy::moveEnemy(glm::vec3 playerPos) {
 	glm::vec3 direction = glm::normalize(playerPos - position) * speed;
 	//position += direction;
 
@@ -130,6 +140,6 @@ glm::mat4 Enemy::moveEnemy(glm::vec3 playerPos) {
 	transMat4 = glm::scale(transMat4, scaleSize);
 	transMat4 = glm::rotate(transMat4, currAngle + initialAngle, glm::vec3(0.0, 1.0, 0.0));
 
-	return transMat4;
+	this->transMat4 = transMat4;
 }
 
