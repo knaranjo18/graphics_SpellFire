@@ -22,8 +22,7 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	myObject = new SceneObject(175);
 
 	shader1 = new ShaderManager();
-	myPLY1 = new ply("./data/arena.ply");
-	myPLY1->applyTexture("./data/red_bricks.ppm");
+	myPLY1 = new ply("./data/arena_4_tex_2.ply");
 	
 	shader2 = new ShaderManager();
 	myPLY2 = new ply("./data/cow.ply");
@@ -85,11 +84,11 @@ void MyGLCanvas::drawScene() {
 	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
+
 	// Pass scenery texture to the shader
-	glEnable(GL_TEXTURE_2D);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, myPLY1->getTextureID());
-	glUniform1i(glGetUniformLocation(shader1->program, "texture"), 0);
+	glUniform1i(glGetUniformLocation(shader1->program, "tex"), 0);
 
 	GLint light_id = glGetUniformLocation(shader1->program, "lightPos");
 	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
@@ -106,7 +105,7 @@ void MyGLCanvas::drawScene() {
 	transMat4 = glm::mat4(1.0f);
 
 	// Calculates the location that enemy should move towards
-	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed;
+	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed * .1f;
 	enemyPos += enemyDir;
 
 	// Used for 2D angle calculations
@@ -263,6 +262,7 @@ void MyGLCanvas::initShaders() {
 	myPLY1->buildArrays(); 
 	myPLY1->bindVBO(shader1->program);
 	myPLY1->printAttributes();
+	myPLY1->applyTexture("./data/arena_texture_debug.ppm");
 
 	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/test2.frag");
 	myPLY2->buildArrays();

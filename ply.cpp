@@ -149,7 +149,7 @@ void ply::loadGeometry(){
 			getline(myfile, line);
 			strcpy(lineCopy, line.c_str());
 
-			// by convention the first three are x, y, z and we ignore the rest
+			// by convention the first three are x, y, z
 			if (properties >= 0){
 				vertexList[i].x = atof(strtok(lineCopy, " \r"));
 			}
@@ -158,6 +158,26 @@ void ply::loadGeometry(){
 			}
 			if (properties >= 2){
 				vertexList[i].z = atof(strtok(NULL, " \r"));
+			}
+			// next 3 should be normals x, y, z
+			if (properties >= 3) {
+				vertexList[i].nx = atof(strtok(NULL, " \r"));
+			}
+			if (properties >= 4) {
+				vertexList[i].ny = atof(strtok(NULL, " \r"));
+			}
+			if (properties >= 5) {
+				vertexList[i].nz = atof(strtok(NULL, " \r"));
+			}
+			// next we expect texture u, v, then ignore the rest
+			if (properties >= 6) {
+				vertexList[i].u = atof(strtok(NULL, " \r"));
+			}
+			if (properties >= 7) {
+				vertexList[i].v = atof(strtok(NULL, " \r"));
+			}
+			if (properties > 6 && vertexList[i].u > 0.9) {
+				fprintf(stderr, "high u detected, tex coords are u:%f v:%f\n", vertexList[i].u, vertexList[i].v);
 			}
 		}
 
@@ -237,47 +257,6 @@ void ply::scaleAndCenter() {
 	}
 }
 
-//Not used
-/*
-// void ply::render(){
-// 	if (vertexList == NULL || faceList == NULL){
-// 		return;
-// 	}
-
-// 	glPushMatrix();
-// 	// For each of our faces
-// 	for (int i = 0; i < faceCount; i++) {
-
-// 		// All of our faces are actually triangles for PLY files
-
-// 		glBegin(GL_TRIANGLES);
-
-// 		// Get the vertex list from the face list.  Each element is not the 
-// 		// vertex itself but the index of the vertex within the vertexList
-// 		// For this project we don't care about the intesity, confidence, 
-// 		// nx, ny or nz.
-
-// 		int index0 = faceList[i].vertexList[0];
-// 		int index1 = faceList[i].vertexList[1];
-// 		int index2 = faceList[i].vertexList[2];
-
-// 		// using the setNormal function from below we normalize the vectors
-// 		setNormal(vertexList[index0].x, vertexList[index0].y, vertexList[index0].z,
-// 			vertexList[index1].x, vertexList[index1].y, vertexList[index1].z,
-// 			vertexList[index2].x, vertexList[index2].y, vertexList[index2].z);
-
-
-// 		for (int j = 0; j < faceList[i].vertexCount; j++){
-// 			// Get each vertices x,y,z and draw them
-// 			int index = faceList[i].vertexList[j];
-// 			glVertex3f(vertexList[index].x, vertexList[index].y, vertexList[index].z);
-// 		}
-// 		glEnd();
-// 	}
-// 	glPopMatrix();
-// }
-*/
-
 /*Desc: Prints some statistics about the file you have read in
 This is useful for debugging information to see if we parse our file correctly.*/
 void ply::printAttributes(){
@@ -332,43 +311,6 @@ unsigned int ply::getTextureID() {
 		exit(1);
 	}
 }
-
-// Not used
-/*
-void ply::setNormal(float x1, float y1, float z1,
-	float x2, float y2, float z2,
-	float x3, float y3, float z3) {
-
-	float v1x, v1y, v1z;
-	float v2x, v2y, v2z;
-	float cx, cy, cz;
-
-	//find vector between x2 and x1
-	v1x = x1 - x2;
-	v1y = y1 - y2;
-	v1z = z1 - z2;
-
-	//find vector between x3 and x2
-	v2x = x2 - x3;
-	v2y = y2 - y3;
-	v2z = z2 - z3;
-
-	//cross product v1xv2
-
-	cx = v1y * v2z - v1z * v2y;
-	cy = v1z * v2x - v1x * v2z;
-	cz = v1x * v2y - v1y * v2x;
-
-	//normalize
-
-	float length = sqrt(cx * cx + cy * cy + cz * cz);
-	cx = cx / length;
-	cy = cy / length;
-	cz = cz / length;
-
-	//glNormal3f(cx, cy, cz);
-}*/
-
 
 //Desc:   Finds the normal to three vertices(1 face making up a triangle)
 void ply::computeNormal(float x1, float y1, float z1,
@@ -443,6 +385,15 @@ void ply::buildArrays() {
 	for (int i = 0; i < vertexCount; i++) {
 		numNormals[i] = 0;
 	}
+	tex_coords_vao = new GLfloat[vertexCount * 2];
+	if (tex_coords_vao == NULL) {
+		cout << "Ran out of memory(tex_coords_vao)!" << endl;
+		return;
+	}
+	// initialize texture coordinates in the case we don't have them so shader can tell not to use them
+	for (int i = 0; i < vertexCount * 2; i++) {
+		tex_coords_vao[i] = NAN;
+	}
 
 
 	// Compress all of the vertices into a simple array
@@ -478,49 +429,66 @@ void ply::buildArrays() {
 		}
 	}
 
-	/*This part is for building the vertex normals -- it looks complicated because 
-	// we are computing the "smooth" normals of a vertex, which is defined as the "average"
-	// of all the normals at a vertex. 
-	//That is, let's say that a vertex is at the intersection of 5 triangles, each triangle
-	// will have its own normal (computed using the cross product).
-	//To determine the "smooth" normal at that vertex, we add up all 5 triangle normals and then
-	// divide by 5.
-	//In order to do this, there are two steps:
-	//  1. we sum up all the normals. 
-	//  2. While we are doing that, we need to keep a counter for the number of normals at a vertex */
-	for (int i = 0; i < faceCount * 3; i = i + 3) {
-		int index0 = indicies_vao[i];
-		int index1 = indicies_vao[i + 1];
-		int index2 = indicies_vao[i + 2];
+	// if we did not read normals we should calculate them
+	if (properties <= 3) {
+		/*This part is for building the vertex normals -- it looks complicated because
+		// we are computing the "smooth" normals of a vertex, which is defined as the "average"
+		// of all the normals at a vertex.
+		//That is, let's say that a vertex is at the intersection of 5 triangles, each triangle
+		// will have its own normal (computed using the cross product).
+		//To determine the "smooth" normal at that vertex, we add up all 5 triangle normals and then
+		// divide by 5.
+		//In order to do this, there are two steps:
+		//  1. we sum up all the normals.
+		//  2. While we are doing that, we need to keep a counter for the number of normals at a vertex */
+		for (int i = 0; i < faceCount * 3; i = i + 3) {
+			int index0 = indicies_vao[i];
+			int index1 = indicies_vao[i + 1];
+			int index2 = indicies_vao[i + 2];
 
-		float outputx, outputy, outputz;
-		// using the setNormal function from below we normalize the vectors
-		computeNormal(
-			vertex_vao[index0 * 3 + 0], vertex_vao[index0 * 3 + 1], vertex_vao[index0 * 3 + 2],
-			vertex_vao[index1 * 3 + 0], vertex_vao[index1 * 3 + 1], vertex_vao[index1 * 3 + 2],
-			vertex_vao[index2 * 3 + 0], vertex_vao[index2 * 3 + 1], vertex_vao[index2 * 3 + 2],
-			&outputx, &outputy, &outputz);
+			float outputx, outputy, outputz;
+			// using the setNormal function from below we normalize the vectors
+			computeNormal(
+				vertex_vao[index0 * 3 + 0], vertex_vao[index0 * 3 + 1], vertex_vao[index0 * 3 + 2],
+				vertex_vao[index1 * 3 + 0], vertex_vao[index1 * 3 + 1], vertex_vao[index1 * 3 + 2],
+				vertex_vao[index2 * 3 + 0], vertex_vao[index2 * 3 + 1], vertex_vao[index2 * 3 + 2],
+				&outputx, &outputy, &outputz);
 
-		numNormals[index0]++;
-		numNormals[index1]++;
-		numNormals[index2]++;
+			numNormals[index0]++;
+			numNormals[index1]++;
+			numNormals[index2]++;
 
-		normals_vao[index0 * 3 + 0] += outputx;
-		normals_vao[index0 * 3 + 1] += outputy;
-		normals_vao[index0 * 3 + 2] += outputz;
+			normals_vao[index0 * 3 + 0] += outputx;
+			normals_vao[index0 * 3 + 1] += outputy;
+			normals_vao[index0 * 3 + 2] += outputz;
 
-		normals_vao[index1 * 3 + 0] += outputx;
-		normals_vao[index1 * 3 + 1] += outputy;
-		normals_vao[index1 * 3 + 2] += outputz;
+			normals_vao[index1 * 3 + 0] += outputx;
+			normals_vao[index1 * 3 + 1] += outputy;
+			normals_vao[index1 * 3 + 2] += outputz;
 
-		normals_vao[index2 * 3 + 0] += outputx;
-		normals_vao[index2 * 3 + 1] += outputy;
-		normals_vao[index2 * 3 + 2] += outputz;
+			normals_vao[index2 * 3 + 0] += outputx;
+			normals_vao[index2 * 3 + 1] += outputy;
+			normals_vao[index2 * 3 + 2] += outputz;
+		}
+		for (int i = 0; i < vertexCount; i++) {
+			normals_vao[i * 3 + 0] = normals_vao[i * 3 + 0] / (float)(numNormals[i]);
+			normals_vao[i * 3 + 1] = normals_vao[i * 3 + 1] / (float)(numNormals[i]);
+			normals_vao[i * 3 + 2] = normals_vao[i * 3 + 2] / (float)(numNormals[i]);
+		}
+	} else { // populate normals with read-in values
+		for (int i = 0; i < vertexCount; i++) {
+			normals_vao[i * 3 + 0] = vertexList[i].nx;
+			normals_vao[i * 3 + 1] = vertexList[i].ny;
+			normals_vao[i * 3 + 2] = vertexList[i].nz;
+		}
 	}
-	for (int i = 0; i < vertexCount; i++) {
-		normals_vao[i * 3 + 0] = normals_vao[i * 3 + 0] / (float)(numNormals[i]);
-		normals_vao[i * 3 + 1] = normals_vao[i * 3 + 1] / (float)(numNormals[i]);
-		normals_vao[i * 3 + 2] = normals_vao[i * 3 + 2] / (float)(numNormals[i]);
+
+	// we have texture coordinates to encode
+	if (properties >= 6) {
+		for (int i = 0; i < vertexCount; i++) {
+			tex_coords_vao[i * 2 + 0] = vertexList[i].u;
+			tex_coords_vao[i * 2 + 1] = vertexList[i].v;
+		}
 	}
 
 	delete[] numNormals;
@@ -574,49 +542,18 @@ void ply::bindVBO(unsigned int programID){
 	// Enable the attribute
 	glEnableVertexAttribArray(normal_attribute);
 
+	//Build a VBO for texture coordinates
+	glGenBuffers(1, &texVBO_id);
+	glBindBuffer(GL_ARRAY_BUFFER, texVBO_id);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexCount * 2, tex_coords_vao, GL_STATIC_DRAW);
+	GLint tex_coord_attribute = glGetAttribLocation(programID, "myTextureCoordinate");
+	glVertexAttribPointer(tex_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(tex_coord_attribute);
+
 	cout << "Created vbo successfully" << endl;
 }
 
 void ply::renderVBO() {
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
-
-	//************The following code is for using VBO but not shaders ****************//
-	/*
-	//glDrawArrays(GL_TRIANGLES, 0, faceCount);
-
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eab);
-
-	//glEnableClientState(GL_VERTEX_ARRAY);
-	//glVertexPointer(3, GL_FLOAT, 0, (char*)NULL + 0);
-	//glDrawElements(GL_TRIANGLES, faceCount*3, GL_UNSIGNED_INT, 0);
-
-	//glDisableClientState(GL_VERTEX_ARRAY);
-	*/
-
-
-	//************The following code is for using the old fixed pipeline (so called immediate mode) ****************//
-	/*
-	//int i;
-
-	//glBegin(GL_TRIANGLES);
-
-	//for (i = 0; i < faceCount*3; i=i+3) {
-	//	int index0 = indicies_vao[i];
-	//	int index1 = indicies_vao[i+1];
-	//	int index2 = indicies_vao[i+2];
-
-	//	glNormal3f(normals_vao[index0 * 3], normals_vao[index0 * 3 + 1], normals_vao[index0 * 3 + 2]);
-	//	glVertex3f(vertex_vao[index0*3], vertex_vao[index0*3+1], vertex_vao[index0*3+2]);
-
-	//	glNormal3f(normals_vao[index1 * 3], normals_vao[index1 * 3 + 1], normals_vao[index1 * 3 + 2]);
-	//	glVertex3f(vertex_vao[index1 * 3], vertex_vao[index1 * 3 + 1], vertex_vao[index1 * 3 + 2]);
-
-	//	glNormal3f(normals_vao[index2 * 3], normals_vao[index2 * 3 + 1], normals_vao[index2 * 3 + 2]);
-	//	glVertex3f(vertex_vao[index2 * 3], vertex_vao[index2 * 3 + 1], vertex_vao[index2 * 3 + 2]);
-	//}
-
-	//glEnd();
-	*/
 }

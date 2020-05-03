@@ -129,11 +129,12 @@ private:
 		face* faceList;
 
 		// Id for Vertex Buffer Object
-		GLuint vertexVBO_id, indicesVBO_id, normalVBO_id;
+		GLuint vertexVBO_id, indicesVBO_id, normalVBO_id, texVBO_id;
 		// Special arrays that are used for vertex buffer objects
 		GLfloat* vertex_vao;
 		GLuint* indicies_vao;
 		GLfloat* normals_vao;
+		GLfloat* tex_coords_vao;
 
 		// holds texture colors as ppm
 		ppm* texture;
