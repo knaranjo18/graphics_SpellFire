@@ -1,32 +1,15 @@
-#include <iostream>
-#include <string>
-#include <fstream>
-#if defined(__APPLE__)
-#  include <OpenGL/gl3.h> // defines OpenGL 3.0+ functions
-#else
-#  if defined(WIN32)
-#    define GLEW_STATIC 1
-#  endif
-#  include <GL/glew.h>
-#endif
-#include <FL/glut.h>
-#include <FL/glu.h>
-#include "ppm.h"
 #include "ShaderManager.h"
 
-using namespace std;
 
 ShaderManager::ShaderManager(){
 		// Return the version of OpenGL you are running.
 #ifndef __APPLE__
 		printf("Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 #endif
-
 		program = 0;
-		// Set our ppm images to NULL.
 		layer1 = NULL;
 		layer2 = NULL;
-	}
+}
 
 
 ShaderManager::~ShaderManager(){
