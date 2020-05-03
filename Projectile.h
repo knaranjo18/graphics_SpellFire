@@ -18,6 +18,10 @@ public:
 	Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired);
 	~Projectile();
 
+	time_t getSpawnTime();
+	float getDuration();
+	bool hitFloor();
+
 	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly);
 
 	void moveProjectile();
@@ -28,6 +32,7 @@ private:
 	float duration, speed, manaCost, currAngleYaw, currAnglePitch, initialAngleYaw, initialAnglePitch, modelSize;
 	glm::vec3 position, dirFired, orientation, scaleSize;
 	glm::mat4 transMat4;
+	time_t spawnTime;
 
 	BoundingBox *box;
 
