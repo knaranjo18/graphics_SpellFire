@@ -15,7 +15,6 @@ Quit Game - *Escape Key*
 	- Get enemy PLY models
 	- Apply textures
 	- Make their movements less straightforward (wavey?)
-	- Randomize enemy spawn
 
 
 - **Scenery**
@@ -26,7 +25,6 @@ Quit Game - *Escape Key*
 
 
 - **Game Mechanics**
-	- Add enemy health
 	- Add collision between player and enemy
 	- Allow player to shoot projectile along long vector with click
 	- Add collision between enemy and projectile

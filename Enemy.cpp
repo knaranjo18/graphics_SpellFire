@@ -79,6 +79,13 @@ glm::mat4 Enemy::moveEnemy(glm::vec3 playerPos) {
 		angle_offset = (2 * PI) - angle_offset;  //Deals with some stupid loop in the angle
 	}
 
+	/*
+	glm::mat4 rotation(1.0f);
+	rotation = glm::rotate(rotation, angle_offset, glm::vec3(0, -1, 0));
+	glm::vec3 newLook = glm::vec4(lookVector, 0.0) * rotation;
+	position += glm::normalize(newLook) * speed;
+	*/
+
 	glm::mat4 transMat4(1.0f);
 	transMat4 = glm::translate(transMat4, position);
 	transMat4 = glm::scale(transMat4, scaleSize);

@@ -14,11 +14,6 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 
 	player = new Player();
 
-	for (int i = 0; i < 2; i++) {
-		spawnEnemy(COW);
-		spawnEnemy(BUNNY);
-	}
-
 	setupShaders();
 }
 
@@ -136,7 +131,7 @@ void MyGLCanvas::removeEnemy(shaderType enemyType, int index) {
 		break;
 	case(BUNNY):
 		delete bunnyList[index];
-		bunnyList.erase(cowList.begin() + index);
+		bunnyList.erase(bunnyList.begin() + index);
 		break;
 	}
 }
