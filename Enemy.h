@@ -22,15 +22,22 @@ public:
 	void setHealth(float _health);
 	
 	float getHealth();
+	const BoundingBox* getBox();
 
 	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly, glm::vec3 playerPos);
-
+	
+	void moveEnemy(glm::vec3 playerPos);
+	
 	shaderType enemyType;
 	int pointValue;
+
+	static bool debug_draw_hitbox;
 private:
-	float health, speed, initialAngle, currAngle, angularSpeed;
+	float health, speed, initialAngle, currAngle, angularSpeed, modelSize;
 	glm::vec3 position, lookVector, scaleSize;
 
-	glm::mat4 moveEnemy(glm::vec3 playerPos);
+	BoundingBox *box;
+
+	glm::mat4 transMat4;
 };
 #endif

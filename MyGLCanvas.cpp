@@ -181,6 +181,10 @@ int MyGLCanvas::handle(int e) {
 		case 'd':
 			player->moveRight();
 			break;
+		// toggle debug mode
+		case 'm':
+			Enemy::debug_draw_hitbox = !Enemy::debug_draw_hitbox;
+			break;
 		case FL_Escape:
 			deallocate();
 			exit(0);
@@ -195,8 +199,9 @@ int MyGLCanvas::handle(int e) {
 			prevX = Fl::event_x();
 			prevY = Fl::event_y();
 			player->canMoveSight = !(player->canMoveSight);
+			return 1;
 		}
-
+		return 0;
 		break;
 	case FL_FOCUS:
 		return 1;
@@ -210,8 +215,6 @@ void MyGLCanvas::resize(int x, int y, int w, int h) {
 	Fl_Gl_Window::resize(x, y, w, h);
 	puts("resize called");
 }
-
-
 
 void MyGLCanvas::moveSight() {
 	float currX = Fl::event_x(), currY = Fl::event_y();
