@@ -115,7 +115,7 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 
 	switch (enemyType) {
 	case(COW):
-		cowList.push_back(new Enemy(COW, glm::vec3(xPos, -0.4, zPos)));
+		cowList.push_back(new Enemy(COW, glm::vec3(xPos, -0.45, zPos)));
 		break;
 	case(BUNNY):
 		bunnyList.push_back(new Enemy(BUNNY, glm::vec3(xPos, -0.4, zPos)));
