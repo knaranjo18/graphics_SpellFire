@@ -254,7 +254,7 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/bunny.ply"));
 	
 	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
-	plyList[ARENA]->applyTexture("./data/arena_texture_debug.ppm");
+	plyList[ARENA]->applyTexture("./data/arena_1024.ppm");
 
 	for (int i = COW; i <= ARENA; i++) {
 		if (i == ARENA) {
