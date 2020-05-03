@@ -2,41 +2,28 @@
 
 #define SENSITIVITY 0.3
 
+
 MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
-	
+
+	srand(time(0));
 	prevX = prevY = 0;
 	firstTime = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 
+
 	player = new Player();
 
-	cowList.push_back(new Enemy(COW, glm::vec3(1.5, -0.2, 0.4)));
-	cowList.push_back(new Enemy(COW, glm::vec3(-1.5, -0.2, -0.4)));
-
-	bunnyList.push_back(new Enemy(BUNNY, glm::vec3(1.5, -0.2, -0.4)));
+	for (int i = 0; i < 2; i++) {
+		spawnEnemy(COW);
+		spawnEnemy(BUNNY);
+	}
 
 	setupShaders();
 }
 
 MyGLCanvas::~MyGLCanvas() {
-	delete player;
-
-	for (int i = 0; i < shaderList.size(); i++) {
-		delete shaderList[i];
-	}
-
-	for (int i = 0; i < plyList.size(); i++) {
-		delete plyList[i];
-	}
-
-	for (int i = 0; i < cowList.size(); i++) {
-		delete cowList[i];
-	}
-
-	for (int i = 0; i < bunnyList.size(); i++) {
-		delete bunnyList[i];
-	}
+	deallocate();
 }
 
 
@@ -55,6 +42,7 @@ void MyGLCanvas::draw() {
 		if (firstTime == true) {
 			firstTime = false;
 			initShaders();
+			startTime = time(0);
 		}
 	}
 
@@ -66,6 +54,25 @@ void MyGLCanvas::draw() {
 }
 
 void MyGLCanvas::drawScene() {
+	double deltaTime = difftime(time(0), startTime);
+
+	if (deltaTime >= 2) {
+		startTime = time(0);
+		if (cowList.size() != 0) {
+			removeEnemy(COW, 0);
+		}
+		else if (bunnyList.size() != 0) {
+			removeEnemy(BUNNY, 0);
+		}
+		else {
+			for (int i = 0; i < 2; i++) {
+				spawnEnemy(COW);
+				spawnEnemy(BUNNY);
+			}
+		}
+	}
+
+
 
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
@@ -101,6 +108,36 @@ void MyGLCanvas::drawScene() {
 
 	for (int i = 0; i < bunnyList.size(); i++) {
 		bunnyList[i]->draw(modelViewMatrix, shaderList[BUNNY], plyList[BUNNY], playerPos);
+	}
+}
+
+void MyGLCanvas::spawnEnemy(shaderType enemyType) {
+	float xPos = float(rand()) / float(RAND_MAX) * (ARENA_SIZE * 2) - ARENA_SIZE;
+	float zPos = sqrt((ARENA_SIZE * ARENA_SIZE) - xPos * xPos);
+	float random = rand();
+	float(random) > (RAND_MAX / 2.0) ? zPos *= -1 : zPos;
+
+	switch (enemyType) {
+	case(COW):
+		cowList.push_back(new Enemy(COW, glm::vec3(xPos, -0.2, zPos)));
+		break;
+	case(BUNNY):
+		bunnyList.push_back(new Enemy(BUNNY, glm::vec3(xPos, -0.2, zPos)));
+		break;
+	}
+}
+
+
+void MyGLCanvas::removeEnemy(shaderType enemyType, int index) {
+	switch (enemyType) {
+	case(COW):
+		delete cowList[index];
+		cowList.erase(cowList.begin() + index);
+		break;
+	case(BUNNY):
+		delete bunnyList[index];
+		bunnyList.erase(cowList.begin() + index);
+		break;
 	}
 }
 
@@ -165,6 +202,7 @@ int MyGLCanvas::handle(int e) {
 			player->moveRight();
 			break;
 		case FL_Escape:
+			deallocate();
 			exit(0);
 			break;
 		}
@@ -243,4 +281,24 @@ void MyGLCanvas::setupShaders() {
 
 void printEvent(int e) {
 	printf("Event was %s (%d)\n", fl_eventnames[e], e);
+}
+
+void MyGLCanvas::deallocate() {
+	delete player;
+
+	for (int i = 0; i < shaderList.size(); i++) {
+		delete shaderList[i];
+	}
+
+	for (int i = 0; i < plyList.size(); i++) {
+		delete plyList[i];
+	}
+
+	for (int i = 0; i < cowList.size(); i++) {
+		delete cowList[i];
+	}
+
+	for (int i = 0; i < bunnyList.size(); i++) {
+		delete bunnyList[i];
+	}
 }

@@ -30,7 +30,7 @@ void Player::moveForward() {
 
 	// Bounds player in arena
 	distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
-	if (distance < 1.9) {
+	if (distance < ARENA_SIZE) {
 		myCam->setEyePoint(eyeP);
 	}
 
@@ -47,7 +47,7 @@ void Player::moveBackward() {
 
 	// Bounds player in arena
     distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
-	if (distance < 1.9) {
+	if (distance < ARENA_SIZE) {
 		myCam->setEyePoint(eyeP);
 	}
 }
@@ -65,7 +65,7 @@ void Player::moveLeft() {
 
 	// Bounds player in arena
 	distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
-	if (distance < 1.9) {
+	if (distance < ARENA_SIZE) {
 		myCam->setEyePoint(eyeP);
 	}
 }
@@ -83,7 +83,7 @@ void Player::moveRight() {
 
 	// Bounds player in arena
 	distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
-	if (distance < 1.9) {
+	if (distance < ARENA_SIZE) {
 		myCam->setEyePoint(eyeP);
 	}
 

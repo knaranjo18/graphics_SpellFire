@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <vector>
+#include <time.h>
 
 #include "Enemy.h"
 #include "Player.h"
@@ -49,8 +50,12 @@ private:
 	int handle(int);
 	void resize(int x, int y, int w, int h);
 	void updateCamera(int width, int height);
+	void deallocate();
 	
 	void moveSight();
+
+	void spawnEnemy(shaderType enemyType);
+	void removeEnemy(shaderType enemyType, int index);
 
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
@@ -61,6 +66,7 @@ private:
 	glm::vec3 lightPos;
 	int prevX, prevY;
 	bool firstTime;
+	time_t startTime;
 };
 
 #endif 
