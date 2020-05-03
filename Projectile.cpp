@@ -6,8 +6,8 @@ bool Projectile::debug_draw_hitbox = false;
 
 Projectile::Projectile() {
 	projectileType = FIREBALL;
-	speed = 0.05;
-	duration = 6;
+	speed = 0.03;
+	duration = 2;
 	manaCost = 10;
 	currAngleYaw = currAnglePitch = 0;
 	initialAngleYaw = 0;
@@ -17,13 +17,14 @@ Projectile::Projectile() {
 	scaleSize = dirFired = glm::vec3(1, 1, 1);
 	modelSize = FIREBALLSIZE * PLYSIZE;
 	box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
+	spawnTime = time(0);
 }
 
 Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired) {
 	switch (_type) {
 	case(FIREBALL):
-		speed = 0.005;
-		duration = 6;
+		speed = 0.03;
+		duration = 2;
 		manaCost = 10;
 		currAngleYaw = currAnglePitch = 0;
 		initialAngleYaw = 0;
@@ -34,6 +35,7 @@ Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 direction
 		orientation = glm::vec3(1.0, 1.0, 1.0);
 		modelSize = FIREBALLSIZE * PLYSIZE;
 		box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
+		spawnTime = time(0);
 		break;
 	default:
 		printf("NOT A VALID SPELL");
@@ -96,9 +98,20 @@ void Projectile::moveProjectile() {
 	glm::mat4 transMat4(1.0f);
 	transMat4 = glm::translate(transMat4, position);
 	transMat4 = glm::scale(transMat4, scaleSize);
-	//transMat4 = glm::rotate(transMat4, currAngleYaw + initialAngleYaw, glm::vec3(0.0, 1.0, 0.0));
-	//transMat4 = glm::rotate(transMat4, currAnglePitch + initialAnglePitch, glm::vec3(1.0, 0.0, 0.0));
+	transMat4 = glm::rotate(transMat4, currAngleYaw + initialAngleYaw, glm::vec3(0.0, 1.0, 0.0));
+	transMat4 = glm::rotate(transMat4, currAnglePitch + initialAnglePitch, glm::vec3(1.0, 0.0, 0.0));
 
 	this->transMat4 = transMat4;
 }
 
+time_t Projectile::getSpawnTime() {
+	return spawnTime;
+}
+
+float Projectile::getDuration() {
+	return duration;
+}
+
+bool Projectile::hitFloor() {
+	return position.y < -0.15;
+}

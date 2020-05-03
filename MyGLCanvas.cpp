@@ -110,8 +110,18 @@ void MyGLCanvas::doGameLogic() {
 	}
 	*/
 	
+
 	for (int i = 0; i < projectileList.size(); i++) {
-		projectileList[i]->moveProjectile();
+		if (difftime(time(0), projectileList[i]->getSpawnTime()) >= double(projectileList[i]->getDuration())) {
+			cout << "Deleted fireball " << i << endl;
+			removeProjectile(FIREBALL, i);
+			i--;
+		} else if (projectileList[i]->hitFloor()) {
+			removeProjectile(FIREBALL, i);
+			i--;
+		} else { 
+			projectileList[i]->moveProjectile();
+		}
 	}
 }
 
