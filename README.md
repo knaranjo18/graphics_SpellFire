@@ -7,13 +7,14 @@ Player Movement - *W, A, S, D*
 
 Camera Movement - *Mouse (__Left click to toggle camera movement__)*
 
+Quit Game - *Escape Key*
+
 
 ## Todo
 - **Develop Enemies**
 	- Get enemy PLY models
 	- Apply textures
 	- Make their movements less straightforward (wavey?)
-	- Randomize enemy spawn
 
 
 - **Scenery**
@@ -24,8 +25,6 @@ Camera Movement - *Mouse (__Left click to toggle camera movement__)*
 
 
 - **Game Mechanics**
-	- Add player and enemy health
-	- Add collision between player and wall
 	- Add collision between player and enemy
 	- Allow player to shoot projectile along long vector with click
 	- Add collision between enemy and projectile
@@ -37,4 +36,8 @@ Camera Movement - *Mouse (__Left click to toggle camera movement__)*
 
 
 - **Code improvement**
-	- Refactor a ton of stuff into functions and classes
+	- Switch over from FLTK to GLFW for window (Makes for smoother gameplay)
+
+- **GUI**
+	- Add crosshair
+	- Health bar

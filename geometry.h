@@ -1,12 +1,3 @@
-/*  =================== File Information =================
-	File Name: geometry.h
-	Description:
-	Author: Michael Shah
-
-	Purpose:
-	Examples:
-	===================================================== */
-
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
@@ -21,19 +12,15 @@
 struct vertex{
 	// position in 3D space
 	float x,y,z;		
-	// I believe this is used to determine if a vertex can be removed.
-	// Search for polygon decimation or vertex removal for more ideas.
-	// source: graphics.standford.edu/software/vrip/plyusage.html
-	float confidence;	
-	// I believe this has to do with lighting and shading, and this value
-	// determines the shading coefficent used. This can be useful for when
-	// we color the model.
-	// source: www.okino.com/conv/imp_ply.htm
-	float intensity;
+
+	float confidence, intensity;
+
 	// Color values
 	float r,g,b;	
+
 	// surface normal values	
 	float nx,ny,nz;		
+
 	// texture coordinates
 	float u,v,w;		
 };

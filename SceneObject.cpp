@@ -1,27 +1,6 @@
-/*  =================== File Information =================
-	File Name: object.h
-	Description:
-	Author: Michael Shah
-	Last Modified: 4/2/14
-
-	Purpose: 
-	Usage:	
-
-	Further Reading resources: 
-	===================================================== */
-
-#include <iostream>
-#include <cmath>
 #include "SceneObject.h"
-#include <glm/gtc/constants.hpp>
 
-#define PI glm::pi<float>()
-
-	/*	===============================================
-Desc:
-Precondition: 
-Postcondition:
-=============================================== */ 
+// Constructor
 SceneObject::SceneObject(int _id){
 	id = _id;
 	radius = 0.5;
@@ -29,11 +8,8 @@ SceneObject::SceneObject(int _id){
 	baseTexture = NULL;
 	blendTexture = NULL;
 }
-/*	===============================================
-Desc:
-Precondition: 
-Postcondition:
-=============================================== */ 
+
+// Destructor
 SceneObject::~SceneObject(){
 	if(baseTexture!=NULL){
 		delete baseTexture;
@@ -42,11 +18,8 @@ SceneObject::~SceneObject(){
 		delete blendTexture;
 	}
 }
-/*	===============================================
-Desc:	
-Precondition: 
-Postcondition:
-=============================================== */ 
+
+
 void SceneObject::paintTexture(int x, int y, char r, char g, char b){
 	blendTexture->setPixel(x, y, r, g, b);
 		glGenTextures(1,&blendTextureID);
@@ -67,17 +40,14 @@ void SceneObject::paintTexture(int x, int y, char r, char g, char b){
 
 }
 
-/*	===============================================
+/*
 Desc:	This instantiates an image to be rendered.
 		
 		textureNumber 0 corresponds to the base texture
 		textureNuber 1 corresponds to the next texture
 
 		If texture number is less than 0, then default to 0
-		If texture number is greater than 1, then default to 1
-Precondition: 
-Postcondition:
-=============================================== */ 
+		If texture number is greater than 1, then default to 1 */
 void SceneObject::setTexture(int textureNumber,std::string _fileName){
 	/*
 		Algorithm
@@ -113,12 +83,10 @@ void SceneObject::setTexture(int textureNumber,std::string _fileName){
 	}
 }
 
-/*	===============================================
+/*
 Desc:	Loads a new array of colors of a specified dimension
 		into our object.
-Precondition: 
-Postcondition:
-=============================================== */
+*/
 GLuint SceneObject::loadTexture(int width, int height, char* pixels){
 	//std::cout << "loading texture" << std::endl;
 	GLuint textureId;
@@ -146,16 +114,13 @@ GLuint SceneObject::loadTexture(int width, int height, char* pixels){
 }
 
 
-/*	===============================================
+/*
 Desc:	This function is an example of how to map a full
 		texture to an object with an arbritrary shape.
 
 		You can also see how two triangles make up a quad and then
 		can be used to go through a surface.  This works okay,
-		if and only if you have lots and lots of triangles to work with!
-Precondition: 
-Postcondition:
-=============================================== */ 
+		if and only if you have lots and lots of triangles to work with! */
 void SceneObject::drawTexturedSphere()
 {
 	float angle = 0;
@@ -236,30 +201,6 @@ void SceneObject::drawTexturedSphere()
 			glTexCoord2f(tx, ety); 		// glTexCoord2f(0.0f, 1.0f);
 			glNormal3f(x, y, z);
 			glVertex3f(x, y, z);
-
-			//				glTexCoord2f(tx, ety); 		// glTexCoord2f(0.0f, 1.0f);
-			//				glNormal3f(x, y, z);
-			//				glVertex3f(x, y, z);
-			//
-			//				glTexCoord2f(etx, ety); 		// glTexCoord2f(1.0f, 1.0f);
-			//				glNormal3f(newx, newy, newz);
-			//				glVertex3f(newx, newy, newz);
-			//				
-			//				glTexCoord2f(etx, ty); 		// glTexCoord2f(1.0f, 0.0f);
-			//				glNormal3f(newx_next, newy_next, newz_next);
-			//				glVertex3f(newx_next, newy_next, newz_next);
-			//
-			//				glTexCoord2f(etx, ty); 		// glTexCoord2f(1.0f, 0.0f);
-			//				glNormal3f(newx_next, newy_next, newz_next);
-			//				glVertex3f(newx_next, newy_next, newz_next);
-			//				
-			//				glTexCoord2f(tx, ty); 		// glTexCoord2f(0.0f, 0.0f);
-			//				glNormal3f(x_next, y_next, z_next);
-			//				glVertex3f(x_next, y_next, z_next);
-			//				
-			//				glTexCoord2f(tx, ety); 		// glTexCoord2f(0.0f, 1.0f);
-			//				glNormal3f(x, y, z);
-			//				glVertex3f(x, y, z);
 
 			angle = angle + angle_delta;
 		}

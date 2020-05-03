@@ -176,15 +176,11 @@ void ply::loadGeometry(){
 			if (properties >= 7) {
 				vertexList[i].v = atof(strtok(NULL, " \r"));
 			}
-			if (properties > 6 && vertexList[i].u > 0.9) {
-				fprintf(stderr, "high u detected, tex coords are u:%f v:%f\n", vertexList[i].u, vertexList[i].v);
-			}
 		}
 
 		// Read in the faces (exactly faceCount number of lines) and set the 
 		// appropriate face in the faceList
 		for (int i = 0; i < faceCount; i++){
-
 			getline(myfile, line);
 
 			strcpy(lineCopy, line.c_str());
@@ -483,7 +479,7 @@ void ply::buildArrays() {
 		}
 	}
 
-	// we have texture coordinates to encode
+	// if we have texture coordinates to encode
 	if (properties >= 6) {
 		for (int i = 0; i < vertexCount; i++) {
 			tex_coords_vao[i * 2 + 0] = vertexList[i].u;

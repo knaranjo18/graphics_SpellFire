@@ -1,21 +1,10 @@
-/*  =================== File Information =================
-	File Name: ppm.h
-	Description:
-	Author: Michael Shah
-	Last Modified: 4/2/14
-
-	Purpose: 
-	Usage:	
-
-	Further Reading resources: 
-	PPM Format:
-	Specs from: http://netpbm.sourceforge.net/doc/ppm.html
-	===================================================== */
-
 #ifndef PPM_H
 #define PPM_H
 
+
+#include <iostream>
 #include <string>
+#include <fstream>
 
 /*
 	A ppm is a simple image format.
@@ -30,30 +19,9 @@
 */
 class ppm{
 	public:
-		/*	===============================================
-		Desc:	Default constructor for a ppm
-		Precondition: _fileName is the image file name. It is also expected that the file is of type "ppm" 
-		Postcondition: The array 'color' is allocated memory according to the image dimensions.
-						width and height private members are set based on ppm header information.
-		=============================================== */ 
 		ppm(std::string _fileName);
-		/*	===============================================
-		Desc:	Default destructor for a ppm
-		Precondition: 
-		Postcondition: 'color' array memory is deleted,
-		=============================================== */ 
 		~ppm();
-		/*	===============================================
-		Desc:	Draws a 2D quad on the front of the screen at window coordinates x and y
-		Precondition: 
-		Postcondition:
-		=============================================== */ 
-		void render(int x, int y);
-		/*	===============================================
-		Desc:	Sets a pixel in our array a specific color
-		Precondition: 
-		Postcondition:
-		=============================================== */ 
+
 		void setPixel(int x, int y, int r, int g, int b);
 
 		// Getter functions
@@ -79,8 +47,6 @@ private:
 									// color[4] = second g value
 									// color[5] = second b value
 									// etc.
-
-		
 };
 
 #endif

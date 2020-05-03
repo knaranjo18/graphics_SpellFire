@@ -1,33 +1,13 @@
-/*  =================== File Information =================
-	File Name: ppm.cpp
-	Description:
-	Author: Michael Shah
-	Last Modified: 4/2/14
-
-	Purpose: 
-	Usage:	
-	===================================================== */
-
-#include <FL/gl.h>
-#include <iostream>
-#include <string>
-#include <fstream>
 #include "ppm.h"
+#include <FL/gl.h>
 
-/*	===============================================
-Desc:	Default constructor for a ppm
-Precondition: _fileName is the image file name. It is also expected that the file is of type "ppm"
-              It is expected that width and height are also set in the constructor. 
-Postcondition: The array 'color' is allocated memory according to the image dimensions.
-				width and height private members are set based on ppm header information.
-=============================================== */ 
+//Desc:	Default constructor for a ppm
 ppm::ppm(std::string _fileName){
   /* Algorithm
       Step 1: Parse header of PPM
       Step 2: Read in colors into array
       Step 3: Allocate memory for width and height dimensions
   */
-
 
   // Open an input file stream for reading a file
   std::ifstream ppmFile(_fileName.c_str());
@@ -99,13 +79,7 @@ ppm::ppm(std::string _fileName){
   } 
 }
 
-
-
-/*	===============================================
-Desc:	Default destructor for a ppm
-Precondition: 
-Postcondition: 'color' array memory is deleted,
-=============================================== */ 
+// Desc:	Default destructor for a ppm
 ppm::~ppm(){
   if(color!=NULL){
     delete[] color;
@@ -113,38 +87,22 @@ ppm::~ppm(){
   }	
 }
 
-/*	===============================================
-Desc:	Draws a 2D quad on the front of the screen at window coordinates x and y
-Precondition: 
-Postcondition:
-=============================================== */ 
-void ppm::render(int x, int y){
-	 
-}
 
-/*  ===============================================
-Desc: Sets a pixel in our array a specific color
-Precondition: 
-Postcondition:
-=============================================== */ 
+
+// Desc: Sets a pixel in our array a specific color
 void ppm::setPixel(int x, int y, int r, int g, int b){
   if(x > width || y > height){
     return;
   }
   else{
-    /*std::cout << "modifying pixel at " 
-              << x << "," << y << "from (" <<
-              (int)color[x*y] << "," << (int)color[x*y+1] << "," << (int)color[x*y+2] << ")";
-*/
     color[(x*3)+height*(y*3)] = r;
     color[(x*3)+height*(y*3)+1] = g;
     color[(x*3)+height*(y*3)+2] = b;
-/*
-    std::cout << " to (" << (int)color[x*y] << "," << (int)color[x*y+1] << "," << (int)color[x*y+2] << ")" << std::endl;
-*/
   }
 }
 
+
+// Turns ppm file into a texture that can be used with shaders
 unsigned int ppm::createAsTexture() {
 	unsigned int textureNum;
 	

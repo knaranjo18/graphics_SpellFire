@@ -1,45 +1,22 @@
  #include "MyGLCanvas.h"
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include "glm/ext.hpp"
 
 #define SENSITIVITY 0.3
 
+
 MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
-	
-	prevX = prevY = yaw = pitch = 0;
-	moveOn = false;
-	eyePosition = glm::vec3(0.0f, -0.2f, 0.0f);
-	glm::vec3 lookatPoint = glm::vec3(1.0f, 0.0f, 0.0f);
-	lightPos = glm::vec3(0.0, 10, 0.0);
-	enemyPos = glm::vec3(1.5, -0.20, 0.4);
-	enemySpeed = 0.001;
-	enemyLook = glm::vec3(1.0, 0.0, 0.0);
 
+	srand(time(0));
+	prevX = prevY = 0;
 	firstTime = true;
-
-	myObject = new SceneObject(175);
-
-	shader1 = new ShaderManager();
-	myPLY1 = new ply("./data/arena_4_tex_2.ply");
+	lightPos = glm::vec3(0.0, 10, 0.0);
 	
-	shader2 = new ShaderManager();
-	myPLY2 = new ply("./data/cow.ply");
+	player = new Player();
 
-	camera = new Camera();
-	camera->orientLookAt(eyePosition, lookatPoint, glm::vec3(0, 1, 0));
 }
 
 MyGLCanvas::~MyGLCanvas() {
-	delete myObject;
-	delete shader1;
-	delete shader2;
-	delete myPLY1;
-	delete myPLY2;
-
-	if (camera != NULL)
-		delete camera;
+	deallocate();
 }
 
 
@@ -50,14 +27,18 @@ void MyGLCanvas::draw() {
 		printf("establishing GL context\n");
 
 		glViewport(0, 0, w(), h());
-		updateCamera(w(), h());
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glPolygonOffset(1, 1);
-		if (firstTime == true) {
+		
+		if (firstTime) {
 			firstTime = false;
+			setupShaders();
 			initShaders();
+			startTime = time(0);
 		}
+		// needs to be after so that shaders can setup
+		updateCamera(w(), h());
 	}
 
 	// Clear the buffer of colors in each bit plane.
@@ -68,215 +49,251 @@ void MyGLCanvas::draw() {
 }
 
 void MyGLCanvas::drawScene() {
+	double deltaTime = difftime(time(0), startTime);
+
+	if (deltaTime >= 2) {
+		startTime = time(0);
+		if (cowList.size() != 0) {
+			removeEnemy(COW, 0);
+		}
+		else if (bunnyList.size() != 0) {
+			removeEnemy(BUNNY, 0);
+		}
+		else {
+			for (int i = 0; i < 2; i++) {
+				spawnEnemy(COW);
+				spawnEnemy(BUNNY);
+			}
+		}
+	}
 
 	//setting up camera info
-	glm::mat4 modelViewMatrix = camera->getModelViewMatrix();
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+	glm::vec3 playerPos = player->myCam->getEyePoint();
 
 	/*-----------------------For the scenery----------------------------------------*/
-	shader1->useShader();
-	GLint modelView_id = glGetUniformLocation(shader1->program, "myModelviewMatrix");
+	shaderList[ARENA]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[ARENA]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	//Places the arena in the correct location
 	glm::mat4 transMat4(1.0f);
     transMat4 = glm::scale(transMat4, glm::vec3(6.5, 4, 6.5));
 
-	GLint trans_id = glGetUniformLocation(shader1->program, "translationMatrix");
+	GLint trans_id = glGetUniformLocation(shaderList[ARENA]->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 
 
 	// Pass scenery texture to the shader
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, myPLY1->getTextureID());
-	glUniform1i(glGetUniformLocation(shader1->program, "tex"), 0);
-
-	GLint light_id = glGetUniformLocation(shader1->program, "lightPos");
-	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
+	glBindTexture(GL_TEXTURE_2D, plyList[ARENA]->getTextureID());
+	glUniform1i(glGetUniformLocation(shaderList[ARENA]->program, "tex"), 0);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	myPLY1->renderVBO();
+	plyList[ARENA]->renderVBO();
 
 	/*--------------For the enemy---------------------------*/
-	shader2->useShader();
-	modelView_id = glGetUniformLocation(shader2->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-
-	transMat4 = glm::mat4(1.0f);
-
-	// Calculates the location that enemy should move towards
-	glm::vec3 enemyDir = glm::normalize(eyePosition - enemyPos) * enemySpeed * .1f;
-	enemyPos += enemyDir;
-
-	// Used for 2D angle calculations
-	glm::vec2 enemyDir2 = glm::normalize(glm::vec2(enemyDir.x, enemyDir.z));
-	glm::vec2 enemyLook2 = glm::vec2(enemyLook.x, enemyLook.z);
-
-	// Calculates angle that the enemy should rotate to face the player
-	float angle_offset = acos(glm::dot(glm::normalize(enemyDir2), glm::normalize(enemyLook2)));
-	if (enemyDir.z > 0) {
-		angle_offset = 2 * PI - angle_offset;  //Deals with some stupid loop in the angle
+	for (int i = 0; i < cowList.size(); i++) {
+		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW], playerPos);
 	}
 
-	// Places enemy in the right position
-	transMat4 = glm::translate(transMat4, enemyPos);
-	transMat4 = glm::scale(transMat4, glm::vec3(0.3, 0.3, 0.3));
-	transMat4 = glm::rotate(transMat4, angle_offset, glm::vec3(0.0, 1.0, 0.0));
+	for (int i = 0; i < bunnyList.size(); i++) {
+		bunnyList[i]->draw(modelViewMatrix, shaderList[BUNNY], plyList[BUNNY], playerPos);
+	}
+}
 
-	trans_id = glGetUniformLocation(shader2->program, "translationMatrix");
-	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
+void MyGLCanvas::spawnEnemy(shaderType enemyType) {
+	float xPos = float(rand()) / float(RAND_MAX) * (ARENA_SIZE * 2) - ARENA_SIZE;
+	float zPos = sqrt((ARENA_SIZE * ARENA_SIZE) - xPos * xPos);
+	float random = rand();
+	float(random) > (RAND_MAX / 2.0) ? zPos *= -1 : zPos;
 
-    light_id = glGetUniformLocation(shader2->program, "lightPos");
-	glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
+	switch (enemyType) {
+	case(COW):
+		cowList.push_back(new Enemy(COW, glm::vec3(xPos, -0.2, zPos)));
+		break;
+	case(BUNNY):
+		bunnyList.push_back(new Enemy(BUNNY, glm::vec3(xPos, -0.2, zPos)));
+		break;
+	}
+}
 
-	//renders the object
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	myPLY2->renderVBO(); 
+void MyGLCanvas::removeEnemy(shaderType enemyType, int index) {
+	switch (enemyType) {
+	case(COW):
+		delete cowList[index];
+		cowList.erase(cowList.begin() + index);
+		break;
+	case(BUNNY):
+		delete bunnyList[index];
+		bunnyList.erase(bunnyList.begin() + index);
+		break;
+	}
 }
 
 
 void MyGLCanvas::updateCamera(int width, int height) {
 	float xy_aspect;
+	GLint projection_id;
 	xy_aspect = (float)width / (float)height;
 
-	camera->setScreenSize(width, height);
+	player->myCam->setScreenSize(width, height);
 
-	shader1->useShader();
-	glm::mat4 perspectiveMatrix = camera->getProjectionMatrix();
-	GLint projection_id = glGetUniformLocation(shader1->program, "myProjectionMatrix");
-	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
-
-	shader2->useShader();
-	projection_id = glGetUniformLocation(shader2->program, "myProjectionMatrix");
-	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
+	glm::mat4 perspectiveMatrix = player->myCam->getProjectionMatrix();
+	int size = shaderList.size();
+	for (int i = 0; i < size; i++) {
+		shaderList[i]->useShader();
+		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
+		glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
+	}
 }
 
 
 int MyGLCanvas::handle(int e) {
-	//static int first = 1;
-#ifndef __APPLE__
-	if (firstTime && e == FL_SHOW && shown()) {
-		firstTime = 0;
-		make_current();
-		GLenum err = glewInit(); // defines pters to functions of OpenGL V 1.2 and above
-		if (GLEW_OK != err)	{
-			/* Problem: glewInit failed, something is seriously wrong. */
-			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+	#ifndef __APPLE__
+		if (firstTime && e == FL_SHOW && shown()) {
+			firstTime = 0;
+			make_current();
+			GLenum err = glewInit(); // defines pters to functions of OpenGL V 1.2 and above
+			if (GLEW_OK != err)	{
+				/* Problem: glewInit failed, something is seriously wrong. */
+				fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+			}
+			else {
+				//SHADER: initialize the shader manager and loads the two shader programs
+				setupShaders();
+			}
 		}
-		else {
-			//SHADER: initialize the shader manager and loads the two shader programs
-			initShaders();
-		}
-	}
-#endif	
+	#endif	
 
 	int button, key;
-	float speed = .05;
-	glm::vec3 tempVec = camera->getLookVector();
-	//printf("Event was %s (%d)\n", fl_eventnames[e], e);
+
 	switch (e) {
 	case FL_MOVE:
-		if (moveOn) {
-			cursor(FL_CURSOR_NONE);
-			float x_offset = (Fl::event_x() - prevX);
-			float y_offset = (prevY - Fl::event_y()); 
-			prevX = Fl::event_x();
-			prevY = Fl::event_y();
-
-			x_offset *= SENSITIVITY;
-			y_offset *= SENSITIVITY;
-
-			yaw += x_offset;
-			pitch += y_offset;
-
-
-			if (pitch > 89.0f)
-				pitch = 89.0f;
-			else if (pitch < -89.0f)
-				pitch = -89.0f;
-
-			camera->rotateView(yaw, pitch);
-		}
-		else {
+		if (player->canMoveSight) 
+			moveSight();
+		else 
 			cursor(FL_CURSOR_CROSS);
-		}
 		break;
-	case FL_RELEASE:
 	case FL_KEYDOWN:
 		key = Fl::event_key();
 		
 		switch (key) {
 		case 'w':
-			eyePosition.x += speed * tempVec.x;
-			eyePosition.z += speed * tempVec.z;
+			player->moveForward();
 			break;
 		case 'a':
-			tempVec = glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector()));
-			eyePosition.x -= tempVec.x * speed;
-			eyePosition.z -= tempVec.z * speed;
+			player->moveLeft();
 			break;
 		case 's':
-			eyePosition.x -= speed * tempVec.x;
-			eyePosition.z -= speed * tempVec.z;
+			player->moveBackward();
 			break;
 		case 'd':
-			tempVec = glm::normalize(glm::cross(camera->getLookVector(), camera->getUpVector()));
-			eyePosition.x += tempVec.x * speed;
-			eyePosition.z += tempVec.z * speed;
+			player->moveRight();
 			break;
 		case FL_Escape:
-			exit(1);
+			deallocate();
+			exit(0);
 			break;
 		}
 
-		camera->setEyePoint(eyePosition);
 		return 1;
-		break;
-	case FL_MOUSEWHEEL:
-		break;
 	case FL_PUSH:
 		button = Fl::event_button();
+		
 		if (button == FL_LEFT_MOUSE) {
 			prevX = Fl::event_x();
 			prevY = Fl::event_y();
-			moveOn = !moveOn;
+			player->canMoveSight = !(player->canMoveSight);
 		}
-		break;
-	case FL_DRAG:
+
 		break;
 	case FL_FOCUS:
 		return 1;
-		break;
-}
+	}
+
 	return Fl_Gl_Window::handle(e);
 }
+
 
 void MyGLCanvas::resize(int x, int y, int w, int h) {
 	Fl_Gl_Window::resize(x, y, w, h);
 	puts("resize called");
 }
 
-void MyGLCanvas::initShaders() {
-	shader1->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
-	myPLY1->buildArrays(); 
-	myPLY1->bindVBO(shader1->program);
-	myPLY1->printAttributes();
-	myPLY1->applyTexture("./data/arena_texture_debug.ppm");
 
-	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/test2.frag");
-	myPLY2->buildArrays();
-	myPLY2->bindVBO(shader2->program);
+void MyGLCanvas::initShaders() {
 }
 
-void MyGLCanvas::reloadShaders() {
-	shader1->resetShaders();
-	shader1->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
-	myPLY1->bindVBO(shader1->program);
 
-	shader2->resetShaders();
-	shader2->initShader("./shaders/330/scene.vert", "./shaders/330/test2.frag");
-	myPLY2->bindVBO(shader2->program);
+void MyGLCanvas::moveSight() {
+	float currX = Fl::event_x(), currY = Fl::event_y();
+	float x_offset = currX - prevX;
+	float y_offset = prevY - currY;
 
-	invalidate();
+	cursor(FL_CURSOR_NONE);
+
+	x_offset *= SENSITIVITY;
+	y_offset *= SENSITIVITY;
+
+	prevX = currX;
+	prevY = currY;
+
+	player->moveSight(x_offset, y_offset);
+}
+
+void MyGLCanvas::setupShaders() {
+	//shaderList.resize(3);
+	//plyList.resize(3);
+	
+	shaderList.push_back(new ShaderManager());
+	shaderList.push_back(new ShaderManager());
+	shaderList.push_back(new ShaderManager());
+
+	plyList.push_back(new ply("./data/cow.ply"));
+	plyList.push_back(new ply("./data/bunny.ply"));
+	
+	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
+	plyList[ARENA]->applyTexture("./data/arena_texture_debug.ppm");
+
+	for (int i = COW; i <= ARENA; i++) {
+		if (i == ARENA) {
+			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
+		}
+		else {
+			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/cowColor.frag");
+		}
+
+		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
+		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
+
+		plyList[i]->buildArrays();
+		plyList[i]->bindVBO(shaderList[i]->program);
+	}
+}
+
+void printEvent(int e) {
+	printf("Event was %s (%d)\n", fl_eventnames[e], e);
+}
+
+void MyGLCanvas::deallocate() {
+	delete player;
+
+	for (int i = 0; i < shaderList.size(); i++) {
+		delete shaderList[i];
+	}
+
+	for (int i = 0; i < plyList.size(); i++) {
+		delete plyList[i];
+	}
+
+	for (int i = 0; i < cowList.size(); i++) {
+		delete cowList[i];
+	}
+
+	for (int i = 0; i < bunnyList.size(); i++) {
+		delete bunnyList[i];
+	}
 }
