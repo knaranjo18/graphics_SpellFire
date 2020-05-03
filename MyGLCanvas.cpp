@@ -3,6 +3,7 @@
 #define SENSITIVITY 0.5
 
 
+
 MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 
@@ -17,6 +18,8 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 		spawnEnemy(COW);
 		spawnEnemy(BUNNY);
 	}
+
+	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
 }
 
 MyGLCanvas::~MyGLCanvas() {
@@ -77,26 +80,7 @@ void MyGLCanvas::drawScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
 	/*-----------------------For the scenery----------------------------------------*/
-	shaderList[ARENA]->useShader();
-	GLint modelView_id = glGetUniformLocation(shaderList[ARENA]->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-
-	//Places the arena in the correct location
-	glm::mat4 transMat4(1.0f);
-    transMat4 = glm::scale(transMat4, glm::vec3(6.5, 4, 6.5));
-
-	GLint trans_id = glGetUniformLocation(shaderList[ARENA]->program, "translationMatrix");
-	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
-
-
-	// Pass scenery texture to the shader
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, plyList[ARENA]->getTextureID());
-	glUniform1i(glGetUniformLocation(shaderList[ARENA]->program, "tex"), 0);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	plyList[ARENA]->renderVBO();
+	arena->draw(modelViewMatrix, shaderList[ARENA], plyList[ARENA]);
 
 	/*--------------For the enemy---------------------------*/
 	for (int i = 0; i < cowList.size(); i++) {
@@ -128,10 +112,10 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 
 	switch (enemyType) {
 	case(COW):
-		cowList.push_back(new Enemy(COW, glm::vec3(xPos, -0.4, zPos)));
+		cowList.push_back(new Enemy(COW, glm::vec3(xPos, HEIGHT - 0.05, zPos)));
 		break;
 	case(BUNNY):
-		bunnyList.push_back(new Enemy(BUNNY, glm::vec3(xPos, -0.4, zPos)));
+		bunnyList.push_back(new Enemy(BUNNY, glm::vec3(xPos, HEIGHT, zPos)));
 		break;
 	}
 }
