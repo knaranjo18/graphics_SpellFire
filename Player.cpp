@@ -19,6 +19,7 @@ Player::Player() {
 	canMoveSight = false;
 	maxMana = 20.0;
 	maxHealth = 100;
+	maxPoints = 10;
 	spellSelected = FIREBALL;
 	box = new BoundingBox(glm::vec4(myCam->getEyePoint(), 1.0), PLAYERSIZE);
 	iFrames = 0;
@@ -132,7 +133,13 @@ void Player::changeHealth(float _health) {
 
 
 void Player::changePoints(int _points) {
-	points += _points;
+	int temp = points + _points;
+	if (temp <= maxPoints) {
+		points = temp;
+	} else {
+		points = 0;
+		maxPoints *= 2;
+	}
 }
 
 

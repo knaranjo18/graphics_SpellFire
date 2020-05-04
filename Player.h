@@ -42,7 +42,7 @@ public:
 	Camera *myCam;
 	bool canMoveSight;
 	shaderType spellSelected;
-	float maxMana, maxHealth;
+	float maxMana, maxHealth, maxPoints;
 private:
 	int points;
 	int iFrames; // invincibility frames after getting hit

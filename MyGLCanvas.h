@@ -72,6 +72,7 @@ private:
 	void setupSprites();
 	void handleHealthBar();
 	void handleManaBar();
+	void handleExpBar();
 
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
@@ -80,6 +81,7 @@ private:
 	vector<Sprite *> crossHair;
 	vector<Sprite *> healthBar;
 	vector<Sprite *> manaBar;
+	vector<Sprite *> expBar;
 	vector<Sprite *> deathScreen;
 
 	Player *player;
