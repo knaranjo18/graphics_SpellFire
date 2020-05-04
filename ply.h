@@ -47,7 +47,10 @@ public:
 		void buildArrays();
 		void bindVBO(unsigned int programID);
 		void renderVBO();
-		
+
+		void buildArraysSprite();
+		void bindVBOsprites(unsigned int programID);
+
 		void printAttributes();
 		void printVertexList();
 		void printFaceList();

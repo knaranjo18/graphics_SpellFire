@@ -4,7 +4,7 @@
 
 
 
-MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window(x, y, w, h, l) {
+MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Window(_x, _y, _w, _h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 
 	srand(time(0));
@@ -20,6 +20,8 @@ MyGLCanvas::MyGLCanvas(int x, int y, int w, int h, const char *l) : Fl_Gl_Window
 	}
 
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
+	healthBar.push_back(new Sprite(SPRITE, glm::vec2(260.0 - 52, 25.0), glm::vec2(400, 30), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
+	healthBar.push_back(new Sprite(SPRITE, glm::vec2(260.0, 25.0), glm::vec2(500, 30), 0, glm::vec3(1.0, 0.0, 0.0), FOREGROUND));
 }
 
 MyGLCanvas::~MyGLCanvas() {
@@ -43,6 +45,10 @@ void MyGLCanvas::draw() {
 			setupShaders();
 			startTime = time(0);
 		}
+
+		//if (!healthBar->initComplete) {
+			//setupSprites();
+		//}
 		// needs to be after so that shaders can setup
 		updateCamera(w(), h());
 	}
@@ -82,6 +88,9 @@ void MyGLCanvas::drawScene() {
 	/*-----------------------For the scenery----------------------------------------*/
 	arena->draw(modelViewMatrix, shaderList[ARENA], plyList[ARENA]);
 
+	/*------------------------For bars-----------------------------------------------*/
+	for (int i = 0; i < 2; i++) 
+		healthBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 	/*--------------For the enemy---------------------------*/
 	for (int i = 0; i < cowList.size(); i++) {
 		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW]);
@@ -111,11 +120,9 @@ void MyGLCanvas::doGameLogic() {
 	*/
 	
 	player->chargeMana();
-	printf("Mana %f\n", player->getMana());
 
 	for (int i = 0; i < projectileList.size(); i++) {
 		if (difftime(time(0), projectileList[i]->getSpawnTime()) >= double(projectileList[i]->getDuration())) {
-			cout << "Deleted fireball " << i << endl;
 			removeProjectile(FIREBALL, i);
 			i--;
 		} else if (projectileList[i]->hitFloor()) {
@@ -225,11 +232,17 @@ void MyGLCanvas::updateCamera(int width, int height) {
 	player->myCam->setScreenSize(width, height);
 
 	glm::mat4 perspectiveMatrix = player->myCam->getProjectionMatrix();
+	glm::mat4 orthoMatrix = glm::ortho(0.0f, float(w()), float(h()), 0.0f, -1.0f, 1.0f);
 	int size = shaderList.size();
 	for (int i = 0; i < size; i++) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
-		glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
+		
+		if (i == SPRITE) {
+			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
+		} else{
+			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
+		}
 	}
 }
 
@@ -247,6 +260,7 @@ int MyGLCanvas::handle(int e) {
 			else {
 				//SHADER: initialize the shader manager and loads the two shader programs
 				setupShaders();
+				startTime = time(0);
 			}
 		}
 	#endif	
@@ -344,12 +358,16 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
+	shaderList.push_back(new ShaderManager());
 
 	plyList.push_back(new ply("./data/cow.ply"));
 	plyList.push_back(new ply("./data/bunny.ply"));
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
 	plyList[FIREBALL]->applyTexture("./data/fireball_256.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE]->applyTexture("./data/fireball_256.ppm");
 
 	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_1024.ppm");
@@ -358,7 +376,9 @@ void MyGLCanvas::setupShaders() {
 		if (i == ARENA || i == FIREBALL) {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
 		}
-		else {
+		else if (i == SPRITE) {
+			shaderList[i]->initShader("./shaders/330/sprite.vert", "./shaders/330/sprite.frag");
+		} else {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/enemyColor.frag");
 		}
 
@@ -368,6 +388,11 @@ void MyGLCanvas::setupShaders() {
 		plyList[i]->buildArrays();
 		plyList[i]->bindVBO(shaderList[i]->program);
 	}
+}
+
+void MyGLCanvas::setupSprites() {
+	glm::vec2 pos(w() / 2.0, h() / 2.0);
+	glm::vec2 scale(10.0, 10.0);
 }
 
 void printEvent(int e) {

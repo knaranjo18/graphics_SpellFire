@@ -33,6 +33,7 @@
 #include "ply.h"
 #include "gfxDefs.h"
 #include "Camera.h"
+#include "Sprite.h"
 
 
 class MyGLCanvas : public Fl_Gl_Window {
@@ -61,13 +62,19 @@ private:
 	void doGameLogic();
 	void handleMoveCollisions(glm::vec3);
 
+	void setupSprites();
+
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
 	vector<ply *> plyList;
 	vector<Projectile *> projectileList;
+	vector<Sprite *> crossHair;
+	vector<Sprite *> healthBar;
 
 	Player *player;
 	Scenery *arena;
+	Sprite *manaBar;
+	
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
