@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 	win->resizable(win);
 	Fl::add_idle(MyAppWindow::idleCB);
 	win->show();
-	win->fullscreen();
+	//win->fullscreen();
 	
 	return(Fl::run());
 }

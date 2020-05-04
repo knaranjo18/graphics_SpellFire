@@ -35,8 +35,9 @@ public:
 	static bool debug_draw_hitbox;
 
 private:
-	float duration, speed, manaCost, currAngleYaw, currAnglePitch, initialAngleYaw, initialAnglePitch, modelSize;
-	float damage;
+
+	float duration, speed, currAngleYaw, currAnglePitch, initialAngleYaw, initialAnglePitch, modelSize;
+
 	glm::vec3 position, dirFired, orientation, scaleSize;
 	glm::mat4 transMat4;
 	time_t spawnTime;
