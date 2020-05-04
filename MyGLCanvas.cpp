@@ -17,7 +17,7 @@ MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Wi
 	prevX = prevY = 0;
 	firstTime = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
-	alive = false;
+	alive = true;
 	
 	player = new Player();
 
@@ -87,31 +87,17 @@ void MyGLCanvas::drawScene() {
 	double deltaTime = difftime(time(0), startTime);
 
 	doGameLogic();
-/*
-	if (deltaTime >= 3) {
-		startTime = time(0);
-		if (cowList.size() != 0) {
-			removeEnemy(COW, 0);
-		}
-		else if (bunnyList.size() != 0) {
-			removeEnemy(BUNNY, 0);
-		}
-		else {
-			for (int i = 0; i < 2; i++) {
-				spawnEnemy(COW);
-				spawnEnemy(BUNNY);
-			}
-		}
-	}
-	*/
 
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
-
+	/*-----------------------For the skybox----------------------------------------*/
+	skybox->draw(modelViewMatrix, player->myCam->getProjectionMatrix());
+	
 	/*-----------------------For the scenery----------------------------------------*/
 	arena->draw(modelViewMatrix, shaderList[ARENA], plyList[ARENA]);
 
 	/*------------------------For GUI-----------------------------------------------*/
+	
 	for (int i = 0; i < 2; i++)
 		healthBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 
@@ -120,6 +106,7 @@ void MyGLCanvas::drawScene() {
 
 	for (int i = 0; i < 2; i++)
 		manaBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+		
 	/*--------------For the enemy---------------------------*/
 	for (int i = 0; i < cowList.size(); i++) {
 		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW]);
@@ -131,7 +118,7 @@ void MyGLCanvas::drawScene() {
 
 	for (int i = 0; i < projectileList.size(); i++) {
 		projectileList[i]->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
-	}
+	}	
 }
 
 void MyGLCanvas::doGameLogic() {
@@ -490,6 +477,12 @@ void MyGLCanvas::setupShaders() {
 		plyList[i]->buildArrays();
 		plyList[i]->bindVBO(shaderList[i]->program);
 	}
+	
+	string filenames[6] = {
+		"./data/red_right.ppm", "./data/red_left.ppm", "./data/red_top.ppm",
+		"./data/red_bottom.ppm", "./data/red_front.ppm", "./data/red_back.ppm"
+	};
+	skybox = new Skybox(filenames);
 }
 
 void MyGLCanvas::setupSprites() {
