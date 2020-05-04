@@ -31,6 +31,7 @@ public:
 
 	void applyHit(t_hitfunc);
 
+	t_hitfunc getHitFunc();
 	
 	shaderType enemyType;
 	int pointValue;
@@ -41,6 +42,8 @@ private:
 	glm::vec3 position, lookVector, scaleSize;
 
 	BoundingBox *box;
+
+	t_hitfunc onHit;
 
 	glm::mat4 transMat4;
 };

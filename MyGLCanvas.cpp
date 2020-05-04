@@ -3,6 +3,7 @@
 #define SENSITIVITY 1.0f
 #define HEALTHBAR_START 260.0
 #define HEALTHBAR_LENGTH 500.0
+#define IFRAME_AFTER_HIT 150
 
 #define MANABAR_START 260
 #define MANABAR_LENGTH 500
@@ -132,12 +133,33 @@ void MyGLCanvas::doGameLogic() {
 		enemies.push_back(bunnyList[i]);
 	}
 
-	player->chargeMana();
-
 	handleMoveCollisions(playerPos, enemies);
 	hendleProjectiles(enemies);
 	handleManaBar();
 	handleHealthBar();
+	handlePlayerCollisions(enemies);
+
+	player->chargeMana();
+	player->tickHeal();
+}
+
+void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
+	if (player->isInvincible()) {
+		player->deciFrames();
+		return;
+	}
+	const BoundingBox* p_box = player->getBox();
+	for (int i = 0; i < enemies.size(); i++) {
+		const BoundingBox* e_box = enemies[i]->getBox();
+		if (p_box->doesCollide(*e_box)) {
+			// Player may only be hit once per frame and 
+			// will receive invincibility frames for a short while after
+			player->applyHit(enemies[i]->getHitFunc());
+			player->setiFrames(IFRAME_AFTER_HIT);
+			if (player->isDead()) alive = false;
+			return;
+		}
+	}
 }
 
 void MyGLCanvas::handleHealthBar() {
@@ -192,7 +214,6 @@ void MyGLCanvas::hendleProjectiles(vector<Enemy*>&enemies) {
 // Handle all logic when enemy e is hit by projectile p
 void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 	Enemy* e = enemies[i];
-	printf("Before hit, enemy has %f health left\n", e->getHealth());
 	e->applyHit(p->getHitfunc());
 
 	// if the enemy is dead remove it TODO: make this better its jank
@@ -207,9 +228,7 @@ void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 		}
 		
 		enemies.erase(enemies.begin() + i);
-		printf("Enemy killed!\n");
 	}
-	printf("after hit, it has %f health left!\n", e->getHealth());
 }
 
 // Returns the index of the enemy which is currently colliding with the projectile

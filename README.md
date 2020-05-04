@@ -20,11 +20,11 @@ Quit Game - *Escape Key*
 
 - **Scenery**
 	- ~~Implement the complete Phong lighting model (Ambient, Diffuse, Specular)~~
-	- Add sky textures
+	- ~~Add sky textures~~
 
 
 - **Game Mechanics**
-	- Add collision between player and enemy
+	- ~~Add collision between player and enemy~~
 	- ~~Allow player to shoot projectile along long vector with click~~
 	- ~~Add collision between enemy and projectile~~
 	- Add sounds
@@ -33,7 +33,7 @@ Quit Game - *Escape Key*
 	- Add spell selection
 		- Add ice bolt spell
 	- Make different enemies
-	- Add maximum mana
+	- ~~Add maximum mana~~
 	
 
 

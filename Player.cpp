@@ -1,6 +1,8 @@
 #include "Player.h"
 
 #define MANA_CHARGE 0.01
+#define HEAL_PER_TICK 0.01
+#define PLAYERSIZE 0.15f
 
 Player::Player() {
 	glm::vec3 startPoint(0.0, HEIGHT, 0.0);
@@ -18,12 +20,24 @@ Player::Player() {
 	maxMana = 20.0;
 	maxHealth = 100;
 	spellSelected = FIREBALL;
+	box = new BoundingBox(glm::vec4(myCam->getEyePoint(), 1.0), PLAYERSIZE);
+	iFrames = 0;
 }
 
 Player::~Player() {
 	delete myCam;
+	delete box;
 }
 
+void Player::deciFrames()
+{
+	this->iFrames = max(0, --iFrames);
+}
+
+void Player::setiFrames(int iFrames)
+{
+	this->iFrames = iFrames;
+}
 
 void Player::moveForward() {
 	glm::vec3 eyeP = myCam->getEyePoint();
@@ -37,10 +51,9 @@ void Player::moveForward() {
 	distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
 	if (distance < ARENA_SIZE) {
 		myCam->setEyePoint(eyeP);
+		box->setCenter(glm::vec4(eyeP, 1.0f));
 	}
-
 }
-
 
 void Player::moveBackward() {
 	glm::vec3 eyeP = myCam->getEyePoint();
@@ -54,6 +67,7 @@ void Player::moveBackward() {
     distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
 	if (distance < ARENA_SIZE) {
 		myCam->setEyePoint(eyeP);
+		box->setCenter(glm::vec4(eyeP, 1.0f));
 	}
 }
 
@@ -72,6 +86,7 @@ void Player::moveLeft() {
 	distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
 	if (distance < ARENA_SIZE) {
 		myCam->setEyePoint(eyeP);
+		box->setCenter(glm::vec4(eyeP, 1.0f));
 	}
 }
 
@@ -90,8 +105,8 @@ void Player::moveRight() {
 	distance = sqrt(eyeP.x * eyeP.x + eyeP.z * eyeP.z);
 	if (distance < ARENA_SIZE) {
 		myCam->setEyePoint(eyeP);
+		box->setCenter(glm::vec4(eyeP, 1.0f));
 	}
-
 }
 
 void Player::moveSight(int x_offset, int y_offset) {
@@ -125,6 +140,10 @@ void Player::chargeMana() {
 	float temp = mana + MANA_CHARGE;
 	if (temp <= maxMana)
 		mana = temp;
+}
+
+void Player::tickHeal() {
+	health = min(maxHealth, health + HEAL_PER_TICK);
 }
 
 
@@ -161,6 +180,24 @@ float Player::getSpellCost(shaderType spellType) {
 		printf("You don't know that spell!\n");
 		return INFINITY;
 	}
+}
+
+const BoundingBox* Player::getBox()
+{
+	return box;
+}
+
+int Player::getiFrames()
+{
+	return iFrames;
+}
+
+bool Player::isInvincible() {
+	return iFrames > 0;
+}
+
+bool Player::isDead() {
+	return health <= 0;
 }
 
 void Player::applyHit(t_hitfunc f) {
