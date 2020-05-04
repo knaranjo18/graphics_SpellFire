@@ -15,6 +15,7 @@
 
 #define TARGETFPS 60
 #define TIMEPERFRAME 1000 / TARGETFPS
+#define MAX_ENEMIES 20
 
 
 MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Window(_x, _y, _w, _h, l) {
@@ -25,11 +26,13 @@ MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Wi
 	firstTime = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	alive = true;
-	
+
 	player = new Player();
 
-	for (int i = 0; i < 6; i++) {
-		spawnEnemy(COW);
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) 
+			spawnEnemy(COW); 
+		
 		spawnEnemy(BUNNY);
 	}
 
@@ -93,8 +96,6 @@ void MyGLCanvas::draw() {
 }
 
 void MyGLCanvas::drawScene() {
-	double deltaTime = difftime(time(0), startTime);
-
 	doGameLogic();
 
 	//setting up camera info
@@ -154,6 +155,23 @@ void MyGLCanvas::doGameLogic() {
 
 	player->chargeMana();
 	player->tickHeal();
+
+	respawnEnemies();
+}
+
+void MyGLCanvas::respawnEnemies() {
+	double deltaTime = difftime(time(0), startTime);
+	float temp;
+
+	if (deltaTime > 1) {
+
+		startTime = time(0);
+		temp = rand() / float(RAND_MAX);
+		if (temp < 0.5)
+			spawnEnemy(BUNNY);
+		if (temp < 0.75)
+			spawnEnemy(COW);
+	}
 }
 
 void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
@@ -209,7 +227,6 @@ void MyGLCanvas::handleExpBar() {
 
 	expBar[0]->setPosition(pos);
 	expBar[0]->setScale(scale);
-	cout << player->getPoints() << endl;
 }
 
 void MyGLCanvas::handleManaBar() {

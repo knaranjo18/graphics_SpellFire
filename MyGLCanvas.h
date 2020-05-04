@@ -59,6 +59,7 @@ private:
 	void removeProjectile(shaderType projectileType, int index);
 
 	void spawnEnemy(shaderType enemyType);
+	void respawnEnemies();
 	void removeEnemy(shaderType enemyType, int index);
 
 	void doGameLogic();
