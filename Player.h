@@ -17,12 +17,20 @@ public:
 	void changeMana(int _mana);
 
 	void chargeMana();
+	void tickHeal();
 
 	float getHealth();
 	int getPoints();
 	float getMana();
 	float getSpellCost(shaderType spellType);
+	const BoundingBox* getBox();
+	int getiFrames();
 
+	bool isInvincible();
+	bool isDead();
+
+	void deciFrames();
+	void setiFrames(int);
 	void moveForward();
 	void moveBackward();
 	void moveLeft();
@@ -34,12 +42,13 @@ public:
 	Camera *myCam;
 	bool canMoveSight;
 	shaderType spellSelected;
-	float maxMana, maxHealth;
+	float maxMana, maxHealth, maxPoints;
 private:
 	int points;
+	int iFrames; // invincibility frames after getting hit
 	float speed, mana, health, yaw, pitch;
 
-	
+	BoundingBox* box;
 
 
 };

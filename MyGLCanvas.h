@@ -34,6 +34,9 @@
 #include "gfxDefs.h"
 #include "Camera.h"
 #include "Sprite.h"
+#include "skybox.h"
+#include <chrono>
+#include <thread>
 
 
 class MyGLCanvas : public Fl_Gl_Window {
@@ -52,6 +55,7 @@ private:
 	void resize(int x, int y, int w, int h);
 	void updateCamera(int width, int height);
 	void deallocate();
+	void enforceFrameTime(GLint);
 	
 	void moveSight();
 	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
@@ -64,11 +68,14 @@ private:
 	void hendleProjectiles(vector<Enemy*>&);
 	void applyProjectile(Projectile*, int, vector<Enemy*>&);
 	void handleMoveCollisions(glm::vec3, vector<Enemy*>&);
+	void handlePlayerCollisions(vector<Enemy*>&);
+
 	int findEnemyCollision(Projectile*, vector<Enemy*>&);
 
 	void setupSprites();
 	void handleHealthBar();
 	void handleManaBar();
+	void handleExpBar();
 
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
@@ -77,11 +84,12 @@ private:
 	vector<Sprite *> crossHair;
 	vector<Sprite *> healthBar;
 	vector<Sprite *> manaBar;
+	vector<Sprite *> expBar;
 	vector<Sprite *> deathScreen;
 
 	Player *player;
 	Scenery *arena;
-
+	Skybox* skybox;
 	
 
 	glm::vec3 lightPos;

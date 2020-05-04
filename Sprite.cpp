@@ -39,6 +39,13 @@ void Sprite::draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly) {
 	GLint color_id = glGetUniformLocation(shader->program, "spriteColor");
 	glUniform3f(color_id, color.x, color.y, color.z);
 
+	if (spriteType == DEATH) {
+		// Pass scenery texture to the shader
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, myPly->getTextureID());
+		glUniform1i(glGetUniformLocation(shader->program, "tex"), 3);
+	}
+
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	myPly->renderVBO();

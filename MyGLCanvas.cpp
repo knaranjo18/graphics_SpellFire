@@ -1,40 +1,47 @@
  #include "MyGLCanvas.h"
 
-#define SENSITIVITY 1.0f
+#define SENSITIVITY 0.5f
 #define HEALTHBAR_START 260.0
 #define HEALTHBAR_LENGTH 500.0
+#define IFRAME_AFTER_HIT 60
 
 #define MANABAR_START 260
 #define MANABAR_LENGTH 500
+
+#define EXPBAR_START 260
 #define EXPBAR_LENGTH 500
 #define BAR_HEIGHT 25
 #define BAR_WIDTH 30
 
+#define TARGETFPS 60
+#define NANOPERSEC 1000000000
+
+
 MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Window(_x, _y, _w, _h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 
-	srand(time(0));
 	prevX = prevY = 0;
 	firstTime = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
-	alive = false;
+	alive = true;
 	
 	player = new Player();
 
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 6; i++) {
 		spawnEnemy(COW);
 		spawnEnemy(BUNNY);
 	}
-	float temp = 400 / 500;
-	temp = 1 - temp;
-
 
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+	
+	healthBar.push_back(new Sprite());
+	healthBar.push_back(new Sprite());
 
 	manaBar.push_back(new Sprite());
 	manaBar.push_back(new Sprite());
+
+	expBar.push_back(new Sprite());
+	expBar.push_back(new Sprite());
 
 	crossHair.push_back(new Sprite());
 	crossHair.push_back(new Sprite());
@@ -58,11 +65,11 @@ void MyGLCanvas::draw() {
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glPolygonOffset(1, 1);
+
 		
 		if (firstTime) {
 			firstTime = false;
 			setupShaders();
-			startTime = time(0);
 		}
 
 		if (!crossHair[0]->initComplete) {
@@ -84,34 +91,23 @@ void MyGLCanvas::draw() {
 }
 
 void MyGLCanvas::drawScene() {
-	double deltaTime = difftime(time(0), startTime);
-
+	GLuint query;
+	// set up frame timing
+	glGenQueries(1, &query);
+	glBeginQuery(GL_TIME_ELAPSED, query);
+	
 	doGameLogic();
-/*
-	if (deltaTime >= 3) {
-		startTime = time(0);
-		if (cowList.size() != 0) {
-			removeEnemy(COW, 0);
-		}
-		else if (bunnyList.size() != 0) {
-			removeEnemy(BUNNY, 0);
-		}
-		else {
-			for (int i = 0; i < 2; i++) {
-				spawnEnemy(COW);
-				spawnEnemy(BUNNY);
-			}
-		}
-	}
-	*/
 
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
-
+	/*-----------------------For the skybox----------------------------------------*/
+	skybox->draw(modelViewMatrix, player->myCam->getProjectionMatrix());
+	
 	/*-----------------------For the scenery----------------------------------------*/
 	arena->draw(modelViewMatrix, shaderList[ARENA], plyList[ARENA]);
 
 	/*------------------------For GUI-----------------------------------------------*/
+	
 	for (int i = 0; i < 2; i++)
 		healthBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 
@@ -120,6 +116,11 @@ void MyGLCanvas::drawScene() {
 
 	for (int i = 0; i < 2; i++)
 		manaBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+
+	for (int i = 0; i < 2; i++) {
+		expBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+	}
+		
 	/*--------------For the enemy---------------------------*/
 	for (int i = 0; i < cowList.size(); i++) {
 		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW]);
@@ -131,6 +132,25 @@ void MyGLCanvas::drawScene() {
 
 	for (int i = 0; i < projectileList.size(); i++) {
 		projectileList[i]->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
+	}
+
+	glEndQuery(GL_TIME_ELAPSED);
+	enforceFrameTime(query);
+}
+
+void MyGLCanvas::enforceFrameTime(GLint query) {
+	GLint available = 0;
+	while (!available) {
+		glGetQueryObjectiv(query, GL_QUERY_RESULT_AVAILABLE, &available);
+	}
+
+	GLuint64 timeElapsed = 0;
+	GLuint64 frameTarget = NANOPERSEC / TARGETFPS;
+	
+	glGetQueryObjectui64v(query, GL_QUERY_RESULT, &timeElapsed);
+
+	if (timeElapsed < frameTarget) {
+		this_thread::sleep_for(std::chrono::nanoseconds(frameTarget - timeElapsed));
 	}
 }
 
@@ -145,25 +165,71 @@ void MyGLCanvas::doGameLogic() {
 		enemies.push_back(bunnyList[i]);
 	}
 
-	player->chargeMana();
-
 	handleMoveCollisions(playerPos, enemies);
 	hendleProjectiles(enemies);
 	handleManaBar();
 	handleHealthBar();
+	handleExpBar();
+	handlePlayerCollisions(enemies);
+
+	player->chargeMana();
+	player->tickHeal();
+}
+
+void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
+	if (player->isInvincible()) {
+		player->deciFrames();
+		return;
+	}
+	const BoundingBox* p_box = player->getBox();
+	for (int i = 0; i < enemies.size(); i++) {
+		const BoundingBox* e_box = enemies[i]->getBox();
+		if (p_box->doesCollide(*e_box)) {
+			// Player may only be hit once per frame and 
+			// will receive invincibility frames for a short while after
+			player->applyHit(enemies[i]->getHitFunc());
+			player->setiFrames(IFRAME_AFTER_HIT);
+			if (player->isDead()) alive = false;
+			return;
+		}
+	}
 }
 
 void MyGLCanvas::handleHealthBar() {
+	glm::vec3 color;
 	float healthRatio = player->getHealth() / player->maxHealth;
+
+	if (healthRatio <= 1.0 / 3.0) {
+		color = glm::vec3(1.0, 0.0, 0.0);
+	} else if (healthRatio <= 2.0 / 3.0) {
+		color = glm::vec3(0.8, 0.4, 0.2);
+	} else {
+		color = glm::vec3(0.0, 1.0, 0.0);
+	}
 
 	float length = HEALTHBAR_LENGTH * healthRatio;
 	float offset = (HEALTHBAR_START * (1 - healthRatio));
 
-	glm::vec2 pos(HEALTHBAR_START - offset, BAR_HEIGHT);
+	glm::vec2 pos(HEALTHBAR_START - offset, h() - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	healthBar[0]->setPosition(pos);
 	healthBar[0]->setScale(scale);
+	healthBar[0]->setColor(color);
+}
+
+void MyGLCanvas::handleExpBar() {
+	float expRatio = player->getPoints() / player->maxPoints;
+
+	float length = EXPBAR_LENGTH * expRatio;
+	float offset = (EXPBAR_START * (1 - expRatio));
+
+	glm::vec2 pos(w() / 2.0 - offset, h() - BAR_HEIGHT);
+	glm::vec2 scale(length, BAR_WIDTH);
+
+	expBar[0]->setPosition(pos);
+	expBar[0]->setScale(scale);
+	cout << player->getPoints() << endl;
 }
 
 void MyGLCanvas::handleManaBar() {
@@ -172,7 +238,7 @@ void MyGLCanvas::handleManaBar() {
 	float length = MANABAR_LENGTH * manaRatio;
 	float offset = (MANABAR_START * (1 - manaRatio));
 
-	glm::vec2 pos(w() - MANABAR_START, BAR_HEIGHT);
+	glm::vec2 pos(w() - MANABAR_START, h() - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	manaBar[0]->setPosition(pos);
@@ -205,13 +271,13 @@ void MyGLCanvas::hendleProjectiles(vector<Enemy*>&enemies) {
 // Handle all logic when enemy e is hit by projectile p
 void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 	Enemy* e = enemies[i];
-	printf("Before hit, enemy has %f health left\n", e->getHealth());
 	e->applyHit(p->getHitfunc());
 
 	// if the enemy is dead remove it TODO: make this better its jank
 	// probably make it better by making the one list of enemies THE list and using
 	// counts of enemy types to tell what pointer is what
 	if (e->getHealth() <= 0) { // TODO: an isDead() func would be better
+		player->changePoints(e->pointValue);
 		if (e->enemyType == COW) { 
 			removeEnemy(COW, i);
 		}
@@ -220,9 +286,7 @@ void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 		}
 		
 		enemies.erase(enemies.begin() + i);
-		printf("Enemy killed!\n");
 	}
-	printf("after hit, it has %f health left!\n", e->getHealth());
 }
 
 // Returns the index of the enemy which is currently colliding with the projectile
@@ -334,7 +398,7 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
 		
-		if (i == SPRITE) {
+		if (i == SPRITE || i == DEATH) {
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
 		} else{
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
@@ -461,15 +525,18 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
+	shaderList.push_back(new ShaderManager());
 
-	plyList.push_back(new ply("./data/cow.ply"));
-	plyList.push_back(new ply("./data/bunny.ply"));
+	plyList.push_back(new ply("./data/blob.ply"));
+	plyList.push_back(new ply("./data/jad.ply"));
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
 	plyList[FIREBALL]->applyTexture("./data/fireball_256.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE]->applyTexture("./data/fireball_256.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[DEATH]->applyTexture("./data/skull.ppm");
 
 	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_1024.ppm");
@@ -477,31 +544,51 @@ void MyGLCanvas::setupShaders() {
 	for (int i = COW; i <= ARENA; i++) {
 		if (i == ARENA || i == FIREBALL) {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
-		}
-		else if (i == SPRITE) {
+		} else if (i == SPRITE) {
 			shaderList[i]->initShader("./shaders/330/sprite.vert", "./shaders/330/sprite.frag");
+		} else if (i == DEATH) {
+			shaderList[i]->initShader("./shaders/330/death.vert", "./shaders/330/death.frag");
 		} else {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/enemyColor.frag");
 		}
 
+
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
 		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
-		plyList[i]->buildArrays();
-		plyList[i]->bindVBO(shaderList[i]->program);
+		if (i == SPRITE || i == DEATH) {
+			plyList[i]->buildArraysSprite();
+			plyList[i]->bindVBOsprites(shaderList[i]->program);
+		} else {
+			plyList[i]->buildArrays();
+			plyList[i]->bindVBO(shaderList[i]->program);
+		}
 	}
+	
+	string filenames[6] = {
+		"./data/red_right.ppm", "./data/red_left.ppm", "./data/red_top.ppm",
+		"./data/red_bottom.ppm", "./data/red_front.ppm", "./data/red_back.ppm"
+	};
+	skybox = new Skybox(filenames);
 }
 
 void MyGLCanvas::setupSprites() {
 	glm::vec2 pos(w() / 2.0 - 2, h() / 2.0 + 40);
 
+	healthBar[0]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, h() - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND);
+	healthBar[1]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, h() - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
+
+	expBar[0]->setEverything(SPRITE, glm::vec2(w() / 2, h() - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND);
+	expBar[1]->setEverything(SPRITE, glm::vec2(w() / 2, h() - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND);
+
 	crossHair[0]->setEverything(SPRITE, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 	crossHair[1]->setEverything(SPRITE, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 
-	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
-	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
+	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
+	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
 
-	deathScreen[0]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
+	deathScreen[0]->setEverything(DEATH, glm::vec2(w()/2.0f, h()/2.0f), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
+	//deathScreen[1]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
 }
 
 void printEvent(int e) {
@@ -537,5 +624,6 @@ void MyGLCanvas::deallocate() {
 void MyGLCanvas::drawDeathScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
-	deathScreen[0]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+	deathScreen[0]->draw(modelViewMatrix, shaderList[DEATH], plyList[DEATH]);
+	//deathScreen[1]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 }

@@ -5,16 +5,21 @@
 
 bool Enemy::debug_draw_hitbox = false;
 
+void smackAttackCB(HITDATA& h) {
+	h.health -= 25;
+	h.mana -= 50;
+}
+
 Enemy::Enemy() {
 	health = 100.0;
-	speed = 0.001;
+	speed = 0.002;
 	position = glm::vec3(1, -0.4, 0.0);
 	lookVector = glm::vec3(1.0, 0.0, 0.0);
 	scaleSize = glm::vec3(0.3, 0.3, 0.3);
 	pointValue = 1;
 	initialAngle = 0;
 	currAngle = 0;
-	angularSpeed = PI / 1080.0;
+	angularSpeed = PI / 350.0;
 	enemyType = COW;
 	modelSize = COWSIZE * PLYSIZE;
 	box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
@@ -22,33 +27,34 @@ Enemy::Enemy() {
 	transMat4 = glm::translate(transMat4, position);
 	transMat4 = glm::scale(transMat4, scaleSize);
 	transMat4 = glm::rotate(transMat4, currAngle + initialAngle, glm::vec3(0.0, 1.0, 0.0));
+	onHit = &smackAttackCB;
 }
 
 Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 	switch (_enemyType) {
 	case(COW):
 		health = 100.0;
-		speed = 0.001;
+		speed = 0.002;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
 		scaleSize = glm::vec3(1, 1, 1) * COWSIZE;
 		pointValue = 1;
 		initialAngle = 0;
 		currAngle = 0;
-		angularSpeed = PI / 800.0;
+		angularSpeed = PI / 350.0;
 		enemyType = _enemyType;
 		modelSize = PLYSIZE * COWSIZE;
 		break;
 	case(BUNNY):
 		health = 200.0;
-		speed = 0.002;
+		speed = 0.004;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
 		scaleSize = glm::vec3(1, 1, 1) * BUNNYSIZE;
-		pointValue = 2;
+		pointValue = 3;
 		initialAngle = PI;
 		currAngle = 0;
-		angularSpeed = PI / 600.0;
+		angularSpeed = PI / 300.0;
 		enemyType = _enemyType;
 		modelSize = PLYSIZE * BUNNYSIZE;
 		break;
@@ -62,6 +68,7 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 	transMat4 = glm::translate(transMat4, position);
 	transMat4 = glm::scale(transMat4, scaleSize);
 	transMat4 = glm::rotate(transMat4, currAngle + initialAngle, glm::vec3(0.0, 1.0, 0.0));
+	onHit = &smackAttackCB;
 }
 
 
@@ -87,6 +94,10 @@ void Enemy::applyHit(t_hitfunc f) {
 	f(data);
 	health = data.health;
 	speed = data.speed;
+}
+
+t_hitfunc Enemy::getHitFunc() {
+	return onHit;
 }
 
 void Enemy::draw(glm::mat4 modelView, ShaderManager* shader, ply* myPly) {
