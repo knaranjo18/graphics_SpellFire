@@ -12,6 +12,7 @@
 #include "ShaderManager.h"
 #include "ply.h"
 #include "gfxDefs.h"
+#include "gamedefs.h"
 
 class Enemy {
 public:
@@ -27,6 +28,9 @@ public:
 	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly);
 	
 	void moveEnemy(glm::vec3 playerPos);
+
+	void applyHit(t_hitfunc);
+
 	
 	shaderType enemyType;
 	int pointValue;

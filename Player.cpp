@@ -134,4 +134,12 @@ float Player::getMana() {
 	return mana;
 }
 
+void Player::applyHit(t_hitfunc f) {
+	HITDATA data(health, mana, speed);
 
+	f(data);
+
+	health = data.health;
+	mana = data.mana;
+	speed = data.speed;
+}
