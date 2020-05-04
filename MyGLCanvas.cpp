@@ -110,6 +110,8 @@ void MyGLCanvas::doGameLogic() {
 	}
 	*/
 	
+	player->chargeMana();
+	printf("Mana %f\n", player->getMana());
 
 	for (int i = 0; i < projectileList.size(); i++) {
 		if (difftime(time(0), projectileList[i]->getSpawnTime()) >= double(projectileList[i]->getDuration())) {
@@ -294,9 +296,17 @@ int MyGLCanvas::handle(int e) {
 			player->canMoveSight = !(player->canMoveSight);
 		}
 		else if (button == FL_RIGHT_MOUSE) {
-			fireProjectile(player->spellSelected, player->myCam->getEyePoint(), player->myCam->getLookVector());
-		}
-		else return 0;
+			shaderType spellAttempt = player->spellSelected;
+
+			if (player->getSpellCost(spellAttempt) <= player->getMana()) {
+				fireProjectile(player->spellSelected, player->myCam->getEyePoint(), player->myCam->getLookVector());
+				player->changeMana(-player->getSpellCost(spellAttempt));
+			} else {
+				printf("Need to charge my mana!\n");
+			}
+
+		} else 
+			return 0;
 
 		return 1;
 		break;

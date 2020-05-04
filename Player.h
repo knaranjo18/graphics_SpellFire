@@ -11,14 +11,16 @@ public:
 	Player();
 	~Player();
 
-	void setHealth(float _health);
-	void setPoints(int _points);
-	void setMana(float _mana);
+	void changeHealth(float _health);
+	void changePoints(int _points);
+	void changeMana(int _mana);
+
+	void chargeMana();
 
 	float getHealth();
 	int getPoints();
 	float getMana();
-
+	float getSpellCost(shaderType spellType);
 
 	void moveForward();
 	void moveBackward();
@@ -32,6 +34,8 @@ public:
 private:
 	int points;
 	float speed, mana, health, yaw, pitch;
+
+	
 
 
 };

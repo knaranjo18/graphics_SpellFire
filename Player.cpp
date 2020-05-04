@@ -1,5 +1,7 @@
 #include "Player.h"
 
+#define MANA_CHARGE 0.01
+
 Player::Player() {
 	glm::vec3 startPoint(0.0, HEIGHT, 0.0);
 	glm::vec3 startLook(1.0, 0.0, 0.0);
@@ -104,18 +106,18 @@ void Player::moveSight(int x_offset, int y_offset) {
 
 
 /*---------------Setters------------------*/
-void Player::setHealth(float _health) {
-	health = _health;
+void Player::changeHealth(float _health) {
+	health += _health;
 }
 
 
-void Player::setPoints(int _points) {
-	points = _points;
+void Player::changePoints(int _points) {
+	points += _points;
 }
 
 
-void Player::setMana(float _mana) {
-	mana = _mana;
+void Player::chargeMana() {
+	mana += MANA_CHARGE;
 }
 
 
@@ -132,6 +134,21 @@ int Player::getPoints() {
 
 float Player::getMana() {
 	return mana;
+}
+
+void Player::changeMana(int _mana) {
+	mana += _mana;
+}
+
+float Player::getSpellCost(shaderType spellType) {
+	switch (spellType) {
+	case(FIREBALL):
+		return 2.0;
+		break;
+	default:
+		printf("You don't know that spell!\n");
+		return INFINITY;
+	}
 }
 
 

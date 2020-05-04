@@ -8,7 +8,6 @@ Projectile::Projectile() {
 	projectileType = FIREBALL;
 	speed = 0.03;
 	duration = 2;
-	manaCost = 10;
 	currAngleYaw = currAnglePitch = 0;
 	initialAngleYaw = 0;
 	initialAnglePitch = 0;
@@ -25,7 +24,6 @@ Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 direction
 	case(FIREBALL):
 		speed = 0.03;
 		duration = 2;
-		manaCost = 10;
 		currAngleYaw = currAnglePitch = 0;
 		initialAngleYaw = 0;
 		initialAnglePitch = 0;
