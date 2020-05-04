@@ -35,8 +35,9 @@ MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Wi
 
 
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+	
+	healthBar.push_back(new Sprite());
+	healthBar.push_back(new Sprite());
 
 	manaBar.push_back(new Sprite());
 	manaBar.push_back(new Sprite());
@@ -173,7 +174,7 @@ void MyGLCanvas::handleHealthBar() {
 	float length = HEALTHBAR_LENGTH * healthRatio;
 	float offset = (HEALTHBAR_START * (1 - healthRatio));
 
-	glm::vec2 pos(HEALTHBAR_START - offset, BAR_HEIGHT);
+	glm::vec2 pos(HEALTHBAR_START - offset, h() - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	healthBar[0]->setPosition(pos);
@@ -186,7 +187,7 @@ void MyGLCanvas::handleManaBar() {
 	float length = MANABAR_LENGTH * manaRatio;
 	float offset = (MANABAR_START * (1 - manaRatio));
 
-	glm::vec2 pos(w() - MANABAR_START, BAR_HEIGHT);
+	glm::vec2 pos(w() - MANABAR_START, h() - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	manaBar[0]->setPosition(pos);
@@ -523,11 +524,14 @@ void MyGLCanvas::setupShaders() {
 void MyGLCanvas::setupSprites() {
 	glm::vec2 pos(w() / 2.0 - 2, h() / 2.0 + 40);
 
+	healthBar[0]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, h() - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND);
+	healthBar[1]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, h() - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
+
 	crossHair[0]->setEverything(SPRITE, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 	crossHair[1]->setEverything(SPRITE, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 
-	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
-	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
+	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
+	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
 
 	deathScreen[0]->setEverything(DEATH, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
 	//deathScreen[1]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
