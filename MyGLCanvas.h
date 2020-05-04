@@ -44,6 +44,7 @@ public:
 private:
 	void draw();
 	void drawScene();
+	void drawDeathScene();
 	
 	void setupShaders();
 	
@@ -76,14 +77,16 @@ private:
 	vector<Sprite *> crossHair;
 	vector<Sprite *> healthBar;
 	vector<Sprite *> manaBar;
+	vector<Sprite *> deathScreen;
 
 	Player *player;
 	Scenery *arena;
+
 	
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
-	bool firstTime;
+	bool firstTime, alive;
 	time_t startTime;
 };
 

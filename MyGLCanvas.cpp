@@ -17,6 +17,7 @@ MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Wi
 	prevX = prevY = 0;
 	firstTime = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
+	alive = false;
 	
 	player = new Player();
 
@@ -37,6 +38,9 @@ MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Wi
 
 	crossHair.push_back(new Sprite());
 	crossHair.push_back(new Sprite());
+
+	deathScreen.push_back(new Sprite());
+	deathScreen.push_back(new Sprite());
 }
 
 MyGLCanvas::~MyGLCanvas() {
@@ -72,8 +76,11 @@ void MyGLCanvas::draw() {
 	// Clear the buffer of colors in each bit plane.
 	// bit plane - A set of bits that are on or off (Think of a black and white image)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	drawScene();
+	if (alive) {
+		drawScene();
+	} else {
+		drawDeathScene();
+	}
 }
 
 void MyGLCanvas::drawScene() {
@@ -143,10 +150,20 @@ void MyGLCanvas::doGameLogic() {
 	handleMoveCollisions(playerPos, enemies);
 	hendleProjectiles(enemies);
 	handleManaBar();
+	handleHealthBar();
 }
 
 void MyGLCanvas::handleHealthBar() {
+	float healthRatio = player->getHealth() / player->maxHealth;
 
+	float length = HEALTHBAR_LENGTH * healthRatio;
+	float offset = (HEALTHBAR_START * (1 - healthRatio));
+
+	glm::vec2 pos(HEALTHBAR_START - offset, BAR_HEIGHT);
+	glm::vec2 scale(length, BAR_WIDTH);
+
+	healthBar[0]->setPosition(pos);
+	healthBar[0]->setScale(scale);
 }
 
 void MyGLCanvas::handleManaBar() {
@@ -377,6 +394,12 @@ int MyGLCanvas::handle(int e) {
 			deallocate();
 			exit(0);
 			break;
+		case 'h':
+			player->changeHealth(5);
+			break;
+		case 'p':
+			player->changeHealth(-5);
+			break;
 		}
 
 		return 1;
@@ -477,6 +500,8 @@ void MyGLCanvas::setupSprites() {
 
 	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
 	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
+
+	deathScreen[0]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
 }
 
 void printEvent(int e) {
@@ -506,4 +531,11 @@ void MyGLCanvas::deallocate() {
 	for (int i = 0; i < projectileList.size(); i++) {
 		delete projectileList[i];
 	}
+}
+
+
+void MyGLCanvas::drawDeathScene() {
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+
+	deathScreen[0]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 }
