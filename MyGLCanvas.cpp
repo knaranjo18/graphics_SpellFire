@@ -469,7 +469,7 @@ void MyGLCanvas::setupShaders() {
 	plyList[FIREBALL]->applyTexture("./data/fireball_256.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE]->applyTexture("./data/fireball_256.ppm");
+	plyList[SPRITE]->applyTexture("./data/skull.ppm");
 
 	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_1024.ppm");
@@ -477,18 +477,23 @@ void MyGLCanvas::setupShaders() {
 	for (int i = COW; i <= ARENA; i++) {
 		if (i == ARENA || i == FIREBALL) {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
-		}
-		else if (i == SPRITE) {
+		} else if (i == SPRITE) {
 			shaderList[i]->initShader("./shaders/330/sprite.vert", "./shaders/330/sprite.frag");
 		} else {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/enemyColor.frag");
 		}
 
+
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
 		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
-		plyList[i]->buildArrays();
-		plyList[i]->bindVBO(shaderList[i]->program);
+		if (i == SPRITE) {
+			plyList[i]->buildArraysSprite();
+			plyList[i]->bindVBOsprites(shaderList[i]->program);
+		} else {
+			plyList[i]->buildArrays();
+			plyList[i]->bindVBO(shaderList[i]->program);
+		}
 	}
 }
 
