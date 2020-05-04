@@ -553,3 +553,106 @@ void ply::renderVBO() {
 	glBindVertexArray(vao);
 	glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_INT, 0);
 }
+
+void ply::buildArraysSprite() {
+	// allocate memory for our arrays
+	vertex_vao = new GLfloat[vertexCount * 3];
+	if (vertex_vao == NULL) {
+		cout << "Ran out of memory(vertex_vao)!" << endl;
+		return;
+	}
+
+	indicies_vao = new GLuint[faceCount * 3];
+	if (indicies_vao == NULL) {
+		cout << "Ran out of memory(indicies_vao)!" << endl;
+		return;
+	}
+
+	tex_coords_vao = new GLfloat[vertexCount * 2];
+	if (tex_coords_vao == NULL) {
+		cout << "Ran out of memory(tex_coords_vao)!" << endl;
+		return;
+	}
+	// initialize texture coordinates in the case we don't have them so shader can tell not to use them
+	for (int i = 0; i < vertexCount * 2; i++) {
+		tex_coords_vao[i] = NAN;
+	}
+
+	// Compress all of the vertices into a simple array
+	if (vertexList == NULL) {
+		return;
+	}
+	else {
+		for (int i = 0; i < vertexCount; i++) {
+			vertex_vao[i * 3 + 0] = vertexList[i].x;
+			vertex_vao[i * 3 + 1] = vertexList[i].y;
+			vertex_vao[i * 3 + 2] = vertexList[i].z;
+		}
+	}
+
+	// Compress everything into one array of indices
+	unsigned int k = 0;
+	if (faceList == NULL) {
+		return;
+	}
+	else {
+		// For each of our faces
+		for (int i = 0; i < faceCount; i++) {
+			// Get the vertices that make up each face from the face list
+			int index0 = faceList[i].vertexList[0];
+			int index1 = faceList[i].vertexList[1];
+			int index2 = faceList[i].vertexList[2];
+
+			indicies_vao[k] = index0;
+			indicies_vao[k + 1] = index1;
+			indicies_vao[k + 2] = index2;
+
+			k += 3;
+		}
+	}
+
+	// if we have texture coordinates to encode
+	if (properties >= 6) {
+		for (int i = 0; i < vertexCount; i++) {
+			tex_coords_vao[i * 2 + 0] = vertexList[i].u;
+			tex_coords_vao[i * 2 + 1] = vertexList[i].v;
+		}
+	}
+}
+
+void ply::bindVBOsprites(unsigned int programID) {
+	// Use a Vertex Array Object -- think of this as a single ID that sums up all the following VBOs
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	// Generate a buffer that will be sent to the video memory
+	// For each ply object, it will get its own vertex buffer object, but it
+	// would be much more efficient to put everything into one Vertex Buffer Object and send it over
+	// only once to video memory. 
+
+	// Note: If this seg faults, then Glee or Glew (however OpenGL 2.0 extensions are mangaged)
+	// has not yet been initialized.
+	//tell openGL to generate a new VBO object
+	glGenBuffers(1, &vertexVBO_id);
+	// Once we know how many buffers to generate, then hook up the buffer to the vertexVBO_id.
+	glBindBuffer(GL_ARRAY_BUFFER, vertexVBO_id);
+	// Now we finally copy data into the buffer object
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertexCount * 3, vertex_vao, GL_STATIC_DRAW);
+
+
+	//tell openGL to generate a new VBO object
+	glGenBuffers(1, &indicesVBO_id);
+	// Transfer the data from indices to a VBO indicesVBO_id
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesVBO_id);
+	// Copy data into the buffer object. Note the keyword difference here -- GL_ELEMENT_ARRAY_BUFFER
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*faceCount * 3, indicies_vao, GL_STATIC_DRAW);
+	// Get the location of the attributes that enters in the vertex shader
+	GLint position_attribute = glGetAttribLocation(programID, "myPosition");
+	// Specify how the data for position can be accessed
+	glVertexAttribPointer(position_attribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	// Enable the attribute
+	glEnableVertexAttribArray(position_attribute);
+
+
+	cout << "Created vbo successfully" << endl;
+}

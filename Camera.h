@@ -10,8 +10,6 @@
 #include "gfxDefs.h"
 
 #define DEFAULT_FOCUS_LENGTH 1.0f
-#define NEAR_PLANE 0.01f
-#define FAR_PLANE 20.0f
 #define VIEW_ANGLE 60.0f
 
 class Camera {

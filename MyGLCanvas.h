@@ -33,6 +33,7 @@
 #include "ply.h"
 #include "gfxDefs.h"
 #include "Camera.h"
+#include "Sprite.h"
 
 
 class MyGLCanvas : public Fl_Gl_Window {
@@ -43,6 +44,7 @@ public:
 private:
 	void draw();
 	void drawScene();
+	void drawDeathScene();
 	
 	void setupShaders();
 	
@@ -64,17 +66,27 @@ private:
 	void handleMoveCollisions(glm::vec3, vector<Enemy*>&);
 	int findEnemyCollision(Projectile*, vector<Enemy*>&);
 
+	void setupSprites();
+	void handleHealthBar();
+	void handleManaBar();
+
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
 	vector<ply *> plyList;
 	vector<Projectile *> projectileList;
+	vector<Sprite *> crossHair;
+	vector<Sprite *> healthBar;
+	vector<Sprite *> manaBar;
+	vector<Sprite *> deathScreen;
 
 	Player *player;
 	Scenery *arena;
 
+	
+
 	glm::vec3 lightPos;
 	int prevX, prevY;
-	bool firstTime;
+	bool firstTime, alive;
 	time_t startTime;
 };
 

@@ -15,6 +15,8 @@ Player::Player() {
 	mana = 10.0;
 	speed = 0.05;
 	canMoveSight = false;
+	maxMana = 20.0;
+	maxHealth = 100;
 	spellSelected = FIREBALL;
 }
 
@@ -107,7 +109,10 @@ void Player::moveSight(int x_offset, int y_offset) {
 
 /*---------------Setters------------------*/
 void Player::changeHealth(float _health) {
-	health += _health;
+	float temp = health + _health;
+	if (temp <= maxHealth) {
+		health += _health;
+	}
 }
 
 
@@ -117,7 +122,9 @@ void Player::changePoints(int _points) {
 
 
 void Player::chargeMana() {
-	mana += MANA_CHARGE;
+	float temp = mana + MANA_CHARGE;
+	if (temp <= maxMana)
+		mana = temp;
 }
 
 
@@ -137,7 +144,12 @@ float Player::getMana() {
 }
 
 void Player::changeMana(int _mana) {
-	mana += _mana;
+	float temp = mana + _mana;
+	if (temp <= maxMana)
+		mana = temp;
+	else if (temp < 0) {
+		mana = 0;
+	}
 }
 
 float Player::getSpellCost(shaderType spellType) {
