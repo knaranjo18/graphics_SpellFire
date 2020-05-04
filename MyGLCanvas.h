@@ -35,6 +35,8 @@
 #include "Camera.h"
 #include "Sprite.h"
 #include "skybox.h"
+#include <chrono>
+#include <thread>
 
 
 class MyGLCanvas : public Fl_Gl_Window {
@@ -53,6 +55,7 @@ private:
 	void resize(int x, int y, int w, int h);
 	void updateCamera(int width, int height);
 	void deallocate();
+	void enforceFrameTime(GLint);
 	
 	void moveSight();
 	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
