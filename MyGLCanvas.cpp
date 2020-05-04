@@ -507,8 +507,8 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
 
-	plyList.push_back(new ply("./data/cow.ply"));
-	plyList.push_back(new ply("./data/bunny.ply"));
+	plyList.push_back(new ply("./data/blob.ply"));
+	plyList.push_back(new ply("./data/jad.ply"));
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
 	plyList[FIREBALL]->applyTexture("./data/fireball_256.ppm");
@@ -567,7 +567,7 @@ void MyGLCanvas::setupSprites() {
 	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
 	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
 
-	deathScreen[0]->setEverything(DEATH, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
+	deathScreen[0]->setEverything(DEATH, glm::vec2(w()/2.0f, h()/2.0f), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
 	//deathScreen[1]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
 }
 
