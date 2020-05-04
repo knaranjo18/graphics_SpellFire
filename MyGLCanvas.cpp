@@ -1,8 +1,11 @@
  #include "MyGLCanvas.h"
 
 #define SENSITIVITY 1.0f
+#define HEALTHBAR_START 260.0
+#define HEALTHBAR_LENGTH 500.0
 
-
+#define MANABAR_LENGTH 500
+#define EXPBAR_LENGTH 500
 
 MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Window(_x, _y, _w, _h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
@@ -20,8 +23,11 @@ MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Wi
 	}
 
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(260.0 - 52, 25.0), glm::vec2(400, 30), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(260.0, 25.0), glm::vec2(500, 30), 0, glm::vec3(1.0, 0.0, 0.0), FOREGROUND));
+	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, 25.0), glm::vec2(HEALTHBAR_LENGTH, 30), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
+	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, 25.0), glm::vec2(HEALTHBAR_LENGTH, 30), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+
+	crossHair.push_back(new Sprite());
+	crossHair.push_back(new Sprite());
 }
 
 MyGLCanvas::~MyGLCanvas() {
@@ -46,9 +52,10 @@ void MyGLCanvas::draw() {
 			startTime = time(0);
 		}
 
-		//if (!healthBar->initComplete) {
-			//setupSprites();
-		//}
+		if (!crossHair[0]->initComplete) {
+			setupSprites();
+		}
+
 		// needs to be after so that shaders can setup
 		updateCamera(w(), h());
 	}
@@ -89,8 +96,11 @@ void MyGLCanvas::drawScene() {
 	arena->draw(modelViewMatrix, shaderList[ARENA], plyList[ARENA]);
 
 	/*------------------------For bars-----------------------------------------------*/
-	for (int i = 0; i < 2; i++) 
+	for (int i = 0; i < 2; i++)
 		healthBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+
+	for (int i = 0; i < 2; i++) 
+		crossHair[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 	/*--------------For the enemy---------------------------*/
 	for (int i = 0; i < cowList.size(); i++) {
 		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW]);
@@ -432,8 +442,12 @@ void MyGLCanvas::setupShaders() {
 }
 
 void MyGLCanvas::setupSprites() {
-	glm::vec2 pos(w() / 2.0, h() / 2.0);
-	glm::vec2 scale(10.0, 10.0);
+	glm::vec2 pos(w() / 2.0 - 2, h() / 2.0 + 40);
+
+	crossHair[0]->setEverything(SPRITE, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
+	crossHair[1]->setEverything(SPRITE, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
+
+	cout << "SET EVERYTING" << endl;
 }
 
 void printEvent(int e) {
