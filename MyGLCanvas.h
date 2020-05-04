@@ -34,6 +34,7 @@
 #include "gfxDefs.h"
 #include "Camera.h"
 #include "Sprite.h"
+#include "skybox.h"
 
 
 class MyGLCanvas : public Fl_Gl_Window {
@@ -81,7 +82,7 @@ private:
 
 	Player *player;
 	Scenery *arena;
-
+	Skybox* skybox;
 	
 
 	glm::vec3 lightPos;
