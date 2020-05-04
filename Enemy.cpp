@@ -51,7 +51,7 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
 		scaleSize = glm::vec3(1, 1, 1) * BUNNYSIZE;
-		pointValue = 2;
+		pointValue = 3;
 		initialAngle = PI;
 		currAngle = 0;
 		angularSpeed = PI / 600.0;

@@ -7,6 +7,8 @@
 
 #define MANABAR_START 260
 #define MANABAR_LENGTH 500
+
+#define EXPBAR_START 260
 #define EXPBAR_LENGTH 500
 #define BAR_HEIGHT 25
 #define BAR_WIDTH 30
@@ -25,20 +27,21 @@ MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Wi
 	
 	player = new Player();
 
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 6; i++) {
 		spawnEnemy(COW);
 		spawnEnemy(BUNNY);
 	}
-	float temp = 400 / 500;
-	temp = 1 - temp;
-
 
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+	
+	healthBar.push_back(new Sprite());
+	healthBar.push_back(new Sprite());
 
 	manaBar.push_back(new Sprite());
 	manaBar.push_back(new Sprite());
+
+	expBar.push_back(new Sprite());
+	expBar.push_back(new Sprite());
 
 	crossHair.push_back(new Sprite());
 	crossHair.push_back(new Sprite());
@@ -113,6 +116,10 @@ void MyGLCanvas::drawScene() {
 
 	for (int i = 0; i < 2; i++)
 		manaBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+
+	for (int i = 0; i < 2; i++) {
+		expBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+	}
 		
 	/*--------------For the enemy---------------------------*/
 	for (int i = 0; i < cowList.size(); i++) {
@@ -163,6 +170,7 @@ void MyGLCanvas::doGameLogic() {
 	hendleProjectiles(enemies);
 	handleManaBar();
 	handleHealthBar();
+	handleExpBar();
 	handlePlayerCollisions(enemies);
 
 	player->chargeMana();
@@ -189,16 +197,40 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 }
 
 void MyGLCanvas::handleHealthBar() {
+	glm::vec3 color;
 	float healthRatio = player->getHealth() / player->maxHealth;
+
+	if (healthRatio <= 1.0 / 3.0) {
+		color = glm::vec3(1.0, 0.0, 0.0);
+	} else if (healthRatio <= 2.0 / 3.0) {
+		color = glm::vec3(0.8, 0.4, 0.2);
+	} else {
+		color = glm::vec3(0.0, 1.0, 0.0);
+	}
 
 	float length = HEALTHBAR_LENGTH * healthRatio;
 	float offset = (HEALTHBAR_START * (1 - healthRatio));
 
-	glm::vec2 pos(HEALTHBAR_START - offset, BAR_HEIGHT);
+	glm::vec2 pos(HEALTHBAR_START - offset, h() - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	healthBar[0]->setPosition(pos);
 	healthBar[0]->setScale(scale);
+	healthBar[0]->setColor(color);
+}
+
+void MyGLCanvas::handleExpBar() {
+	float expRatio = player->getPoints() / player->maxPoints;
+
+	float length = EXPBAR_LENGTH * expRatio;
+	float offset = (EXPBAR_START * (1 - expRatio));
+
+	glm::vec2 pos(w() / 2.0 - offset, h() - BAR_HEIGHT);
+	glm::vec2 scale(length, BAR_WIDTH);
+
+	expBar[0]->setPosition(pos);
+	expBar[0]->setScale(scale);
+	cout << player->getPoints() << endl;
 }
 
 void MyGLCanvas::handleManaBar() {
@@ -207,7 +239,7 @@ void MyGLCanvas::handleManaBar() {
 	float length = MANABAR_LENGTH * manaRatio;
 	float offset = (MANABAR_START * (1 - manaRatio));
 
-	glm::vec2 pos(w() - MANABAR_START, BAR_HEIGHT);
+	glm::vec2 pos(w() - MANABAR_START, h() - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	manaBar[0]->setPosition(pos);
@@ -544,11 +576,17 @@ void MyGLCanvas::setupShaders() {
 void MyGLCanvas::setupSprites() {
 	glm::vec2 pos(w() / 2.0 - 2, h() / 2.0 + 40);
 
+	healthBar[0]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, h() - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND);
+	healthBar[1]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, h() - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
+
+	expBar[0]->setEverything(SPRITE, glm::vec2(w() / 2, h() - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND);
+	expBar[1]->setEverything(SPRITE, glm::vec2(w() / 2, h() - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND);
+
 	crossHair[0]->setEverything(SPRITE, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 	crossHair[1]->setEverything(SPRITE, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 
-	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
-	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
+	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
+	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
 
 	deathScreen[0]->setEverything(DEATH, glm::vec2(w()/2.0f, h()/2.0f), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
 	//deathScreen[1]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
