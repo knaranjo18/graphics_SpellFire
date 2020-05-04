@@ -5,9 +5,7 @@
 bool Projectile::debug_draw_hitbox = false;
 
 void fireball_hitCB(HITDATA &h) {
-	printf("fireballCB called health is %f\n", h.health);
 	h.health -= 100;
-	printf("fireballCB set health to %f\n", h.health);
 }
 
 Projectile::Projectile() {
