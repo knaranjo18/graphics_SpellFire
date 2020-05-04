@@ -35,6 +35,8 @@
 #include "Camera.h"
 #include "Sprite.h"
 #include "skybox.h"
+#include "pickup.h"
+
 #include <chrono>
 #include <thread>
 
@@ -61,6 +63,8 @@ private:
 	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
 	void removeProjectile(shaderType projectileType, int index);
 
+	void spawnPickup(shaderType, glm::vec3);
+	void removePickup(int);
 	void spawnEnemy(shaderType enemyType);
 	void respawnEnemies();
 	void removeEnemy(shaderType enemyType, int index);
@@ -82,6 +86,7 @@ private:
 	vector<Enemy *> cowList, bunnyList;
 	vector<ply *> plyList;
 	vector<Projectile *> projectileList;
+	vector<Pickup*> pickupList;
 	vector<Sprite *> crossHair;
 	vector<Sprite *> healthBar;
 	vector<Sprite *> manaBar;

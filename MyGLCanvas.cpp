@@ -23,6 +23,8 @@
 MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Window(_x, _y, _w, _h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 
+	srand(time(0));
+
 	prevX = prevY = 0;
 	firstTime = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
@@ -135,8 +137,19 @@ void MyGLCanvas::drawScene() {
 		bunnyList[i]->draw(modelViewMatrix, shaderList[BUNNY], plyList[BUNNY]);
 	}
 
+	/*--------------draw projectiles---------------------------*/
 	for (int i = 0; i < projectileList.size(); i++) {
 		projectileList[i]->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
+	}
+
+	/*--------------draw pickups---------------------------*/
+	for (int i = 0; i < pickupList.size(); i++) {
+		if (pickupList[i]->getType() == HEALTHPOT) {
+			pickupList[i]->draw(modelViewMatrix, shaderList[HEALTHPOT], plyList[HEALTHPOT]);
+		}
+		else if (pickupList[i]->getType() == MANAPOT) {
+			pickupList[i]->draw(modelViewMatrix, shaderList[MANAPOT], plyList[MANAPOT]);
+		}
 	}
 
 	glEndQuery(GL_TIME_ELAPSED);
@@ -198,12 +211,24 @@ void MyGLCanvas::respawnEnemies() {
 	}
 }
 
+// refactor idea: replace pointers with NULL and periodically cull instead of
+// deleting immediately
 void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
+	const BoundingBox* p_box = player->getBox();
+	for (int i = 0; i < pickupList.size(); i++) {
+		const BoundingBox* pot_box = pickupList[i]->getBox();
+		if (p_box->doesCollide(*pot_box)) { // pick up the potion
+			player->applyHit(pickupList[i]->getHitFunc());
+			removePickup(i);
+			i -= 1;
+		}
+	}
+
 	if (player->isInvincible()) {
 		player->deciFrames();
 		return;
 	}
-	const BoundingBox* p_box = player->getBox();
+	
 	for (int i = 0; i < enemies.size(); i++) {
 		const BoundingBox* e_box = enemies[i]->getBox();
 		if (p_box->doesCollide(*e_box)) {
@@ -215,6 +240,11 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 			return;
 		}
 	}
+}
+
+void MyGLCanvas::removePickup(int i) {
+	delete pickupList[i];
+	pickupList.erase(pickupList.begin() + i);
 }
 
 void MyGLCanvas::handleHealthBar() {
@@ -305,6 +335,10 @@ void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 		else if (e->enemyType == BUNNY) { 
 			removeEnemy(BUNNY, i - cowList.size()); 
 		}
+
+		if (rand() % 3 == 0) { // enemies have a 1/3 chance to spawn a potion on death
+			spawnPickup(rand() % 2 == 0 ? HEALTHPOT : MANAPOT, e->getBox()->getCenter()); // TODO: make a getPosition function in enemy and player
+		}
 		
 		enemies.erase(enemies.begin() + i);
 	}
@@ -373,6 +407,20 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 	}
 }
 
+// TODO: insert into list so that all potions of one type are contiguous,
+// right now they are scattered and that may reduce performance
+void MyGLCanvas::spawnPickup(shaderType type, glm::vec3 position) {
+	float angle = sin(rand());
+	switch (type) {
+	case(HEALTHPOT):
+	case(MANAPOT):
+		pickupList.push_back(new Pickup(position, angle, type));
+		break;
+	default:
+		fprintf(stderr, "NOT A VALID PICKUP\n");
+		exit(1);
+	}
+}
 
 void MyGLCanvas::removeEnemy(shaderType enemyType, int index) {
 	switch (enemyType) {
@@ -541,12 +589,14 @@ void MyGLCanvas::moveSight() {
 }
 
 void MyGLCanvas::setupShaders() {	
-	shaderList.push_back(new ShaderManager());
-	shaderList.push_back(new ShaderManager());
-	shaderList.push_back(new ShaderManager());
-	shaderList.push_back(new ShaderManager());
-	shaderList.push_back(new ShaderManager());
-	shaderList.push_back(new ShaderManager());
+	shaderList.push_back(new ShaderManager()); // cow
+	shaderList.push_back(new ShaderManager()); // bunny
+	shaderList.push_back(new ShaderManager()); // fireball
+	shaderList.push_back(new ShaderManager()); // sprite
+	shaderList.push_back(new ShaderManager()); // death
+	shaderList.push_back(new ShaderManager()); // arena
+	shaderList.push_back(new ShaderManager()); // health pot
+	shaderList.push_back(new ShaderManager()); // mana pot
 
 	plyList.push_back(new ply("./data/blob.ply"));
 	plyList.push_back(new ply("./data/jad.ply"));
@@ -562,8 +612,15 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_1024.ppm");
 
-	for (int i = COW; i <= ARENA; i++) {
-		if (i == ARENA || i == FIREBALL) {
+	plyList.push_back(new ply("./data/potion.ply"));
+	plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
+
+	plyList.push_back(new ply("./data/potion.ply"));
+	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
+
+	// TODO, find a better way than going up to max value of enum
+	for (int i = COW; i <= MANAPOT; i++) {
+		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
 		} else if (i == SPRITE) {
 			shaderList[i]->initShader("./shaders/330/sprite.vert", "./shaders/330/sprite.frag");
@@ -572,7 +629,6 @@ void MyGLCanvas::setupShaders() {
 		} else {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/enemyColor.frag");
 		}
-
 
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
 		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
