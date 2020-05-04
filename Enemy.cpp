@@ -5,9 +5,14 @@
 
 bool Enemy::debug_draw_hitbox = false;
 
+void smackAttackCB(HITDATA& h) {
+	h.health -= 25;
+	h.mana -= 50;
+}
+
 Enemy::Enemy() {
 	health = 100.0;
-	speed = 0.001;
+	speed = 0.0001;
 	position = glm::vec3(1, -0.4, 0.0);
 	lookVector = glm::vec3(1.0, 0.0, 0.0);
 	scaleSize = glm::vec3(0.3, 0.3, 0.3);
@@ -22,13 +27,14 @@ Enemy::Enemy() {
 	transMat4 = glm::translate(transMat4, position);
 	transMat4 = glm::scale(transMat4, scaleSize);
 	transMat4 = glm::rotate(transMat4, currAngle + initialAngle, glm::vec3(0.0, 1.0, 0.0));
+	onHit = &smackAttackCB;
 }
 
 Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 	switch (_enemyType) {
 	case(COW):
 		health = 100.0;
-		speed = 0.001;
+		speed = 0.0001;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
 		scaleSize = glm::vec3(1, 1, 1) * COWSIZE;
@@ -41,7 +47,7 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 		break;
 	case(BUNNY):
 		health = 200.0;
-		speed = 0.002;
+		speed = 0.0002;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
 		scaleSize = glm::vec3(1, 1, 1) * BUNNYSIZE;
@@ -62,6 +68,7 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 	transMat4 = glm::translate(transMat4, position);
 	transMat4 = glm::scale(transMat4, scaleSize);
 	transMat4 = glm::rotate(transMat4, currAngle + initialAngle, glm::vec3(0.0, 1.0, 0.0));
+	onHit = &smackAttackCB;
 }
 
 
@@ -87,6 +94,10 @@ void Enemy::applyHit(t_hitfunc f) {
 	f(data);
 	health = data.health;
 	speed = data.speed;
+}
+
+t_hitfunc Enemy::getHitFunc() {
+	return onHit;
 }
 
 void Enemy::draw(glm::mat4 modelView, ShaderManager* shader, ply* myPly) {

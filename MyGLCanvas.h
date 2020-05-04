@@ -65,6 +65,8 @@ private:
 	void hendleProjectiles(vector<Enemy*>&);
 	void applyProjectile(Projectile*, int, vector<Enemy*>&);
 	void handleMoveCollisions(glm::vec3, vector<Enemy*>&);
+	void handlePlayerCollisions(vector<Enemy*>&);
+
 	int findEnemyCollision(Projectile*, vector<Enemy*>&);
 
 	void setupSprites();
