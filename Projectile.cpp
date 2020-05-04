@@ -10,7 +10,7 @@ void fireball_hitCB(HITDATA &h) {
 
 Projectile::Projectile() {
 	projectileType = FIREBALL;
-	speed = 0.03;
+	speed = 0.05;
 	duration = 2;
 	currAngleYaw = currAnglePitch = 0;
 	initialAngleYaw = 0;
@@ -27,7 +27,7 @@ Projectile::Projectile() {
 Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired) {
 	switch (_type) {
 	case(FIREBALL):
-		speed = 0.03;
+		speed = 0.05;
 		duration = 2;
 		currAngleYaw = currAnglePitch = 0;
 		initialAngleYaw = 0;

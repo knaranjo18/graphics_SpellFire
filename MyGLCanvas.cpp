@@ -1,9 +1,9 @@
  #include "MyGLCanvas.h"
 
-#define SENSITIVITY 1.0f
+#define SENSITIVITY 0.5f
 #define HEALTHBAR_START 260.0
 #define HEALTHBAR_LENGTH 500.0
-#define IFRAME_AFTER_HIT 150
+#define IFRAME_AFTER_HIT 60
 
 #define MANABAR_START 260
 #define MANABAR_LENGTH 500
@@ -16,12 +16,13 @@
 #define TARGETFPS 60
 #define TIMEPERFRAME 1000 / TARGETFPS
 #define MAX_ENEMIES 20
+#define NANOPERSEC 1000000000
+
 
 
 MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Window(_x, _y, _w, _h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 
-	srand(time(0));
 	prevX = prevY = 0;
 	firstTime = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
@@ -74,7 +75,6 @@ void MyGLCanvas::draw() {
 		if (firstTime) {
 			firstTime = false;
 			setupShaders();
-			startTime = time(0);
 		}
 
 		if (!crossHair[0]->initComplete) {
@@ -96,6 +96,11 @@ void MyGLCanvas::draw() {
 }
 
 void MyGLCanvas::drawScene() {
+	GLuint query;
+	// set up frame timing
+	glGenQueries(1, &query);
+	glBeginQuery(GL_TIME_ELAPSED, query);
+	
 	doGameLogic();
 
 	//setting up camera info
@@ -132,7 +137,26 @@ void MyGLCanvas::drawScene() {
 
 	for (int i = 0; i < projectileList.size(); i++) {
 		projectileList[i]->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
-	}	
+	}
+
+	glEndQuery(GL_TIME_ELAPSED);
+	enforceFrameTime(query);
+}
+
+void MyGLCanvas::enforceFrameTime(GLint query) {
+	GLint available = 0;
+	while (!available) {
+		glGetQueryObjectiv(query, GL_QUERY_RESULT_AVAILABLE, &available);
+	}
+
+	GLuint64 timeElapsed = 0;
+	GLuint64 frameTarget = NANOPERSEC / TARGETFPS;
+	
+	glGetQueryObjectui64v(query, GL_QUERY_RESULT, &timeElapsed);
+
+	if (timeElapsed < frameTarget) {
+		this_thread::sleep_for(std::chrono::nanoseconds(frameTarget - timeElapsed));
+	}
 }
 
 void MyGLCanvas::doGameLogic() {
