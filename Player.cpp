@@ -15,6 +15,7 @@ Player::Player() {
 	mana = 10.0;
 	speed = 0.05;
 	canMoveSight = false;
+	maxMana = 20.0;
 	spellSelected = FIREBALL;
 }
 
@@ -117,7 +118,9 @@ void Player::changePoints(int _points) {
 
 
 void Player::chargeMana() {
-	mana += MANA_CHARGE;
+	float temp = mana + MANA_CHARGE;
+	if (temp <= maxMana)
+		mana = temp;
 }
 
 
@@ -137,7 +140,9 @@ float Player::getMana() {
 }
 
 void Player::changeMana(int _mana) {
-	mana += _mana;
+	float temp = mana + _mana;
+	if (temp <= maxMana)
+		mana = temp;
 }
 
 float Player::getSpellCost(shaderType spellType) {

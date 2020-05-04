@@ -34,6 +34,7 @@ public:
 	Camera *myCam;
 	bool canMoveSight;
 	shaderType spellSelected;
+	float maxMana;
 private:
 	int points;
 	float speed, mana, health, yaw, pitch;

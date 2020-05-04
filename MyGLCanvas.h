@@ -66,6 +66,8 @@ private:
 	int findEnemyCollision(Projectile*, vector<Enemy*>&);
 
 	void setupSprites();
+	void handleHealthBar();
+	void handleManaBar();
 
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
@@ -73,10 +75,10 @@ private:
 	vector<Projectile *> projectileList;
 	vector<Sprite *> crossHair;
 	vector<Sprite *> healthBar;
+	vector<Sprite *> manaBar;
 
 	Player *player;
 	Scenery *arena;
-	Sprite *manaBar;
 	
 
 	glm::vec3 lightPos;
