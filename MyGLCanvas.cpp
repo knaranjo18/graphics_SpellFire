@@ -346,7 +346,7 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
 		
-		if (i == SPRITE) {
+		if (i == SPRITE || i == DEATH) {
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
 		} else{
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
@@ -473,6 +473,7 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
 	shaderList.push_back(new ShaderManager());
+	shaderList.push_back(new ShaderManager());
 
 	plyList.push_back(new ply("./data/cow.ply"));
 	plyList.push_back(new ply("./data/bunny.ply"));
@@ -481,7 +482,9 @@ void MyGLCanvas::setupShaders() {
 	plyList[FIREBALL]->applyTexture("./data/fireball_256.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE]->applyTexture("./data/fireball_256.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[DEATH]->applyTexture("./data/skull.ppm");
 
 	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_1024.ppm");
@@ -489,18 +492,25 @@ void MyGLCanvas::setupShaders() {
 	for (int i = COW; i <= ARENA; i++) {
 		if (i == ARENA || i == FIREBALL) {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
-		}
-		else if (i == SPRITE) {
+		} else if (i == SPRITE) {
 			shaderList[i]->initShader("./shaders/330/sprite.vert", "./shaders/330/sprite.frag");
+		} else if (i == DEATH) {
+			shaderList[i]->initShader("./shaders/330/death.vert", "./shaders/330/death.frag");
 		} else {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/enemyColor.frag");
 		}
 
+
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
 		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
-		plyList[i]->buildArrays();
-		plyList[i]->bindVBO(shaderList[i]->program);
+		if (i == SPRITE || i == DEATH) {
+			plyList[i]->buildArraysSprite();
+			plyList[i]->bindVBOsprites(shaderList[i]->program);
+		} else {
+			plyList[i]->buildArrays();
+			plyList[i]->bindVBO(shaderList[i]->program);
+		}
 	}
 	
 	string filenames[6] = {
@@ -519,7 +529,8 @@ void MyGLCanvas::setupSprites() {
 	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
 	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
 
-	deathScreen[0]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
+	deathScreen[0]->setEverything(DEATH, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
+	//deathScreen[1]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
 }
 
 void printEvent(int e) {
@@ -555,5 +566,6 @@ void MyGLCanvas::deallocate() {
 void MyGLCanvas::drawDeathScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
-	deathScreen[0]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+	deathScreen[0]->draw(modelViewMatrix, shaderList[DEATH], plyList[DEATH]);
+	//deathScreen[1]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 }

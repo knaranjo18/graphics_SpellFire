@@ -653,6 +653,12 @@ void ply::bindVBOsprites(unsigned int programID) {
 	// Enable the attribute
 	glEnableVertexAttribArray(position_attribute);
 
-
+	glGenBuffers(1, &texVBO_id);
+	glBindBuffer(GL_ARRAY_BUFFER, texVBO_id);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertexCount * 2, tex_coords_vao, GL_STATIC_DRAW);
+	GLint tex_coord_attribute = glGetAttribLocation(programID, "myTextureCoordinate");
+	glVertexAttribPointer(tex_coord_attribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(tex_coord_attribute);
+ 
 	cout << "Created vbo successfully" << endl;
 }

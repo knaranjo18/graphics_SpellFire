@@ -7,17 +7,17 @@ property float y
 property float z
 property float nx
 property float ny
-proeprty float nz
+property float nz
 property float s
 property float t
 element face 2
 property list uchar uint vertex_indices
 end_header
-0.0 1.0 0.0 1.0 1.0 1.0 0.0 1.0
-1.0 0.0 0.0 1.0 1.0 1.0 1.0 0.0
-0.0 0.0 0.0 1.0 1.0 1.0 0.0 0.0
-0.0 1.0 0.0 1.0 1.0 1.0 0.0 1.0
-1.0 1.0 0.0 1.0 1.0 1.0 1.0 1.0
-1.0 0.0 0.0 1.0 1.0 1.0 1.0 0.0
+0.0 1.0 0.0 1.0 1.0 1.0 0.0 1.0  
+1.0 0.0 0.0 1.0 1.0 1.0 1.0 0.0  
+0.0 0.0 0.0 1.0 1.0 1.0 0.0 0.0   
+0.0 1.0 0.0 1.0 1.0 1.0 0.0 1.0   
+1.0 1.0 0.0 1.0 1.0 1.0 1.0 1.0   
+1.0 0.0 0.0 1.0 1.0 1.0 1.0 0.0    
 3 0 1 2
 3 3 4 5
