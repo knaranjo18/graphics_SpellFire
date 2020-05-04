@@ -11,6 +11,10 @@
 #define BAR_HEIGHT 25
 #define BAR_WIDTH 30
 
+#define TARGETFPS 60
+#define TIMEPERFRAME 1000 / TARGETFPS
+
+
 MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Window(_x, _y, _w, _h, l) {
 	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
 
@@ -59,6 +63,7 @@ void MyGLCanvas::draw() {
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glPolygonOffset(1, 1);
+
 		
 		if (firstTime) {
 			firstTime = false;
@@ -220,6 +225,7 @@ void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 	// probably make it better by making the one list of enemies THE list and using
 	// counts of enemy types to tell what pointer is what
 	if (e->getHealth() <= 0) { // TODO: an isDead() func would be better
+		player->changePoints(e->pointValue);
 		if (e->enemyType == COW) { 
 			removeEnemy(COW, i);
 		}

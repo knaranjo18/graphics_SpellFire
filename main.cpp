@@ -46,6 +46,9 @@ int main(int argc, char **argv) {
 	Fl::add_idle(MyAppWindow::idleCB);
 	win->show();
 	win->fullscreen();
+
+	// initialize glut
+	glutInit(&argc, argv);
 	
 	return(Fl::run());
 }
