@@ -1,6 +1,6 @@
  #include "MyGLCanvas.h"
 
-#define SENSITIVITY 0.5
+#define SENSITIVITY 1.0f
 
 
 
@@ -106,35 +106,8 @@ void MyGLCanvas::drawScene() {
 }
 
 void MyGLCanvas::doGameLogic() {
-	// move enemies
 	glm::vec3 playerPos = player->myCam->getEyePoint();
-
-	handleMoveCollisions(playerPos);
-	/*
-	for (int i = 0; i < cowList.size(); i++) {
-		cowList[i]->moveEnemy(playerPos);
-	}
-	for (int i = 0; i < bunnyList.size(); i++) {
-		bunnyList[i]->moveEnemy(playerPos);
-	}
-	*/
 	
-	player->chargeMana();
-
-	for (int i = 0; i < projectileList.size(); i++) {
-		if (difftime(time(0), projectileList[i]->getSpawnTime()) >= double(projectileList[i]->getDuration())) {
-			removeProjectile(FIREBALL, i);
-			i--;
-		} else if (projectileList[i]->hitFloor()) {
-			removeProjectile(FIREBALL, i);
-			i--;
-		} else { 
-			projectileList[i]->moveProjectile();
-		}
-	}
-}
-
-void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos) {
 	vector<Enemy*> enemies;
 	for (int i = 0; i < cowList.size(); i++) {
 		enemies.push_back(cowList[i]);
@@ -143,6 +116,74 @@ void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos) {
 		enemies.push_back(bunnyList[i]);
 	}
 
+	player->chargeMana();
+
+	handleMoveCollisions(playerPos, enemies);
+	hendleProjectiles(enemies);
+}
+
+
+
+void MyGLCanvas::hendleProjectiles(vector<Enemy*>&enemies) {
+	int hit;
+	for (int i = 0; i < projectileList.size(); i++) {
+		if (difftime(time(0), projectileList[i]->getSpawnTime()) >= double(projectileList[i]->getDuration())) {
+			removeProjectile(FIREBALL, i);
+			i--;
+		}
+		else if (projectileList[i]->hitFloor()) {
+			removeProjectile(FIREBALL, i);
+			i--;
+		}
+		else if ((hit = findEnemyCollision(projectileList[i], enemies)) != -1) {
+			// deal damage to enemy here
+			applyProjectile(projectileList[i], hit, enemies);
+			removeProjectile(FIREBALL, i);
+			i--;
+		}
+		else {
+			projectileList[i]->moveProjectile();
+		}
+	}
+}
+
+// Handle all logic when enemy e is hit by projectile p
+void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
+	Enemy* e = enemies[i];
+	printf("Before hit, enemy has %f health left\n", e->getHealth());
+	e->applyHit(p->getHitfunc());
+
+	// if the enemy is dead remove it TODO: make this better its jank
+	// probably make it better by making the one list of enemies THE list and using
+	// counts of enemy types to tell what pointer is what
+	if (e->getHealth() <= 0) { // TODO: an isDead() func would be better
+		if (e->enemyType == COW) { 
+			removeEnemy(COW, i);
+		}
+		else if (e->enemyType == BUNNY) { 
+			removeEnemy(BUNNY, i - cowList.size()); 
+		}
+		
+		enemies.erase(enemies.begin() + i);
+		printf("Enemy killed!\n");
+	}
+	printf("after hit, it has %f health left!\n", e->getHealth());
+}
+
+// Returns the index of the enemy which is currently colliding with the projectile
+// or -1 if there is no collision
+int MyGLCanvas::findEnemyCollision(Projectile* p, vector<Enemy*>& enemies) {
+	const BoundingBox* pBox = p->getBox();
+	for (int i = 0; i < enemies.size(); i++) {
+		const BoundingBox* eBox = enemies[i]->getBox();
+		if (pBox->doesCollide(*eBox)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos, vector<Enemy*>&enemies) {
 	// move either away from collision or towards player
 	for (int i = 0; i < enemies.size(); i++) {
 		bool moved = false;

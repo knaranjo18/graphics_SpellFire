@@ -60,7 +60,10 @@ private:
 	void removeEnemy(shaderType enemyType, int index);
 
 	void doGameLogic();
-	void handleMoveCollisions(glm::vec3);
+	void hendleProjectiles(vector<Enemy*>&);
+	void applyProjectile(Projectile*, int, vector<Enemy*>&);
+	void handleMoveCollisions(glm::vec3, vector<Enemy*>&);
+	int findEnemyCollision(Projectile*, vector<Enemy*>&);
 
 	void setupSprites();
 

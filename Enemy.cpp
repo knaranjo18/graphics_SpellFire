@@ -7,14 +7,14 @@ bool Enemy::debug_draw_hitbox = false;
 
 Enemy::Enemy() {
 	health = 100.0;
-	speed = 0.001;
+	speed = 0.0001;
 	position = glm::vec3(1, -0.4, 0.0);
 	lookVector = glm::vec3(1.0, 0.0, 0.0);
 	scaleSize = glm::vec3(0.3, 0.3, 0.3);
 	pointValue = 1;
 	initialAngle = 0;
 	currAngle = 0;
-	angularSpeed = PI / 1080.0;
+	angularSpeed = PI / 10080.0;
 	enemyType = COW;
 	modelSize = COWSIZE * PLYSIZE;
 	box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
@@ -28,27 +28,27 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 	switch (_enemyType) {
 	case(COW):
 		health = 100.0;
-		speed = 0.001;
+		speed = 0.0001;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
 		scaleSize = glm::vec3(1, 1, 1) * COWSIZE;
 		pointValue = 1;
 		initialAngle = 0;
 		currAngle = 0;
-		angularSpeed = PI / 600.0;
+		angularSpeed = PI / 6000.0;
 		enemyType = _enemyType;
 		modelSize = PLYSIZE * COWSIZE;
 		break;
 	case(BUNNY):
 		health = 200.0;
-		speed = 0.002;
+		speed = 0.0002;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
 		scaleSize = glm::vec3(1, 1, 1) * BUNNYSIZE;
 		pointValue = 2;
 		initialAngle = PI;
 		currAngle = 0;
-		angularSpeed = PI / 600.0;
+		angularSpeed = PI / 6000.0;
 		enemyType = _enemyType;
 		modelSize = PLYSIZE * BUNNYSIZE;
 		break;
@@ -80,6 +80,13 @@ float Enemy::getHealth() {
 
 const BoundingBox* Enemy::getBox() {
 	return box;
+}
+
+void Enemy::applyHit(t_hitfunc f) {
+	HITDATA data(health, 0, speed); // enemies have no mana (yet)
+	f(data);
+	health = data.health;
+	speed = data.speed;
 }
 
 void Enemy::draw(glm::mat4 modelView, ShaderManager* shader, ply* myPly) {

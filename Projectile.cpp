@@ -4,6 +4,12 @@
 
 bool Projectile::debug_draw_hitbox = false;
 
+void fireball_hitCB(HITDATA &h) {
+	printf("fireballCB called health is %f\n", h.health);
+	h.health -= 100;
+	printf("fireballCB set health to %f\n", h.health);
+}
+
 Projectile::Projectile() {
 	projectileType = FIREBALL;
 	speed = 0.03;
@@ -17,6 +23,7 @@ Projectile::Projectile() {
 	modelSize = FIREBALLSIZE * PLYSIZE;
 	box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
 	spawnTime = time(0);
+	onHit = &fireball_hitCB;
 }
 
 Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired) {
@@ -34,6 +41,7 @@ Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 direction
 		modelSize = FIREBALLSIZE * PLYSIZE;
 		box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
 		spawnTime = time(0);
+		onHit = &fireball_hitCB;
 		break;
 	default:
 		printf("NOT A VALID SPELL");
@@ -42,6 +50,10 @@ Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 direction
 	}
 	
 	projectileType = _type;
+}
+
+void Projectile::makeFireball(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired) {
+	// todo, move fireball code here
 }
 
 Projectile::~Projectile() {
@@ -100,6 +112,16 @@ void Projectile::moveProjectile() {
 	transMat4 = glm::rotate(transMat4, currAnglePitch + initialAnglePitch, glm::vec3(1.0, 0.0, 0.0));
 
 	this->transMat4 = transMat4;
+}
+
+t_hitfunc Projectile::getHitfunc()
+{
+	return onHit;
+}
+
+const BoundingBox* Projectile::getBox()
+{
+	return box;
 }
 
 time_t Projectile::getSpawnTime() {

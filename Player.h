@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "ShaderManager.h"
 #include "ply.h"
+#include "gamedefs.h"
 
 class Player {
 public:
@@ -27,6 +28,8 @@ public:
 	void moveLeft();
 	void moveRight();
 	void moveSight(int x_offset, int y_offset);
+
+	void applyHit(t_hitfunc);
 
 	Camera *myCam;
 	bool canMoveSight;
