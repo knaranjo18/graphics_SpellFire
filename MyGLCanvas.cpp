@@ -1,9 +1,9 @@
  #include "MyGLCanvas.h"
 
-#define SENSITIVITY 1.0f
+#define SENSITIVITY 0.5f
 #define HEALTHBAR_START 260.0
 #define HEALTHBAR_LENGTH 500.0
-#define IFRAME_AFTER_HIT 150
+#define IFRAME_AFTER_HIT 60
 
 #define MANABAR_START 260
 #define MANABAR_LENGTH 500
@@ -133,9 +133,8 @@ void MyGLCanvas::drawScene() {
 	for (int i = 0; i < projectileList.size(); i++) {
 		projectileList[i]->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
 	}
-	glEndQuery(GL_TIME_ELAPSED);
 
-	
+	glEndQuery(GL_TIME_ELAPSED);
 	enforceFrameTime(query);
 }
 
