@@ -9,7 +9,17 @@ items to restore your stats.  See how long you can last!
 The majority of the focus of SpellFire was on rendering all aspects of the game
 using GLSL shaders and VBOs.  We modified the ply reader to parse normal data and 
 texture coordinates from ply models we exported from 3D modeling tools (along with
-their textures).  
+their textures).  The code refers to COWs and BUNNYs as the two types of enemies; 
+that is a placeholder from when we used the cow and bunny ply models as the enemies.
+
+## Compilation Instructions
+**Windows**
+Throw everything into a visual studio project.  Ensure that the data directory is
+accessible from the executable directory and you're good to go!
+**Mac / Linux**
+In theory this program should compile if all of the files are compiled and linked, 
+however we did no testing on these operating systems so we make no guarantees about 
+compiling this project for them.
 
 ## Controls
 Player Movement - *W, A, S, D*
@@ -43,6 +53,7 @@ Quit Game - *Escape Key*
 		- Add ice bolt spell
 	- ~~Make different enemies~~
 	- ~~Add maximum mana~~
+	- ~~Add pickups~~
 	
 
 

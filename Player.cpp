@@ -212,7 +212,7 @@ void Player::applyHit(t_hitfunc f) {
 
 	f(data);
 
-	health = max(data.health, maxHealth);
+	health = min(data.health, maxHealth);
 	mana = min(max(data.mana, 0), maxMana);
 	speed = data.speed;
 }
