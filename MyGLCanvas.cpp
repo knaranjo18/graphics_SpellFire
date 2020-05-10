@@ -20,8 +20,11 @@
 
 
 
-MyGLCanvas::MyGLCanvas(int _x, int _y, int _w, int _h, const char *l) : Fl_Gl_Window(_x, _y, _w, _h, l) {
-	mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
+
+
+MyGLCanvas::MyGLCanvas(int _w, int _h) {
+	//mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
+	setupWindow(_w, _h);
 
 	srand(time(0));
 
@@ -61,7 +64,7 @@ MyGLCanvas::~MyGLCanvas() {
 	deallocate();
 }
 
-
+/*
 void MyGLCanvas::draw() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -96,14 +99,14 @@ void MyGLCanvas::draw() {
 		drawDeathScene();
 	}
 }
-
+*/
 void MyGLCanvas::drawScene() {
 	GLuint query;
 	// set up frame timing
 	glGenQueries(1, &query);
 	glBeginQuery(GL_TIME_ELAPSED, query);
 	
-	doGameLogic();
+	//doGameLogic();
 
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
@@ -172,6 +175,7 @@ void MyGLCanvas::enforceFrameTime(GLint query) {
 	}
 }
 
+/*
 void MyGLCanvas::doGameLogic() {
 	glm::vec3 playerPos = player->myCam->getEyePoint();
 	
@@ -195,6 +199,7 @@ void MyGLCanvas::doGameLogic() {
 
 	respawnEnemies();
 }
+*/
 
 void MyGLCanvas::respawnEnemies() {
 	double deltaTime = difftime(time(0), startTime);
@@ -247,6 +252,7 @@ void MyGLCanvas::removePickup(int i) {
 	pickupList.erase(pickupList.begin() + i);
 }
 
+/*
 void MyGLCanvas::handleHealthBar() {
 	glm::vec3 color;
 	float healthRatio = player->getHealth() / player->maxHealth;
@@ -295,7 +301,7 @@ void MyGLCanvas::handleManaBar() {
 	manaBar[0]->setPosition(pos);
 	manaBar[0]->setScale(scale);
 }
-
+*/
 void MyGLCanvas::hendleProjectiles(vector<Enemy*>&enemies) {
 	int hit;
 	for (int i = 0; i < projectileList.size(); i++) {
@@ -452,7 +458,7 @@ void MyGLCanvas::removeProjectile(shaderType projectileType, int index) {
 	}
 }
 
-
+/*
 void MyGLCanvas::updateCamera(int width, int height) {
 	float xy_aspect;
 	GLint projection_id;
@@ -474,8 +480,9 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		}
 	}
 }
+*/
 
-
+/*
 int MyGLCanvas::handle(int e) {
 	#ifndef __APPLE__
 		if (firstTime && e == FL_SHOW && shown()) {
@@ -483,7 +490,7 @@ int MyGLCanvas::handle(int e) {
 			make_current();
 			GLenum err = glewInit(); // defines pters to functions of OpenGL V 1.2 and above
 			if (GLEW_OK != err)	{
-				/* Problem: glewInit failed, something is seriously wrong. */
+				/* Problem: glewInit failed, something is seriously wrong. */ /*
 				fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 			}
 			else {
@@ -587,6 +594,7 @@ void MyGLCanvas::moveSight() {
 
 	player->moveSight(x_offset, y_offset);
 }
+*/
 
 void MyGLCanvas::setupShaders() {	
 	shaderList.push_back(new ShaderManager()); // cow
@@ -649,6 +657,7 @@ void MyGLCanvas::setupShaders() {
 	skybox = new Skybox(filenames);
 }
 
+/*
 void MyGLCanvas::setupSprites() {
 	glm::vec2 pos(w() / 2.0 - 2, h() / 2.0 + 40);
 
@@ -671,6 +680,7 @@ void MyGLCanvas::setupSprites() {
 void printEvent(int e) {
 	printf("Event was %s (%d)\n", fl_eventnames[e], e);
 }
+*/
 
 void MyGLCanvas::deallocate() {
 	delete player;
@@ -703,4 +713,73 @@ void MyGLCanvas::drawDeathScene() {
 
 	deathScreen[0]->draw(modelViewMatrix, shaderList[DEATH], plyList[DEATH]);
 	//deathScreen[1]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+}
+
+void MyGLCanvas::run() {
+	while (!glfwWindowShouldClose(window))
+	{
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+	glfwTerminate();
+}
+
+
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (action == GLFW_PRESS) {
+		if (key == GLFW_KEY_ESCAPE)
+			glfwSetWindowShouldClose(window, true);
+	}
+}
+
+
+void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+	glViewport(0, 0, width, height);
+}
+
+void MyGLCanvas::setupWindow(int w, int h) {
+	glfwInit();
+
+	monitor = glfwGetPrimaryMonitor();
+	mode = glfwGetVideoMode(monitor);
+
+	// Specifies OpenGL must be compatible with version 3.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+
+	// Removes outdated functions
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);  //Uncomment for MacOS devices
+
+	glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+	glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+	window = glfwCreateWindow(mode->width, mode->height, "Spellfire", monitor, NULL);
+
+	if (window == NULL) {
+		printf("Failed to create GLFW window\n");
+		glfwTerminate();
+		exit(1);
+	}
+
+	glfwMakeContextCurrent(window);
+	glViewport(0, 0, mode->width, mode->height);
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetCursorPosCallback(window, cursor_position_callback);
 }

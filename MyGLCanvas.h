@@ -10,10 +10,7 @@
 #  include <GL/glew.h>
 #endif
 
-#include <FL/glut.h>
-#include <FL/glu.h>
-#include <FL/names.h>
-#include <FL/FL_Input_.H>
+#include <GLFW\glfw3.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -41,25 +38,29 @@
 #include <thread>
 
 
-class MyGLCanvas : public Fl_Gl_Window {
+class MyGLCanvas {
 public:
-	MyGLCanvas(int x, int y, int w, int h, const char *l = 0);
+	MyGLCanvas(int w, int h);
 	~MyGLCanvas();
 
+	void run();
+
 private:
-	void draw();
+	//void draw();
 	void drawScene();
 	void drawDeathScene();
 	
 	void setupShaders();
 	
-	int handle(int);
-	void resize(int x, int y, int w, int h);
-	void updateCamera(int width, int height);
+	//int handle(int);
+	//void resize(int x, int y, int w, int h);
+	//void updateCamera(int width, int height);
 	void deallocate();
 	void enforceFrameTime(GLint);
-	
-	void moveSight();
+	void setupWindow(int w, int h);
+
+
+	//void moveSight();
 	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
 	void removeProjectile(shaderType projectileType, int index);
 
@@ -69,7 +70,7 @@ private:
 	void respawnEnemies();
 	void removeEnemy(shaderType enemyType, int index);
 
-	void doGameLogic();
+	//void doGameLogic();
 	void hendleProjectiles(vector<Enemy*>&);
 	void applyProjectile(Projectile*, int, vector<Enemy*>&);
 	void handleMoveCollisions(glm::vec3, vector<Enemy*>&);
@@ -77,10 +78,10 @@ private:
 
 	int findEnemyCollision(Projectile*, vector<Enemy*>&);
 
-	void setupSprites();
-	void handleHealthBar();
-	void handleManaBar();
-	void handleExpBar();
+	//void setupSprites();
+	//void handleHealthBar();
+	//void handleManaBar();
+	//void handleExpBar();
 
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
@@ -102,6 +103,10 @@ private:
 	int prevX, prevY;
 	bool firstTime, alive;
 	time_t startTime;
+
+	GLFWwindow *window;
+	GLFWmonitor *monitor;
+	const GLFWvidmode *mode;
 };
 
 #endif 
