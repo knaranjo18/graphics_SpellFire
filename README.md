@@ -35,6 +35,10 @@ Quit Game - *Escape Key*
 - **Develop Enemies**
 	- ~~Get enemy PLY models~~
 	- Apply textures
+	- Add movement animations (Basic is up and down bobbing)
+	- Make different types of enemies
+		- Archers
+		- Enemy mages 
 
 
 - **Scenery**
@@ -47,6 +51,12 @@ Quit Game - *Escape Key*
 	- ~~Allow player to shoot projectile along long vector with click~~
 	- ~~Add collision between enemy and projectile~~
 	- Add sounds
+	- Add particle effects to projectiles
+	- Add a staff or hand for the player
+	- Add movement bob up and down
+	- Improve collisions so players and enemies not allowed to walk through each other
+	- Implement progressive difficulty 
+	- Improve player stats when leveling up
 	- ~~Add points for player~~
 	- ~~Add mana restricton for player~~
 	- Add spell selection
@@ -59,7 +69,12 @@ Quit Game - *Escape Key*
 
 - **Code improvement**
 	- Switch over from FLTK to GLFW for window (Makes for smoother gameplay)
+	- Improve enemy storage
+	- Improve the textured and untextured sprite difference
 
 - **GUI**
 	- ~~Add crosshair~~
 	- ~~Health bar~~
+	- Add a restart button
+	- Add a start menu
+	- Figure out best way to add text to screen
