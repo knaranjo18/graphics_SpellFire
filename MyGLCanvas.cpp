@@ -683,7 +683,7 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
 	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-	window = glfwCreateWindow(mode->width, mode->height, "Spellfire", NULL, NULL);
+	window = glfwCreateWindow(mode->width, mode->height, "Spellfire", monitor, NULL);
 
 	if (window == NULL) {
 		printf("Failed to create GLFW window\n");
@@ -694,7 +694,7 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwMakeContextCurrent(window);
 	glViewport(0, 0, mode->width, mode->height);
 
-	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);

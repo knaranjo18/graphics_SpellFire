@@ -14,7 +14,7 @@ that is a placeholder from when we used the cow and bunny ply models as the enem
 
 ## Compilation Instructions
 **Windows**
-Throw everything into a visual studio project.  Ensure that the data and shader directory is
+Throw everything into a visual studio project. Make sure you have GLEW and GLFW installed. Ensure that the data and shader directory is
 accessible from the executable directory and you're good to go!
 **Mac / Linux**
 In theory this program should compile if all of the files are compiled and linked, 
@@ -22,8 +22,20 @@ however we did no testing on these operating systems so we make no guarantees ab
 compiling this project for them.
 
 ## Installing GLEW
+**Windows**
+1. Go to the [glew website](http://glew.sourceforge.net/) and download/extract the 32-bit Windows binaries.
+2. Copy the `include\GL` folder into your Visual Studio include path. Usually it's `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\include`
+3. Copy the `.lib` files from `\lib\Release\Win32` into your Visual Studio library path. `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\lib\x86`
+4. Copy the `.dll` file from `\bin\Release\Win32` to your Windows runtime directory. Usually that's `C:\Windows\System32`
+5. Add `glew32s.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`
 
 ## Installing GLFW
+**Windows**
+1. Go to the [GLFW website](https://www.glfw.org/download.html) and download/extract the 32-bit Windows binaries.
+2. Copy the `include\GLFW` folder into your Visual Studio include path. Usually it's `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\include`
+3. Copy the two `.lib` files from the `lib-vc` folder corresponding to your version of Visual Studios into your Visual Studio library path. Usually it's `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\lib\x86`
+4. Copy the `.dll` file to your Windows runtime directory. Usually that's `C:\Windows\System32`
+5. Add `glfw3.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`
 
 ## Controls
 Player Movement - *W, A, S, D*
