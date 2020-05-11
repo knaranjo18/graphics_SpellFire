@@ -82,6 +82,10 @@ Quit Game - *Escape Key*
 	- ~~Add points for player~~
 	- ~~Add mana restricton for player~~
 	- Add sounds
+	- Improve pickups
+		- Add duration
+		- Add animation
+		- Add flashing when they are about to despawn
 	- Add particle effects to projectiles
 	- Add a staff or hand for the player
 	- Add movement bob up and down

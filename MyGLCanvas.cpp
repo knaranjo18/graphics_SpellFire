@@ -23,8 +23,10 @@ MyGLCanvas::MyGLCanvas() {
 	setupWindow(800, 600);
 	srand(time(0));
 
+	currState = PLAYING;
+
 	prevX = prevY = 0;
-	firstTime = firstMouse = alive = true;
+	firstTime = firstMouse = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 
 	player = new Player();
@@ -90,10 +92,19 @@ void MyGLCanvas::draw() {
 	// Clear the buffer of colors in each bit plane.
 	// bit plane - A set of bits that are on or off (Think of a black and white image)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	if (alive) {
+	switch (currState) {
+	case PLAYING:
 		drawScene();
-	} else {
+		break;
+	case DEAD:
 		drawDeathScene();
+		break;
+	case START:
+		//TODO
+		break;
+	default:
+		printf("INVALID GAME STATE\n");
+		exit(1);
 	}
 }
 
@@ -191,6 +202,8 @@ void MyGLCanvas::doGameLogic() {
 	handleExpBar();
 	handlePlayerCollisions(enemies);
 
+	if (player->isDead()) currState = DEAD;
+
 	player->chargeMana();
 	player->tickHeal();
 
@@ -238,7 +251,6 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 			// will receive invincibility frames for a short while after
 			player->applyHit(enemies[i]->getHitFunc());
 			player->setiFrames(IFRAME_AFTER_HIT);
-			if (player->isDead()) alive = false;
 			return;
 		}
 	}
@@ -263,9 +275,9 @@ void MyGLCanvas::handleHealthBar() {
 	}
 
 	float length = HEALTHBAR_LENGTH * healthRatio;
-	float offset = (HEALTHBAR_START * (1 - healthRatio));
+	//float offset = (HEALTHBAR_START * (1 - healthRatio));
 
-	glm::vec2 pos(HEALTHBAR_START - offset, mode->height - BAR_HEIGHT);
+	glm::vec2 pos(HEALTHBAR_START, mode->height - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	healthBar[0]->setPosition(pos);
@@ -277,9 +289,9 @@ void MyGLCanvas::handleExpBar() {
 	float expRatio = player->getPoints() / player->maxPoints;
 
 	float length = EXPBAR_LENGTH * expRatio;
-	float offset = (EXPBAR_START * (1 - expRatio));
+	//float offset = (EXPBAR_START * (1 - expRatio));
 
-	glm::vec2 pos(mode->width / 2.0 - offset, mode->height - BAR_HEIGHT);
+	glm::vec2 pos(mode->width / 2.0, mode->height - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	expBar[0]->setPosition(pos);
@@ -616,6 +628,7 @@ void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int ac
 	if (action == GLFW_PRESS) {
 		if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(_window, true);
 		if (key == GLFW_KEY_M) Enemy::debug_draw_hitbox = !Enemy::debug_draw_hitbox;
+		if (key == GLFW_KEY_R && canvas->currState == DEAD) canvas->restartGame();
 	}
 }
 
@@ -709,4 +722,8 @@ void MyGLCanvas::pollInput() {
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) player->moveLeft();
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) player->moveBackward();
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) player->moveRight();
+}
+
+void MyGLCanvas::restartGame() {
+
 }

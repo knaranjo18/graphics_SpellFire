@@ -12,4 +12,5 @@ const float EPSILON = 1e-5;
 #define FAR_PLANE 20.0f
 enum shaderType { COW, BUNNY, FIREBALL, SPRITE, DEATH, ARENA, HEALTHPOT, MANAPOT };
 enum groundType { FOREGROUND, BACKGROUND };
+enum GameState { START, PLAYING, DEAD };
 #endif

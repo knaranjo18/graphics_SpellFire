@@ -49,9 +49,9 @@ private:
 	void draw();
 	void drawScene();
 	void drawDeathScene();
-	
-	void setupShaders();
 
+	void setupShaders();
+	void restartGame();
 	
 	void updateCamera(int width, int height);
 	void deallocate();
@@ -98,7 +98,9 @@ private:
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
-	bool firstTime, alive, firstMouse;
+	bool firstTime, firstMouse;
+
+	GameState currState;
 
 	time_t startTime;
 
