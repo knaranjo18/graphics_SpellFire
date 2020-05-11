@@ -53,6 +53,8 @@ Camera Movement - *Mouse*
 
 Shoot Fireball - *Right Mouse Button*
 
+Restart Game - *R*
+
 Quit Game - *Escape Key*
 
 
@@ -94,6 +96,8 @@ Quit Game - *Escape Key*
 	- Improve player stats when leveling up
 	- Add spell selection
 		- Add ice bolt spell
+		- Add blink teleport spell
+
 
 
 - **Code improvement**

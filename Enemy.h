@@ -23,6 +23,7 @@ public:
 	void setHealth(float _health);
 	
 	float getHealth();
+	glm::vec3 getPosition();
 	const BoundingBox* getBox();
 
 	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly);
@@ -30,6 +31,8 @@ public:
 	void moveEnemy(glm::vec3 playerPos);
 
 	void applyHit(t_hitfunc);
+
+	bool isDead();
 
 	t_hitfunc getHitFunc();
 	

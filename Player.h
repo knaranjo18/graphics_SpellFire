@@ -12,6 +12,8 @@ public:
 	Player();
 	~Player();
 
+	void restartPlayer();
+
 	void changeHealth(float _health);
 	void changePoints(int _points);
 	void changeMana(int _mana);
@@ -23,6 +25,7 @@ public:
 	int getPoints();
 	float getMana();
 	float getSpellCost(shaderType spellType);
+	glm::vec3 getPosition();
 	const BoundingBox* getBox();
 	int getiFrames();
 
@@ -40,7 +43,6 @@ public:
 	void applyHit(t_hitfunc);
 
 	Camera *myCam;
-	bool canMoveSight;
 	shaderType spellSelected;
 	float maxMana, maxHealth, maxPoints;
 private:
@@ -49,7 +51,5 @@ private:
 	float speed, mana, health, yaw, pitch;
 
 	BoundingBox* box;
-
-
 };
 #endif

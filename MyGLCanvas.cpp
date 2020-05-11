@@ -18,6 +18,8 @@
 #define MAX_ENEMIES 20
 #define NANOPERSEC 1000000000
 
+#define DEBUGMODE false
+
 
 MyGLCanvas::MyGLCanvas() {
 	setupWindow(800, 600);
@@ -185,7 +187,7 @@ void MyGLCanvas::enforceFrameTime(GLint query) {
 
 
 void MyGLCanvas::doGameLogic() {
-	glm::vec3 playerPos = player->myCam->getEyePoint();
+	glm::vec3 playerPos = player->getPosition();
 	
 	vector<Enemy*> enemies;
 	for (int i = 0; i < cowList.size(); i++) {
@@ -256,11 +258,6 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 	}
 }
 
-void MyGLCanvas::removePickup(int i) {
-	delete pickupList[i];
-	pickupList.erase(pickupList.begin() + i);
-}
-
 
 void MyGLCanvas::handleHealthBar() {
 	glm::vec3 color;
@@ -317,12 +314,10 @@ void MyGLCanvas::hendleProjectiles(vector<Enemy*>&enemies) {
 		if (difftime(time(0), projectileList[i]->getSpawnTime()) >= double(projectileList[i]->getDuration())) {
 			removeProjectile(FIREBALL, i);
 			i--;
-		}
-		else if (projectileList[i]->hitFloor()) {
+		} else if (projectileList[i]->hitFloor()) {
 			removeProjectile(FIREBALL, i);
 			i--;
-		}
-		else if ((hit = findEnemyCollision(projectileList[i], enemies)) != -1) {
+		} else if ((hit = findEnemyCollision(projectileList[i], enemies)) != -1) {
 			// deal damage to enemy here
 			applyProjectile(projectileList[i], hit, enemies);
 			removeProjectile(FIREBALL, i);
@@ -342,11 +337,11 @@ void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 	// if the enemy is dead remove it TODO: make this better its jank
 	// probably make it better by making the one list of enemies THE list and using
 	// counts of enemy types to tell what pointer is what
-	if (e->getHealth() <= 0) { // TODO: an isDead() func would be better
+	if (e->isDead()) {
 		player->changePoints(e->pointValue);
 
 		if (rand() % 3 == 0) { // enemies have a 1/3 chance to spawn a potion on death
-			spawnPickup(rand() % 2 == 0 ? HEALTHPOT : MANAPOT, e->getBox()->getCenter()); // TODO: make a getPosition function in enemy and player
+			spawnPickup(rand() % 2 == 0 ? HEALTHPOT : MANAPOT, e->getPosition()); 
 		}
 
 		if (e->enemyType == COW) { 
@@ -408,8 +403,8 @@ void MyGLCanvas::fireProjectile(shaderType projectileType, glm::vec3 originPoint
 void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 	float xPos = float(rand()) / float(RAND_MAX) * (ARENA_SIZE * 2) - ARENA_SIZE;
 	float zPos = sqrt((ARENA_SIZE * ARENA_SIZE) - xPos * xPos);
-	float random = rand();
-	float(random) > (RAND_MAX / 2.0) ? zPos *= -1 : zPos;
+
+	(rand() % 2 == 0) ? zPos *= -1 : zPos;
 
 	switch (enemyType) {
 	case(COW):
@@ -429,6 +424,8 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 // right now they are scattered and that may reduce performance
 void MyGLCanvas::spawnPickup(shaderType type, glm::vec3 position) {
 	float angle = sin(rand());
+	position.y = HEIGHT - 0.05;
+
 	switch (type) {
 	case(HEALTHPOT):
 	case(MANAPOT):
@@ -468,6 +465,11 @@ void MyGLCanvas::removeProjectile(shaderType projectileType, int index) {
 		exit(1);
 		break;
 	}
+}
+
+void MyGLCanvas::removePickup(int i) {
+	delete pickupList[i];
+	pickupList.erase(pickupList.begin() + i);
 }
 
 
@@ -662,7 +664,7 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 			shaderType spellAttempt = canvas->player->spellSelected;
 
 			if (canvas->player->getSpellCost(spellAttempt) <= canvas->player->getMana()) {
-				canvas->fireProjectile(canvas->player->spellSelected, canvas->player->myCam->getEyePoint(), canvas->player->myCam->getLookVector());
+				canvas->fireProjectile(canvas->player->spellSelected, canvas->player->getPosition(), canvas->player->myCam->getLookVector());
 				canvas->player->changeMana(-canvas->player->getSpellCost(spellAttempt));
 			}
 			else {
@@ -696,7 +698,10 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
 	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-	window = glfwCreateWindow(mode->width, mode->height, "Spellfire", monitor, NULL);
+	if (DEBUGMODE)
+		window = glfwCreateWindow(mode->width / 2, mode->height / 2, "Spellfire", NULL, NULL);
+	else
+		window = glfwCreateWindow(mode->width, mode->height, "Spellfire", monitor, NULL);
 
 	if (window == NULL) {
 		printf("Failed to create GLFW window\n");
@@ -705,9 +710,13 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	}
 
 	glfwMakeContextCurrent(window);
-	glViewport(0, 0, mode->width, mode->height);
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	if (!DEBUGMODE) {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glViewport(0, 0, mode->width, mode->height);
+	} else {
+		glViewport(0, 0, mode->width / 2, mode->height / 2);
+	}
 
 	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -724,6 +733,39 @@ void MyGLCanvas::pollInput() {
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) player->moveRight();
 }
 
+// Removes all objects from scene and start initial enemies. Places player back at start.
+// TODO: Organize a bit better (Make a despawn everything function)
 void MyGLCanvas::restartGame() {
+	printf("GAME RESTART\n");
+	for (int i = 0; i < cowList.size(); i++) {
+		removeEnemy(COW, i);
+		i--;
+	}
 
+	for (int i = 0; i < bunnyList.size(); i++) {
+		removeEnemy(BUNNY, i);
+		i--;
+	}
+
+	for (int i = 0; i < projectileList.size(); i++) {
+		removeProjectile(FIREBALL, i);
+		i--;
+	}
+
+	for (int i = 0; i < pickupList.size(); i++) {
+		removePickup(i);
+		i--;
+	}
+
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++)
+			spawnEnemy(COW);
+
+		spawnEnemy(BUNNY);
+	}
+
+	firstMouse = true;
+	currState = PLAYING;
+	player->restartPlayer();
 }

@@ -165,3 +165,10 @@ void Enemy::moveEnemy(glm::vec3 playerPos) {
 	this->transMat4 = transMat4;
 }
 
+bool Enemy::isDead() {
+	return health <= 0;
+}
+
+glm::vec3 Enemy::getPosition() {
+	return position;
+}

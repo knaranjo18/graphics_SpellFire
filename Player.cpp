@@ -17,12 +17,11 @@ Player::Player() {
 	points = 0;
 	mana = 10.0;
 	speed = PLAYERSPEED;
-	canMoveSight = false;
 	maxMana = 20.0;
 	maxHealth = 100;
 	maxPoints = 10;
 	spellSelected = FIREBALL;
-	box = new BoundingBox(glm::vec4(myCam->getEyePoint(), 1.0), PLAYERSIZE);
+	box = new BoundingBox(glm::vec4(getPosition(), 1.0), PLAYERSIZE);
 	iFrames = 0;
 }
 
@@ -42,7 +41,7 @@ void Player::setiFrames(int iFrames)
 }
 
 void Player::moveForward() {
-	glm::vec3 eyeP = myCam->getEyePoint();
+	glm::vec3 eyeP = getPosition();
 	glm::vec3 lookV = myCam->getLookVector();
 	float distance;
 
@@ -58,7 +57,7 @@ void Player::moveForward() {
 }
 
 void Player::moveBackward() {
-	glm::vec3 eyeP = myCam->getEyePoint();
+	glm::vec3 eyeP = getPosition();
 	glm::vec3 lookV = myCam->getLookVector();
 	float distance;
 
@@ -75,7 +74,7 @@ void Player::moveBackward() {
 
 
 void Player::moveLeft() {
-	glm::vec3 eyeP = myCam->getEyePoint();
+	glm::vec3 eyeP = getPosition();
 	glm::vec3 lookV = myCam->getLookVector();
 	glm::vec3 upV = myCam->getUpVector();
 	glm::vec3 tempV = glm::normalize(glm::cross(lookV, upV));
@@ -94,7 +93,7 @@ void Player::moveLeft() {
 
 
 void Player::moveRight() {
-	glm::vec3 eyeP = myCam->getEyePoint();
+	glm::vec3 eyeP = getPosition();
 	glm::vec3 lookV = myCam->getLookVector();
 	glm::vec3 upV = myCam->getUpVector();
 	glm::vec3 tempV = glm::normalize(glm::cross(lookV, upV));
@@ -126,16 +125,13 @@ void Player::moveSight(int x_offset, int y_offset) {
 
 /*---------------Setters------------------*/
 void Player::changeHealth(float _health) {
-	float temp = health + _health;
-	if (temp <= maxHealth) {
-		health += _health;
-	}
+	health = min(maxHealth, health + _health);
 }
 
 
 void Player::changePoints(int _points) {
 	int temp = points + _points;
-	if (temp <= maxPoints) {
+	if (temp < maxPoints) {
 		points = temp;
 	} else {
 		points = 0;
@@ -145,9 +141,7 @@ void Player::changePoints(int _points) {
 
 
 void Player::chargeMana() {
-	float temp = mana + MANA_CHARGE;
-	if (temp <= maxMana)
-		mana = temp;
+	mana = min(maxMana, mana + MANA_CHARGE);
 }
 
 void Player::tickHeal() {
@@ -217,3 +211,25 @@ void Player::applyHit(t_hitfunc f) {
 	mana = min(max(data.mana, 0), maxMana);
 	speed = data.speed;
 }
+
+glm::vec3 Player::getPosition() {
+	return myCam->getEyePoint();
+}
+
+void Player::restartPlayer() {
+	glm::vec3 startPoint(0.0, HEIGHT, 0.0);
+	glm::vec3 startLook(1.0, 0.0, 0.0);
+	glm::vec3 upVec(0.0, 1.0, 0.0);
+	myCam->orientLookAt(startPoint, startLook, upVec);
+
+	health = 100.0;
+	points = 0;
+	mana = 10.0;
+	speed = PLAYERSPEED;
+	maxMana = 20.0;
+	maxHealth = 100;
+	maxPoints = 10;
+	spellSelected = FIREBALL;
+	box->setCenter(glm::vec4(getPosition(), 1.0f));
+}
+
