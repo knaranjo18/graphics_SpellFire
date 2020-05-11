@@ -6,7 +6,6 @@ Sprite::Sprite() {
 	color = glm::vec3(1.0, 1.0, 1.0);
 	angle = 0.0f;
 	spriteType = SPRITE;
-	initComplete = false;
 	ground_type = BACKGROUND;
 }
 
@@ -14,7 +13,6 @@ Sprite::Sprite(shaderType _spriteType, glm::vec2 _position, glm::vec2 _scale, fl
 	spriteType = _spriteType;
 	scale = glm::vec3(_scale, 1.0);
 	angle = _angle;
-	initComplete = true;
 	ground_type = type;
 	color = _color;
 	position = glm::vec3(_position, 0.0);
@@ -82,7 +80,6 @@ void Sprite::setEverything(shaderType _spriteType, glm::vec2 _position, glm::vec
 	position = glm::vec3(_position, 0.0);
 	scale = glm::vec3(_scale, 1.0);
 	angle = _angle;
-	initComplete = true;
 	color = _color;
 	ground_type = type;
 }

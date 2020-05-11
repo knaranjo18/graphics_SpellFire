@@ -55,6 +55,10 @@ Shoot Fireball - *Right Mouse Button*
 
 Restart Game - *R*
 
+Toggle Fullscreen - *F*
+
+Toggle Mouse Visibility = *Tab*
+
 Quit Game - *Escape Key*
 
 
@@ -67,6 +71,7 @@ Quit Game - *Escape Key*
 	- Make different types of enemies
 		- Archers
 		- Enemy mages 
+	- Tweek enemy stats
 
 
 - **Scenery**

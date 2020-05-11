@@ -63,18 +63,20 @@ private:
 
 	void spawnPickup(shaderType, glm::vec3);
 	void removePickup(int);
+
 	void spawnEnemy(shaderType enemyType);
 	void respawnEnemies();
 	void removeEnemy(shaderType enemyType, int index);
 
-	void doGameLogic();
 	void handleProjectiles(vector<Enemy*>&);
 	void applyProjectile(Projectile*, int, vector<Enemy*>&);
 	void handleMoveCollisions(glm::vec3, vector<Enemy*>&);
 	void handlePlayerCollisions(vector<Enemy*>&); 
+	int findEnemyCollision(Projectile*, vector<Enemy*>&);
+
 	void handlePickups();
 
-	int findEnemyCollision(Projectile*, vector<Enemy*>&);
+	void doGameLogic();
 
 	void setupSprites();
 	void handleHealthBar();
@@ -101,7 +103,7 @@ private:
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
-	bool firstTime, firstMouse;
+	bool firstTime, firstMouse, fullscreen, cursorVisible;
 
 	GameState currState;
 
@@ -114,6 +116,8 @@ private:
 	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void pollInput();
+	void toggleFullScreen();
+	void toggleCursor();
 };
 
 #endif 

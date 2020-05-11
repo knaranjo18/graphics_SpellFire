@@ -1,69 +1,70 @@
  #include "MyGLCanvas.h"
 
 #define SENSITIVITY 0.5f
+#define IFRAME_AFTER_HIT 60
+#define MAX_ENEMIES 20
+
 #define HEALTHBAR_START 260.0
 #define HEALTHBAR_LENGTH 500.0
-#define IFRAME_AFTER_HIT 60
 
 #define MANABAR_START 260
 #define MANABAR_LENGTH 500
 
 #define EXPBAR_START 260
 #define EXPBAR_LENGTH 500
+
 #define BAR_HEIGHT 25
 #define BAR_WIDTH 30
 
 #define TARGETFPS 60
 #define TIMEPERFRAME 1000 / TARGETFPS
-#define MAX_ENEMIES 20
+
 #define NANOPERSEC 1000000000
 
 #define DEBUGMODE false
 
-
+// Constructor to set everything up. Spawns some initial enemies
 MyGLCanvas::MyGLCanvas() {
 	setupWindow(800, 600);
 	srand(time(0));
 
 	currState = PLAYING;
-
 	prevX = prevY = 0;
 	firstTime = firstMouse = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 
 	player = new Player();
-	
+	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
+
+	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
+	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+
+	manaBar.push_back(new Sprite(SPRITE, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND));
+	manaBar.push_back(new Sprite(SPRITE, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+
+	expBar.push_back(new Sprite(SPRITE, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND));
+	expBar.push_back(new Sprite(SPRITE, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+
+	glm::vec2 pos(mode->width / 2.0 - 2, mode->height / 2.0 + 40);
+	crossHair.push_back(new Sprite(SPRITE, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	crossHair.push_back(new Sprite(SPRITE, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+	deathScreen.push_back(new Sprite(DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND));
+
+	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) 
-			spawnEnemy(COW); 
-		
+		for (int j = 0; j < 3; j++)
+			spawnEnemy(COW);
 		spawnEnemy(BUNNY);
 	}
-
-
-	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
-	
-	healthBar.push_back(new Sprite());
-	healthBar.push_back(new Sprite());
-
-	manaBar.push_back(new Sprite());
-	manaBar.push_back(new Sprite());
-
-	expBar.push_back(new Sprite());
-	expBar.push_back(new Sprite());
-
-	crossHair.push_back(new Sprite());
-	crossHair.push_back(new Sprite());
-
-	deathScreen.push_back(new Sprite());
-	deathScreen.push_back(new Sprite());
 }
 
+// Makes sure to reclaim all memory taken by new
 MyGLCanvas::~MyGLCanvas() {
 	deallocate();
 }
 
-
+// Chooses to draw the correct thing on the screen
 void MyGLCanvas::draw() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -77,14 +78,9 @@ void MyGLCanvas::draw() {
 		GLenum err = glewInit(); // defines pters to functions of OpenGL V 1.2 and above
 		if (GLEW_OK != err) {
 			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-		}
-		else {
+			exit(1);
+		} else {
 			setupShaders();
-		}
-
-
-		if (!crossHair[0]->initComplete) {
-			setupSprites();
 		}
 
 		// needs to be after so that shaders can setup
@@ -95,6 +91,7 @@ void MyGLCanvas::draw() {
 	// Clear the buffer of colors in each bit plane.
 	// bit plane - A set of bits that are on or off (Think of a black and white image)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
 	switch (currState) {
 	case PLAYING:
 		drawScene();
@@ -489,6 +486,7 @@ void MyGLCanvas::removePickup(int i) {
 }
 
 
+// Updates the camera based on the width and height of the screen
 void MyGLCanvas::updateCamera(int width, int height) {
 	float xy_aspect;
 	GLint projection_id;
@@ -498,6 +496,7 @@ void MyGLCanvas::updateCamera(int width, int height) {
 
 	glm::mat4 perspectiveMatrix = player->myCam->getProjectionMatrix();
 	glm::mat4 orthoMatrix = glm::ortho(0.0f, float(mode->width), float(mode->height), 0.0f, -1.0f, 1.0f);
+	
 	int size = shaderList.size();
 	for (int i = 0; i < size; i++) {
 		shaderList[i]->useShader();
@@ -590,7 +589,6 @@ void MyGLCanvas::setupSprites() {
 	manaBar[1]->setEverything(SPRITE, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
 
 	deathScreen[0]->setEverything(DEATH, glm::vec2(mode->width /2.0f, mode->height/2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
-	//deathScreen[1]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(mode->width, mode->height), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
 }
 
 
@@ -598,25 +596,17 @@ void MyGLCanvas::deallocate() {
 	delete player;
 	delete arena;
 
-	for (int i = 0; i < shaderList.size(); i++) {
-		delete shaderList[i];
-	}
-
-	for (int i = 0; i < plyList.size(); i++) {
-		delete plyList[i];
-	}
-
-	for (int i = 0; i < cowList.size(); i++) {
-		delete cowList[i];
-	}
-
-	for (int i = 0; i < bunnyList.size(); i++) {
-		delete bunnyList[i];
-	}
-
-	for (int i = 0; i < projectileList.size(); i++) {
-		delete projectileList[i];
-	}
+	for (int i = 0; i < shaderList.size(); i++) delete shaderList[i];
+	for (int i = 0; i < plyList.size(); i++) delete plyList[i];
+	for (int i = 0; i < cowList.size(); i++) delete cowList[i];
+	for (int i = 0; i < bunnyList.size(); i++) delete bunnyList[i];
+	for (int i = 0; i < projectileList.size(); i++) delete projectileList[i];
+	
+	for (int i = 0; i < 2; i++) delete healthBar[i];
+	for (int i = 0; i < 2; i++) delete manaBar[i];
+	for (int i = 0; i < 2; i++) delete expBar[i];
+	for (int i = 0; i < 2; i++) delete crossHair[i];
+	for (int i = 0; i < 2; i++) delete deathScreen[i];
 }
 
 
@@ -646,6 +636,8 @@ void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int ac
 		if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(_window, true);
 		if (key == GLFW_KEY_M) Enemy::debug_draw_hitbox = !Enemy::debug_draw_hitbox;
 		if (key == GLFW_KEY_R && c->currState == DEAD) c->restartGame();
+		if (key == GLFW_KEY_F) c->toggleFullScreen();
+		if (key == GLFW_KEY_TAB) c->toggleCursor();
 	}
 }
 
@@ -713,10 +705,15 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
 	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-	if (DEBUGMODE)
+	if (DEBUGMODE) {
 		window = glfwCreateWindow(mode->width / 2, mode->height / 2, "Spellfire", NULL, NULL);
-	else
+		fullscreen = false;
+		cursorVisible = true;
+	} else {
 		window = glfwCreateWindow(mode->width, mode->height, "Spellfire", monitor, NULL);
+		fullscreen = true;
+		cursorVisible = false;
+	}
 
 	if (window == NULL) {
 		printf("Failed to create GLFW window\n");
@@ -787,4 +784,25 @@ void MyGLCanvas::restartGame() {
 
 bool MyGLCanvas::isExpired(time_t spawnTime, float duration) {
 	return (difftime(time(0), spawnTime) >= duration);
+}
+
+void MyGLCanvas::toggleFullScreen() {
+	fullscreen = !fullscreen;
+
+	if (fullscreen) {
+		glfwSetWindowMonitor(window, monitor, NULL, NULL, mode->width, mode->height, mode->refreshRate);
+	} else {
+		glfwSetWindowMonitor(window, NULL, 300, 300, 800, 600, NULL);
+	}
+}
+
+void MyGLCanvas::toggleCursor() {
+	cursorVisible = !cursorVisible;
+
+	if (cursorVisible) {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+	else {
+	    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
 }

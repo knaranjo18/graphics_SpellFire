@@ -30,7 +30,6 @@ public:
 
 	shaderType spriteType;
 	groundType ground_type;
-	bool initComplete;
 private:
 	glm::vec3 position, scale, color;
 	float angle;
