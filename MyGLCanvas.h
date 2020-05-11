@@ -40,27 +40,23 @@
 
 class MyGLCanvas {
 public:
-	MyGLCanvas(int w, int h);
+	MyGLCanvas();
 	~MyGLCanvas();
 
 	void run();
 
 private:
-	//void draw();
+	void draw();
 	void drawScene();
 	void drawDeathScene();
 	
 	void setupShaders();
 	
-	//int handle(int);
-	//void resize(int x, int y, int w, int h);
-	//void updateCamera(int width, int height);
+	void updateCamera(int width, int height);
 	void deallocate();
 	void enforceFrameTime(GLint);
 	void setupWindow(int w, int h);
 
-
-	//void moveSight();
 	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
 	void removeProjectile(shaderType projectileType, int index);
 
@@ -70,7 +66,7 @@ private:
 	void respawnEnemies();
 	void removeEnemy(shaderType enemyType, int index);
 
-	//void doGameLogic();
+	void doGameLogic();
 	void hendleProjectiles(vector<Enemy*>&);
 	void applyProjectile(Projectile*, int, vector<Enemy*>&);
 	void handleMoveCollisions(glm::vec3, vector<Enemy*>&);
@@ -78,10 +74,10 @@ private:
 
 	int findEnemyCollision(Projectile*, vector<Enemy*>&);
 
-	//void setupSprites();
-	//void handleHealthBar();
-	//void handleManaBar();
-	//void handleExpBar();
+	void setupSprites();
+	void handleHealthBar();
+	void handleManaBar();
+	void handleExpBar();
 
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;
@@ -101,12 +97,16 @@ private:
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
-	bool firstTime, alive;
+	bool firstTime, alive, firstMouse;
+
 	time_t startTime;
 
 	GLFWwindow *window;
 	GLFWmonitor *monitor;
 	const GLFWvidmode *mode;
+	static void cursor_position_callback(GLFWwindow* window, double currX, double currY);
+	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 };
 
 #endif 

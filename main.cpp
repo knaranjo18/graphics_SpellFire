@@ -10,7 +10,7 @@ using namespace std;
 
 // Makes the window and runs the game loop
 int main(int argc, char **argv) {
-	MyGLCanvas *myCanvas = new MyGLCanvas(800, 600);
+	MyGLCanvas *myCanvas = new MyGLCanvas();
 	myCanvas->run();
 	return 0;
 }

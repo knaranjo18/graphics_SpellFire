@@ -19,19 +19,13 @@
 #define NANOPERSEC 1000000000
 
 
-
-
-
-MyGLCanvas::MyGLCanvas(int _w, int _h) {
-	//mode(FL_OPENGL3 | FL_RGB | FL_ALPHA | FL_DEPTH | FL_DOUBLE);
-	setupWindow(_w, _h);
-
+MyGLCanvas::MyGLCanvas() {
+	setupWindow(800, 600);
 	srand(time(0));
 
 	prevX = prevY = 0;
-	firstTime = true;
+	firstTime = firstMouse = alive = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
-	alive = true;
 
 	player = new Player();
 
@@ -64,30 +58,33 @@ MyGLCanvas::~MyGLCanvas() {
 	deallocate();
 }
 
-/*
+
 void MyGLCanvas::draw() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (!valid()) {  //this is called when the GL canvas is set up for the first time or when it is resized...
+	if (firstTime) { 
 		printf("establishing GL context\n");
 
-		glViewport(0, 0, w(), h());
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glPolygonOffset(1, 1);
 
-		
-		if (firstTime) {
-			firstTime = false;
+		GLenum err = glewInit(); // defines pters to functions of OpenGL V 1.2 and above
+		if (GLEW_OK != err) {
+			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+		}
+		else {
 			setupShaders();
 		}
+
 
 		if (!crossHair[0]->initComplete) {
 			setupSprites();
 		}
 
 		// needs to be after so that shaders can setup
-		updateCamera(w(), h());
+		updateCamera(mode->width, mode->height);
+		firstTime = false;
 	}
 
 	// Clear the buffer of colors in each bit plane.
@@ -99,14 +96,14 @@ void MyGLCanvas::draw() {
 		drawDeathScene();
 	}
 }
-*/
+
 void MyGLCanvas::drawScene() {
 	GLuint query;
 	// set up frame timing
 	glGenQueries(1, &query);
 	glBeginQuery(GL_TIME_ELAPSED, query);
 	
-	//doGameLogic();
+	doGameLogic();
 
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
@@ -175,7 +172,7 @@ void MyGLCanvas::enforceFrameTime(GLint query) {
 	}
 }
 
-/*
+
 void MyGLCanvas::doGameLogic() {
 	glm::vec3 playerPos = player->myCam->getEyePoint();
 	
@@ -199,7 +196,7 @@ void MyGLCanvas::doGameLogic() {
 
 	respawnEnemies();
 }
-*/
+
 
 void MyGLCanvas::respawnEnemies() {
 	double deltaTime = difftime(time(0), startTime);
@@ -252,7 +249,7 @@ void MyGLCanvas::removePickup(int i) {
 	pickupList.erase(pickupList.begin() + i);
 }
 
-/*
+
 void MyGLCanvas::handleHealthBar() {
 	glm::vec3 color;
 	float healthRatio = player->getHealth() / player->maxHealth;
@@ -268,7 +265,7 @@ void MyGLCanvas::handleHealthBar() {
 	float length = HEALTHBAR_LENGTH * healthRatio;
 	float offset = (HEALTHBAR_START * (1 - healthRatio));
 
-	glm::vec2 pos(HEALTHBAR_START - offset, h() - BAR_HEIGHT);
+	glm::vec2 pos(HEALTHBAR_START - offset, mode->height - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	healthBar[0]->setPosition(pos);
@@ -282,7 +279,7 @@ void MyGLCanvas::handleExpBar() {
 	float length = EXPBAR_LENGTH * expRatio;
 	float offset = (EXPBAR_START * (1 - expRatio));
 
-	glm::vec2 pos(w() / 2.0 - offset, h() - BAR_HEIGHT);
+	glm::vec2 pos(mode->width / 2.0 - offset, mode->height - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	expBar[0]->setPosition(pos);
@@ -295,13 +292,13 @@ void MyGLCanvas::handleManaBar() {
 	float length = MANABAR_LENGTH * manaRatio;
 	float offset = (MANABAR_START * (1 - manaRatio));
 
-	glm::vec2 pos(w() - MANABAR_START, h() - BAR_HEIGHT);
+	glm::vec2 pos(mode->width - MANABAR_START, mode->height - BAR_HEIGHT);
 	glm::vec2 scale(length, BAR_WIDTH);
 
 	manaBar[0]->setPosition(pos);
 	manaBar[0]->setScale(scale);
 }
-*/
+
 void MyGLCanvas::hendleProjectiles(vector<Enemy*>&enemies) {
 	int hit;
 	for (int i = 0; i < projectileList.size(); i++) {
@@ -458,7 +455,7 @@ void MyGLCanvas::removeProjectile(shaderType projectileType, int index) {
 	}
 }
 
-/*
+
 void MyGLCanvas::updateCamera(int width, int height) {
 	float xy_aspect;
 	GLint projection_id;
@@ -467,7 +464,7 @@ void MyGLCanvas::updateCamera(int width, int height) {
 	player->myCam->setScreenSize(width, height);
 
 	glm::mat4 perspectiveMatrix = player->myCam->getProjectionMatrix();
-	glm::mat4 orthoMatrix = glm::ortho(0.0f, float(w()), float(h()), 0.0f, -1.0f, 1.0f);
+	glm::mat4 orthoMatrix = glm::ortho(0.0f, float(mode->width), float(mode->height), 0.0f, -1.0f, 1.0f);
 	int size = shaderList.size();
 	for (int i = 0; i < size; i++) {
 		shaderList[i]->useShader();
@@ -480,7 +477,7 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		}
 	}
 }
-*/
+
 
 /*
 int MyGLCanvas::handle(int e) {
@@ -490,7 +487,6 @@ int MyGLCanvas::handle(int e) {
 			make_current();
 			GLenum err = glewInit(); // defines pters to functions of OpenGL V 1.2 and above
 			if (GLEW_OK != err)	{
-				/* Problem: glewInit failed, something is seriously wrong. */ /*
 				fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 			}
 			else {
@@ -573,28 +569,8 @@ int MyGLCanvas::handle(int e) {
 	return Fl_Gl_Window::handle(e);
 }
 
-
-void MyGLCanvas::resize(int x, int y, int w, int h) {
-	Fl_Gl_Window::resize(x, y, w, h);
-	puts("resize called");
-}
-
-void MyGLCanvas::moveSight() {
-	float currX = Fl::event_x(), currY = Fl::event_y();
-	float x_offset = currX - prevX;
-	float y_offset = prevY - currY;
-
-	cursor(FL_CURSOR_NONE);
-
-	x_offset *= SENSITIVITY;
-	y_offset *= SENSITIVITY;
-
-	prevX = currX;
-	prevY = currY;
-
-	player->moveSight(x_offset, y_offset);
-}
 */
+
 
 void MyGLCanvas::setupShaders() {	
 	shaderList.push_back(new ShaderManager()); // cow
@@ -657,30 +633,26 @@ void MyGLCanvas::setupShaders() {
 	skybox = new Skybox(filenames);
 }
 
-/*
+
 void MyGLCanvas::setupSprites() {
-	glm::vec2 pos(w() / 2.0 - 2, h() / 2.0 + 40);
+	glm::vec2 pos(mode->width / 2.0 - 2, mode->height / 2.0 + 40);
 
-	healthBar[0]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, h() - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND);
-	healthBar[1]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, h() - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
+	healthBar[0]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND);
+	healthBar[1]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
 
-	expBar[0]->setEverything(SPRITE, glm::vec2(w() / 2, h() - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND);
-	expBar[1]->setEverything(SPRITE, glm::vec2(w() / 2, h() - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND);
+	expBar[0]->setEverything(SPRITE, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND);
+	expBar[1]->setEverything(SPRITE, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND);
 
 	crossHair[0]->setEverything(SPRITE, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 	crossHair[1]->setEverything(SPRITE, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 
-	manaBar[0]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
-	manaBar[1]->setEverything(SPRITE, glm::vec2(w() - MANABAR_START, h() - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
+	manaBar[0]->setEverything(SPRITE, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
+	manaBar[1]->setEverything(SPRITE, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
 
-	deathScreen[0]->setEverything(DEATH, glm::vec2(w()/2.0f, h()/2.0f), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
-	//deathScreen[1]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(w(), h()), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
+	deathScreen[0]->setEverything(DEATH, glm::vec2(mode->width /2.0f, mode->height/2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
+	//deathScreen[1]->setEverything(SPRITE, glm::vec2(767, 430), glm::vec2(mode->width, mode->height), 0, glm::vec3(0.7, 0.0, 0.1), BACKGROUND);
 }
 
-void printEvent(int e) {
-	printf("Event was %s (%d)\n", fl_eventnames[e], e);
-}
-*/
 
 void MyGLCanvas::deallocate() {
 	delete player;
@@ -720,13 +692,14 @@ void MyGLCanvas::run() {
 	{
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		draw();
 	}
 	glfwTerminate();
 }
 
 
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void MyGLCanvas::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (action == GLFW_PRESS) {
 		if (key == GLFW_KEY_ESCAPE)
 			glfwSetWindowShouldClose(window, true);
@@ -734,15 +707,33 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 
-void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, double currY) {
+	MyGLCanvas *canvas = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
+	if (canvas->firstMouse) {
+		canvas->prevX = currX;
+		canvas->prevY = currY;
+		canvas->firstMouse = false;
+	}
+
+	float x_offset = currX - canvas->prevX;
+	float y_offset = canvas->prevY - currY;
+
+	x_offset *= SENSITIVITY;
+	y_offset *= SENSITIVITY;
+
+	canvas->prevX = currX;
+	canvas->prevY = currY;
+
+	canvas->player->moveSight(x_offset, y_offset);
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+void MyGLCanvas::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+	printf("Resizing window\n");
 	glViewport(0, 0, width, height);
 }
 
@@ -765,7 +756,7 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
 	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-	window = glfwCreateWindow(mode->width, mode->height, "Spellfire", monitor, NULL);
+	window = glfwCreateWindow(mode->width / 2, mode->height / 2, "Spellfire", NULL, NULL);
 
 	if (window == NULL) {
 		printf("Failed to create GLFW window\n");
@@ -774,12 +765,13 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	}
 
 	glfwMakeContextCurrent(window);
-	glViewport(0, 0, mode->width, mode->height);
+	glViewport(0, 0, mode->width / 2, mode->height / 2);
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
-	glfwSetCursorPosCallback(window, cursor_position_callback);
+	glfwSetCursorPosCallback(window,  cursor_position_callback);
 }
