@@ -68,10 +68,11 @@ private:
 	void removeEnemy(shaderType enemyType, int index);
 
 	void doGameLogic();
-	void hendleProjectiles(vector<Enemy*>&);
+	void handleProjectiles(vector<Enemy*>&);
 	void applyProjectile(Projectile*, int, vector<Enemy*>&);
 	void handleMoveCollisions(glm::vec3, vector<Enemy*>&);
-	void handlePlayerCollisions(vector<Enemy*>&);
+	void handlePlayerCollisions(vector<Enemy*>&); 
+	void handlePickups();
 
 	int findEnemyCollision(Projectile*, vector<Enemy*>&);
 
@@ -79,6 +80,8 @@ private:
 	void handleHealthBar();
 	void handleManaBar();
 	void handleExpBar();
+
+	bool isExpired(time_t spawnTime, float duration);
 
 	vector<ShaderManager *> shaderList;
 	vector<Enemy *> cowList, bunnyList;

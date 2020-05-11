@@ -23,18 +23,21 @@ public:
 
 	const BoundingBox* getBox();
 	shaderType getType();
+	time_t getSpawnTime();
+	float getDuration();
 
 	t_hitfunc getHitFunc();
 
 private:
 	BoundingBox* box;
 	glm::vec3 position, scale;
-	float angle;
-	float modelSize;
+	float angle, modelSize, duration;
+	int tick;
 
 	shaderType type;
 
 	t_hitfunc onHit;
+	time_t spawnTime;
 
 	glm::mat4 placeObject();
 };

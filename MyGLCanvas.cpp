@@ -198,7 +198,8 @@ void MyGLCanvas::doGameLogic() {
 	}
 
 	handleMoveCollisions(playerPos, enemies);
-	hendleProjectiles(enemies);
+	handleProjectiles(enemies);
+	handlePickups();
 	handleManaBar();
 	handleHealthBar();
 	handleExpBar();
@@ -237,7 +238,7 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 		if (p_box->doesCollide(*pot_box)) { // pick up the potion
 			player->applyHit(pickupList[i]->getHitFunc());
 			removePickup(i);
-			i -= 1;
+			i--;
 		}
 	}
 
@@ -258,6 +259,44 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 	}
 }
 
+
+// Returns the index of the enemy which is currently colliding with the projectile
+// or -1 if there is no collision
+int MyGLCanvas::findEnemyCollision(Projectile* p, vector<Enemy*>& enemies) {
+	const BoundingBox* pBox = p->getBox();
+	for (int i = 0; i < enemies.size(); i++) {
+		const BoundingBox* eBox = enemies[i]->getBox();
+
+
+		if (pBox->doesCollide(*eBox)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos, vector<Enemy*>&enemies) {
+	// move either away from collision or towards player
+	for (int i = 0; i < enemies.size(); i++) {
+		bool moved = false;
+		for (int j = i + 1; j < enemies.size(); j++) {
+			const BoundingBox* box1 = enemies[i]->getBox();
+			const BoundingBox* box2 = enemies[j]->getBox();
+			if (box1->doesCollide(*box2) && !moved) {
+				glm::vec3 dir = box1->getCenter() - box2->getCenter();
+				// move enemies towards some faraway point in opposite directions
+				enemies[i]->moveEnemy((dir * 5.0f) + glm::vec3(box1->getCenter()));
+				enemies[j]->moveEnemy((-dir * 5.0f) + glm::vec3(box2->getCenter()));
+				box1 = enemies[i]->getBox();
+				box2 = enemies[j]->getBox();
+				moved = true;
+			}
+		}
+		if (!moved) {
+			enemies[i]->moveEnemy(playerPos);
+		}
+	}
+}
 
 void MyGLCanvas::handleHealthBar() {
 	glm::vec3 color;
@@ -308,23 +347,36 @@ void MyGLCanvas::handleManaBar() {
 	manaBar[0]->setScale(scale);
 }
 
-void MyGLCanvas::hendleProjectiles(vector<Enemy*>&enemies) {
+void MyGLCanvas::handleProjectiles(vector<Enemy*>&enemies) {
 	int hit;
 	for (int i = 0; i < projectileList.size(); i++) {
-		if (difftime(time(0), projectileList[i]->getSpawnTime()) >= double(projectileList[i]->getDuration())) {
+		Projectile *p = projectileList[i];
+
+		if (isExpired(p->getSpawnTime(), p->getDuration())) {
 			removeProjectile(FIREBALL, i);
 			i--;
-		} else if (projectileList[i]->hitFloor()) {
+		} else if (p->hitFloor()) {
 			removeProjectile(FIREBALL, i);
 			i--;
-		} else if ((hit = findEnemyCollision(projectileList[i], enemies)) != -1) {
+		} else if ((hit = findEnemyCollision(p, enemies)) != -1) {
 			// deal damage to enemy here
-			applyProjectile(projectileList[i], hit, enemies);
+			applyProjectile(p, hit, enemies);
 			removeProjectile(FIREBALL, i);
 			i--;
 		}
 		else {
-			projectileList[i]->moveProjectile();
+			p->moveProjectile();
+		}
+	}
+}
+
+void MyGLCanvas::handlePickups() {
+	for (int i = 0; i < pickupList.size(); i++) {
+		Pickup *p = pickupList[i];
+		
+		if (isExpired(p->getSpawnTime(), p->getDuration())) {
+			removePickup(i);
+			i--;
 		}
 	}
 }
@@ -355,43 +407,6 @@ void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 	}
 }
 
-// Returns the index of the enemy which is currently colliding with the projectile
-// or -1 if there is no collision
-int MyGLCanvas::findEnemyCollision(Projectile* p, vector<Enemy*>& enemies) {
-	const BoundingBox* pBox = p->getBox();
-	for (int i = 0; i < enemies.size(); i++) {
-		const BoundingBox* eBox = enemies[i]->getBox();
-
-
-		if (pBox->doesCollide(*eBox)) {
-			return i;
-		}
-	}
-	return -1;
-}
-
-void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos, vector<Enemy*>&enemies) {
-	// move either away from collision or towards player
-	for (int i = 0; i < enemies.size(); i++) {
-		bool moved = false;
-		for (int j = i + 1; j < enemies.size(); j++) {
-			const BoundingBox* box1 = enemies[i]->getBox();
-			const BoundingBox* box2 = enemies[j]->getBox();
-			if (box1->doesCollide(*box2) && !moved) {
-				glm::vec3 dir = box1->getCenter() - box2->getCenter();
-				// move enemies towards some faraway point in opposite directions
-				enemies[i]->moveEnemy((dir * 5.0f) + glm::vec3(box1->getCenter()));
-				enemies[j]->moveEnemy((-dir * 5.0f) + glm::vec3(box2->getCenter()));
-				box1 = enemies[i]->getBox();
-				box2 = enemies[j]->getBox();
-				moved = true;
-			}
-		}
-		if (!moved) {
-			enemies[i]->moveEnemy(playerPos);
-		}
-	}
-}
 
 void MyGLCanvas::fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired) {
 	glm::vec3 startPoint = originPoint + (0.1f * glm::normalize(directionFired));
@@ -623,49 +638,48 @@ void MyGLCanvas::run() {
 }
 
 
-
 void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods) {
-	MyGLCanvas *canvas = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
+	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
 	if (action == GLFW_PRESS) {
 		if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(_window, true);
 		if (key == GLFW_KEY_M) Enemy::debug_draw_hitbox = !Enemy::debug_draw_hitbox;
-		if (key == GLFW_KEY_R && canvas->currState == DEAD) canvas->restartGame();
+		if (key == GLFW_KEY_R && c->currState == DEAD) c->restartGame();
 	}
 }
 
 
 void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, double currY) {
-	MyGLCanvas *canvas = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
+	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
-	if (canvas->firstMouse) {
-		canvas->prevX = currX;
-		canvas->prevY = currY;
-		canvas->firstMouse = false;
+	if (c->firstMouse) {
+		c->prevX = currX;
+		c->prevY = currY;
+		c->firstMouse = false;
 	}
 
-	float x_offset = currX - canvas->prevX;
-	float y_offset = canvas->prevY - currY;
+	float x_offset = currX - c->prevX;
+	float y_offset = c->prevY - currY;
 
 	x_offset *= SENSITIVITY;
 	y_offset *= SENSITIVITY;
 
-	canvas->prevX = currX;
-	canvas->prevY = currY;
+	c->prevX = currX;
+	c->prevY = currY;
 
-	canvas->player->moveSight(x_offset, y_offset);
+	c->player->moveSight(x_offset, y_offset);
 }
 
 void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int action, int mods) {
-	MyGLCanvas *canvas = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
+	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
 	if (action == GLFW_PRESS) {
 		if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-			shaderType spellAttempt = canvas->player->spellSelected;
+			shaderType spellAttempt = c->player->spellSelected;
 
-			if (canvas->player->getSpellCost(spellAttempt) <= canvas->player->getMana()) {
-				canvas->fireProjectile(canvas->player->spellSelected, canvas->player->getPosition(), canvas->player->myCam->getLookVector());
-				canvas->player->changeMana(-canvas->player->getSpellCost(spellAttempt));
+			if (c->player->getSpellCost(spellAttempt) <= c->player->getMana()) {
+				c->fireProjectile(c->player->spellSelected, c->player->getPosition(), c->player->myCam->getLookVector());
+				c->player->changeMana(-c->player->getSpellCost(spellAttempt));
 			}
 			else {
 				printf("Need to charge my mana!\n");
@@ -768,4 +782,8 @@ void MyGLCanvas::restartGame() {
 	firstMouse = true;
 	currState = PLAYING;
 	player->restartPlayer();
+}
+
+bool MyGLCanvas::isExpired(time_t spawnTime, float duration) {
+	return (difftime(time(0), spawnTime) >= duration);
 }
