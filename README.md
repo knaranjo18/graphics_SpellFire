@@ -14,12 +14,16 @@ that is a placeholder from when we used the cow and bunny ply models as the enem
 
 ## Compilation Instructions
 **Windows**
-Throw everything into a visual studio project.  Ensure that the data directory is
+Throw everything into a visual studio project.  Ensure that the data and shader directory is
 accessible from the executable directory and you're good to go!
 **Mac / Linux**
 In theory this program should compile if all of the files are compiled and linked, 
 however we did no testing on these operating systems so we make no guarantees about 
 compiling this project for them.
+
+## Installing GLEW
+
+## Installing GLFW
 
 ## Controls
 Player Movement - *W, A, S, D*
@@ -34,6 +38,7 @@ Quit Game - *Escape Key*
 ## Todo
 - **Develop Enemies**
 	- ~~Get enemy PLY models~~
+	- Add enemy death animation (Fall over)
 	- Apply textures
 	- Add movement animations (Basic is up and down bobbing)
 	- Make different types of enemies

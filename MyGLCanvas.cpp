@@ -332,15 +332,16 @@ void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 	// counts of enemy types to tell what pointer is what
 	if (e->getHealth() <= 0) { // TODO: an isDead() func would be better
 		player->changePoints(e->pointValue);
+
+		if (rand() % 3 == 0) { // enemies have a 1/3 chance to spawn a potion on death
+			spawnPickup(rand() % 2 == 0 ? HEALTHPOT : MANAPOT, e->getBox()->getCenter()); // TODO: make a getPosition function in enemy and player
+		}
+
 		if (e->enemyType == COW) { 
 			removeEnemy(COW, i);
 		}
 		else if (e->enemyType == BUNNY) { 
 			removeEnemy(BUNNY, i - cowList.size()); 
-		}
-
-		if (rand() % 3 == 0) { // enemies have a 1/3 chance to spawn a potion on death
-			spawnPickup(rand() % 2 == 0 ? HEALTHPOT : MANAPOT, e->getBox()->getCenter()); // TODO: make a getPosition function in enemy and player
 		}
 		
 		enemies.erase(enemies.begin() + i);
@@ -353,6 +354,8 @@ int MyGLCanvas::findEnemyCollision(Projectile* p, vector<Enemy*>& enemies) {
 	const BoundingBox* pBox = p->getBox();
 	for (int i = 0; i < enemies.size(); i++) {
 		const BoundingBox* eBox = enemies[i]->getBox();
+
+
 		if (pBox->doesCollide(*eBox)) {
 			return i;
 		}
@@ -680,7 +683,7 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
 	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-	window = glfwCreateWindow(mode->width, mode->height, "Spellfire", monitor, NULL);
+	window = glfwCreateWindow(mode->width, mode->height, "Spellfire", NULL, NULL);
 
 	if (window == NULL) {
 		printf("Failed to create GLFW window\n");
@@ -691,7 +694,7 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwMakeContextCurrent(window);
 	glViewport(0, 0, mode->width, mode->height);
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);

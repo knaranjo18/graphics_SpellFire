@@ -114,7 +114,7 @@ void Enemy::draw(glm::mat4 modelView, ShaderManager* shader, ply* myPly) {
 	myPly->renderVBO();
 
 	if (debug_draw_hitbox) {
-		glutSolidSphere(0.5, 15, 15);
+		//glutSolidSphere(0.5, 15, 15);
 	}
 }
 
