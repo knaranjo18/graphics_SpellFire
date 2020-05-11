@@ -64,6 +64,18 @@ MyGLCanvas::~MyGLCanvas() {
 	deallocate();
 }
 
+// Main game loop
+void MyGLCanvas::run() {
+	while (!glfwWindowShouldClose(window))
+	{
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+		pollInput();
+		draw();
+	}
+	glfwTerminate();
+}
+
 // Chooses to draw the correct thing on the screen
 void MyGLCanvas::draw() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -94,7 +106,16 @@ void MyGLCanvas::draw() {
 	
 	switch (currState) {
 	case PLAYING:
+		// set up frame timing
+		GLuint query;
+		glGenQueries(1, &query);
+		glBeginQuery(GL_TIME_ELAPSED, query);
+
+		doGameLogic();
 		drawScene();
+
+		glEndQuery(GL_TIME_ELAPSED);
+		enforceFrameTime(query);
 		break;
 	case DEAD:
 		drawDeathScene();
@@ -108,24 +129,23 @@ void MyGLCanvas::draw() {
 	}
 }
 
-void MyGLCanvas::drawScene() {
-	GLuint query;
-	// set up frame timing
-	glGenQueries(1, &query);
-	glBeginQuery(GL_TIME_ELAPSED, query);
-	
-	doGameLogic();
+// Draws the death scene with the skull
+void MyGLCanvas::drawDeathScene() {
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
+	deathScreen[0]->draw(modelViewMatrix, shaderList[DEATH], plyList[DEATH]);
+}
+
+// Draws all the elements of the main game
+void MyGLCanvas::drawScene() {
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
-	/*-----------------------For the skybox----------------------------------------*/
-	skybox->draw(modelViewMatrix, player->myCam->getProjectionMatrix());
 	
-	/*-----------------------For the scenery----------------------------------------*/
+	/*-----------------------For the scenary----------------------------------------*/
+	skybox->draw(modelViewMatrix, player->myCam->getProjectionMatrix());
 	arena->draw(modelViewMatrix, shaderList[ARENA], plyList[ARENA]);
 
 	/*------------------------For GUI-----------------------------------------------*/
-	
 	for (int i = 0; i < 2; i++)
 		healthBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 
@@ -135,38 +155,31 @@ void MyGLCanvas::drawScene() {
 	for (int i = 0; i < 2; i++)
 		manaBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 2; i++) 
 		expBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
-	}
 		
 	/*--------------For the enemy---------------------------*/
-	for (int i = 0; i < cowList.size(); i++) {
+	for (int i = 0; i < cowList.size(); i++) 
 		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW]);
-	}
 
-	for (int i = 0; i < bunnyList.size(); i++) {
+
+	for (int i = 0; i < bunnyList.size(); i++) 
 		bunnyList[i]->draw(modelViewMatrix, shaderList[BUNNY], plyList[BUNNY]);
-	}
 
 	/*--------------draw projectiles---------------------------*/
-	for (int i = 0; i < projectileList.size(); i++) {
+	for (int i = 0; i < projectileList.size(); i++) 
 		projectileList[i]->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
-	}
 
 	/*--------------draw pickups---------------------------*/
 	for (int i = 0; i < pickupList.size(); i++) {
-		if (pickupList[i]->getType() == HEALTHPOT) {
+		if (pickupList[i]->getType() == HEALTHPOT) 
 			pickupList[i]->draw(modelViewMatrix, shaderList[HEALTHPOT], plyList[HEALTHPOT]);
-		}
-		else if (pickupList[i]->getType() == MANAPOT) {
+		else if (pickupList[i]->getType() == MANAPOT) 
 			pickupList[i]->draw(modelViewMatrix, shaderList[MANAPOT], plyList[MANAPOT]);
-		}
 	}
-
-	glEndQuery(GL_TIME_ELAPSED);
-	enforceFrameTime(query);
 }
 
+// Ensures that the game runs at the specified FPS regardless of machine
 void MyGLCanvas::enforceFrameTime(GLint query) {
 	GLint available = 0;
 	while (!available) {
@@ -183,10 +196,11 @@ void MyGLCanvas::enforceFrameTime(GLint query) {
 	}
 }
 
-
+// Handles all the game mechanics such as collisions, projectiles, movements, etc...
 void MyGLCanvas::doGameLogic() {
 	glm::vec3 playerPos = player->getPosition();
 	
+	// TODO: Make more cohesive instead of disjoint lists
 	vector<Enemy*> enemies;
 	for (int i = 0; i < cowList.size(); i++) {
 		enemies.push_back(cowList[i]);
@@ -196,12 +210,14 @@ void MyGLCanvas::doGameLogic() {
 	}
 
 	handleMoveCollisions(playerPos, enemies);
+	handlePlayerCollisions(enemies);
+	
 	handleProjectiles(enemies);
 	handlePickups();
+
 	handleManaBar();
 	handleHealthBar();
 	handleExpBar();
-	handlePlayerCollisions(enemies);
 
 	if (player->isDead()) currState = DEAD;
 
@@ -211,19 +227,17 @@ void MyGLCanvas::doGameLogic() {
 	respawnEnemies();
 }
 
-
+// Has a random chance to spawn new enemies
 void MyGLCanvas::respawnEnemies() {
 	double deltaTime = difftime(time(0), startTime);
 	float temp;
 
 	if (deltaTime > 1) {
-
 		startTime = time(0);
 		temp = rand() / float(RAND_MAX);
-		if (temp < 0.5)
-			spawnEnemy(BUNNY);
-		if (temp < 0.75)
-			spawnEnemy(COW);
+
+		if (temp < 0.5) spawnEnemy(BUNNY);
+		if (temp < 0.75) spawnEnemy(COW);
 	}
 }
 
@@ -231,6 +245,7 @@ void MyGLCanvas::respawnEnemies() {
 // deleting immediately
 void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 	const BoundingBox* p_box = player->getBox();
+	
 	for (int i = 0; i < pickupList.size(); i++) {
 		const BoundingBox* pot_box = pickupList[i]->getBox();
 		if (p_box->doesCollide(*pot_box)) { // pick up the potion
@@ -240,6 +255,7 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 		}
 	}
 
+	// Don't damage player if invicible
 	if (player->isInvincible()) {
 		player->deciFrames();
 		return;
@@ -247,16 +263,13 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 	
 	for (int i = 0; i < enemies.size(); i++) {
 		const BoundingBox* e_box = enemies[i]->getBox();
-		if (p_box->doesCollide(*e_box)) {
-			// Player may only be hit once per frame and 
-			// will receive invincibility frames for a short while after
+		if (p_box->doesCollide(*e_box)) { // Gives invicibility frames after player is hit
 			player->applyHit(enemies[i]->getHitFunc());
 			player->setiFrames(IFRAME_AFTER_HIT);
 			return;
 		}
 	}
 }
-
 
 // Returns the index of the enemy which is currently colliding with the projectile
 // or -1 if there is no collision
@@ -265,7 +278,6 @@ int MyGLCanvas::findEnemyCollision(Projectile* p, vector<Enemy*>& enemies) {
 	for (int i = 0; i < enemies.size(); i++) {
 		const BoundingBox* eBox = enemies[i]->getBox();
 
-
 		if (pBox->doesCollide(*eBox)) {
 			return i;
 		}
@@ -273,8 +285,9 @@ int MyGLCanvas::findEnemyCollision(Projectile* p, vector<Enemy*>& enemies) {
 	return -1;
 }
 
+// Moves enemies towards players. If collision between enemies occurs
+// they will move apart from each other.
 void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos, vector<Enemy*>&enemies) {
-	// move either away from collision or towards player
 	for (int i = 0; i < enemies.size(); i++) {
 		bool moved = false;
 		for (int j = i + 1; j < enemies.size(); j++) {
@@ -296,6 +309,7 @@ void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos, vector<Enemy*>&enemie
 	}
 }
 
+// Calculates health bar sprites
 void MyGLCanvas::handleHealthBar() {
 	glm::vec3 color;
 	float healthRatio = player->getHealth() / player->maxHealth;
@@ -319,6 +333,7 @@ void MyGLCanvas::handleHealthBar() {
 	healthBar[0]->setColor(color);
 }
 
+// Calculates experience bar sprites
 void MyGLCanvas::handleExpBar() {
 	float expRatio = player->getPoints() / player->maxPoints;
 
@@ -332,6 +347,7 @@ void MyGLCanvas::handleExpBar() {
 	expBar[0]->setScale(scale);
 }
 
+// Calculates mana bar sprites
 void MyGLCanvas::handleManaBar() {
 	float manaRatio = player->getMana() / player->maxMana;
 
@@ -345,6 +361,7 @@ void MyGLCanvas::handleManaBar() {
 	manaBar[0]->setScale(scale);
 }
 
+// Move projectiles, delete if they expire, figure out collisions with enemies
 void MyGLCanvas::handleProjectiles(vector<Enemy*>&enemies) {
 	int hit;
 	for (int i = 0; i < projectileList.size(); i++) {
@@ -368,6 +385,7 @@ void MyGLCanvas::handleProjectiles(vector<Enemy*>&enemies) {
 	}
 }
 
+// Deletes pickup if they have expired
 void MyGLCanvas::handlePickups() {
 	for (int i = 0; i < pickupList.size(); i++) {
 		Pickup *p = pickupList[i];
@@ -405,7 +423,7 @@ void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 	}
 }
 
-
+// Creates new projectile given an origin and a direction of travel
 void MyGLCanvas::fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired) {
 	glm::vec3 startPoint = originPoint + (0.1f * glm::normalize(directionFired));
 	startPoint.y -= 0.08;
@@ -413,6 +431,7 @@ void MyGLCanvas::fireProjectile(shaderType projectileType, glm::vec3 originPoint
 	projectileList.push_back(new Projectile(projectileType, startPoint, directionFired));
 }
 
+// Creates a new enemy of a given type somewhere around the edge of the arena
 void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 	float xPos = float(rand()) / float(RAND_MAX) * (ARENA_SIZE * 2) - ARENA_SIZE;
 	float zPos = sqrt((ARENA_SIZE * ARENA_SIZE) - xPos * xPos);
@@ -433,6 +452,7 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 	}
 }
 
+// Spawns a pickup of a given type in a given position
 // TODO: insert into list so that all potions of one type are contiguous,
 // right now they are scattered and that may reduce performance
 void MyGLCanvas::spawnPickup(shaderType type, glm::vec3 position) {
@@ -450,6 +470,7 @@ void MyGLCanvas::spawnPickup(shaderType type, glm::vec3 position) {
 	}
 }
 
+// Removes an enemy from game and reclaims memory
 void MyGLCanvas::removeEnemy(shaderType enemyType, int index) {
 	switch (enemyType) {
 	case(COW):
@@ -467,6 +488,7 @@ void MyGLCanvas::removeEnemy(shaderType enemyType, int index) {
 	} 
 }
 
+// Removes a projectile from game and reclaims memory
 void MyGLCanvas::removeProjectile(shaderType projectileType, int index) {
 	switch (projectileType) {
 	case(FIREBALL):
@@ -480,11 +502,11 @@ void MyGLCanvas::removeProjectile(shaderType projectileType, int index) {
 	}
 }
 
+// Removes a pickup from game and reclaims memory
 void MyGLCanvas::removePickup(int i) {
 	delete pickupList[i];
 	pickupList.erase(pickupList.begin() + i);
 }
-
 
 // Updates the camera based on the width and height of the screen
 void MyGLCanvas::updateCamera(int width, int height) {
@@ -510,10 +532,10 @@ void MyGLCanvas::updateCamera(int width, int height) {
 	}
 }
 
-
+// Initializes all the shaderes with their ply files and textures
 void MyGLCanvas::setupShaders() {	
-	shaderList.push_back(new ShaderManager()); // cow
-	shaderList.push_back(new ShaderManager()); // bunny
+	shaderList.push_back(new ShaderManager()); // blob
+	shaderList.push_back(new ShaderManager()); // jad
 	shaderList.push_back(new ShaderManager()); // fireball
 	shaderList.push_back(new ShaderManager()); // sprite
 	shaderList.push_back(new ShaderManager()); // death
@@ -572,26 +594,7 @@ void MyGLCanvas::setupShaders() {
 	skybox = new Skybox(filenames);
 }
 
-
-void MyGLCanvas::setupSprites() {
-	glm::vec2 pos(mode->width / 2.0 - 2, mode->height / 2.0 + 40);
-
-	healthBar[0]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND);
-	healthBar[1]->setEverything(SPRITE, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
-
-	expBar[0]->setEverything(SPRITE, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND);
-	expBar[1]->setEverything(SPRITE, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND);
-
-	crossHair[0]->setEverything(SPRITE, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
-	crossHair[1]->setEverything(SPRITE, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
-
-	manaBar[0]->setEverything(SPRITE, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND);
-	manaBar[1]->setEverything(SPRITE, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND);
-
-	deathScreen[0]->setEverything(DEATH, glm::vec2(mode->width /2.0f, mode->height/2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND);
-}
-
-
+// Frees all memory that used 
 void MyGLCanvas::deallocate() {
 	delete player;
 	delete arena;
@@ -609,26 +612,7 @@ void MyGLCanvas::deallocate() {
 	for (int i = 0; i < 2; i++) delete deathScreen[i];
 }
 
-
-void MyGLCanvas::drawDeathScene() {
-	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
-
-	deathScreen[0]->draw(modelViewMatrix, shaderList[DEATH], plyList[DEATH]);
-	//deathScreen[1]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
-}
-
-void MyGLCanvas::run() {
-	while (!glfwWindowShouldClose(window))
-	{
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-		pollInput();
-		draw();
-	}
-	glfwTerminate();
-}
-
-
+// Callback for keyboard key
 void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods) {
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
@@ -641,7 +625,7 @@ void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int ac
 	}
 }
 
-
+// Callback for cursor position
 void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, double currY) {
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
@@ -663,6 +647,7 @@ void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, dou
 	c->player->moveSight(x_offset, y_offset);
 }
 
+// Callback for mouse click
 void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int action, int mods) {
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
@@ -681,11 +666,13 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 	}
 }
 
+// Callback for changing the size of the window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	printf("Resizing window\n");
 	glViewport(0, 0, width, height);
 }
 
+// Sets up the GLFW window 
 void MyGLCanvas::setupWindow(int w, int h) {
 	glfwInit();
 
@@ -709,7 +696,8 @@ void MyGLCanvas::setupWindow(int w, int h) {
 		window = glfwCreateWindow(mode->width / 2, mode->height / 2, "Spellfire", NULL, NULL);
 		fullscreen = false;
 		cursorVisible = true;
-	} else {
+	}
+	else {
 		window = glfwCreateWindow(mode->width, mode->height, "Spellfire", monitor, NULL);
 		fullscreen = true;
 		cursorVisible = false;
@@ -726,7 +714,8 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	if (!DEBUGMODE) {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		glViewport(0, 0, mode->width, mode->height);
-	} else {
+	}
+	else {
 		glViewport(0, 0, mode->width / 2, mode->height / 2);
 	}
 
@@ -734,10 +723,10 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
-	glfwSetCursorPosCallback(window,  cursor_position_callback);
+	glfwSetCursorPosCallback(window, cursor_position_callback);
 }
 
-
+// Checks keyboard input. Works best for movement using WASD
 void MyGLCanvas::pollInput() {
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) player->moveForward();
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) player->moveLeft();
@@ -782,10 +771,12 @@ void MyGLCanvas::restartGame() {
 	player->restartPlayer();
 }
 
+// Checks if an item is expired based on it's duration and spawn time
 bool MyGLCanvas::isExpired(time_t spawnTime, float duration) {
 	return (difftime(time(0), spawnTime) >= duration);
 }
 
+// Changes fullscreen option
 void MyGLCanvas::toggleFullScreen() {
 	fullscreen = !fullscreen;
 
@@ -796,6 +787,7 @@ void MyGLCanvas::toggleFullScreen() {
 	}
 }
 
+// Changes cursor visibility
 void MyGLCanvas::toggleCursor() {
 	cursorVisible = !cursorVisible;
 

@@ -57,7 +57,7 @@ Restart Game - *R*
 
 Toggle Fullscreen - *F*
 
-Toggle Mouse Visibility = *Tab*
+Toggle Mouse Visibility - *Tab*
 
 Quit Game - *Escape Key*
 

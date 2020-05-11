@@ -78,7 +78,6 @@ private:
 
 	void doGameLogic();
 
-	void setupSprites();
 	void handleHealthBar();
 	void handleManaBar();
 	void handleExpBar();
