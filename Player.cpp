@@ -3,6 +3,7 @@
 #define MANA_CHARGE 0.01
 #define HEAL_PER_TICK 0.01
 #define PLAYERSIZE 0.15f
+#define PLAYERSPEED 0.02f
 
 Player::Player() {
 	glm::vec3 startPoint(0.0, HEIGHT, 0.0);
@@ -15,7 +16,7 @@ Player::Player() {
 	health = 100.0;
 	points = 0;
 	mana = 10.0;
-	speed = 0.05;
+	speed = PLAYERSPEED;
 	canMoveSight = false;
 	maxMana = 20.0;
 	maxHealth = 100;

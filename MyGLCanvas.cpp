@@ -479,99 +479,6 @@ void MyGLCanvas::updateCamera(int width, int height) {
 }
 
 
-/*
-int MyGLCanvas::handle(int e) {
-	#ifndef __APPLE__
-		if (firstTime && e == FL_SHOW && shown()) {
-			firstTime = 0;
-			make_current();
-			GLenum err = glewInit(); // defines pters to functions of OpenGL V 1.2 and above
-			if (GLEW_OK != err)	{
-				fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-			}
-			else {
-				//SHADER: initialize the shader manager and loads the two shader programs
-				setupShaders();
-				startTime = time(0);
-			}
-		}
-	#endif	
-
-	int button, key;
-
-	switch (e) {
-	case FL_MOVE:
-		if (player->canMoveSight) 
-			moveSight();
-		else 
-			cursor(FL_CURSOR_CROSS);
-		break;
-	case FL_KEYDOWN:
-		key = Fl::event_key();
-		
-		switch (key) {
-		case 'w':
-			player->moveForward();
-			break;
-		case 'a':
-			player->moveLeft();
-			break;
-		case 's':
-			player->moveBackward();
-			break;
-		case 'd':
-			player->moveRight();
-			break;
-		// toggle debug mode
-		case 'm':
-			Enemy::debug_draw_hitbox = !Enemy::debug_draw_hitbox;
-			break;
-		case FL_Escape:
-			deallocate();
-			exit(0);
-			break;
-		case 'h':
-			player->changeHealth(5);
-			break;
-		case 'p':
-			player->changeHealth(-5);
-			break;
-		}
-
-		return 1;
-	case FL_PUSH:
-		button = Fl::event_button();
-		
-		if (button == FL_LEFT_MOUSE) {
-			prevX = Fl::event_x();
-			prevY = Fl::event_y();
-			player->canMoveSight = !(player->canMoveSight);
-		}
-		else if (button == FL_RIGHT_MOUSE) {
-			shaderType spellAttempt = player->spellSelected;
-
-			if (player->getSpellCost(spellAttempt) <= player->getMana()) {
-				fireProjectile(player->spellSelected, player->myCam->getEyePoint(), player->myCam->getLookVector());
-				player->changeMana(-player->getSpellCost(spellAttempt));
-			} else {
-				printf("Need to charge my mana!\n");
-			}
-
-		} else 
-			return 0;
-
-		return 1;
-		break;
-	case FL_FOCUS:
-		return 1;
-	}
-
-	return Fl_Gl_Window::handle(e);
-}
-
-*/
-
-
 void MyGLCanvas::setupShaders() {	
 	shaderList.push_back(new ShaderManager()); // cow
 	shaderList.push_back(new ShaderManager()); // bunny
@@ -692,6 +599,7 @@ void MyGLCanvas::run() {
 	{
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		pollInput();
 		draw();
 	}
 	glfwTerminate();
@@ -699,10 +607,12 @@ void MyGLCanvas::run() {
 
 
 
-void MyGLCanvas::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods) {
+	MyGLCanvas *canvas = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
+
 	if (action == GLFW_PRESS) {
-		if (key == GLFW_KEY_ESCAPE)
-			glfwSetWindowShouldClose(window, true);
+		if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(_window, true);
+		if (key == GLFW_KEY_M) Enemy::debug_draw_hitbox = !Enemy::debug_draw_hitbox;
 	}
 }
 
@@ -728,8 +638,22 @@ void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, dou
 	canvas->player->moveSight(x_offset, y_offset);
 }
 
-void MyGLCanvas::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int action, int mods) {
+	MyGLCanvas *canvas = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
+	if (action == GLFW_PRESS) {
+		if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+			shaderType spellAttempt = canvas->player->spellSelected;
+
+			if (canvas->player->getSpellCost(spellAttempt) <= canvas->player->getMana()) {
+				canvas->fireProjectile(canvas->player->spellSelected, canvas->player->myCam->getEyePoint(), canvas->player->myCam->getLookVector());
+				canvas->player->changeMana(-canvas->player->getSpellCost(spellAttempt));
+			}
+			else {
+				printf("Need to charge my mana!\n");
+			}
+		}
+	}
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -756,7 +680,7 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
 	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-	window = glfwCreateWindow(mode->width / 2, mode->height / 2, "Spellfire", NULL, NULL);
+	window = glfwCreateWindow(mode->width, mode->height, "Spellfire", monitor, NULL);
 
 	if (window == NULL) {
 		printf("Failed to create GLFW window\n");
@@ -765,7 +689,7 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	}
 
 	glfwMakeContextCurrent(window);
-	glViewport(0, 0, mode->width / 2, mode->height / 2);
+	glViewport(0, 0, mode->width, mode->height);
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -774,4 +698,12 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetCursorPosCallback(window,  cursor_position_callback);
+}
+
+
+void MyGLCanvas::pollInput() {
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) player->moveForward();
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) player->moveLeft();
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) player->moveBackward();
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) player->moveRight();
 }
