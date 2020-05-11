@@ -12,14 +12,23 @@ texture coordinates from ply models we exported from 3D modeling tools (along wi
 their textures).  The code refers to COWs and BUNNYs as the two types of enemies; 
 that is a placeholder from when we used the cow and bunny ply models as the enemies.
 
+## How to Start
+If you just want to get straight to the game, place `Spellfire.exe` in the same directory as the `data` and `shader` folders. Then simply run it to play. If you wanna compile from source, follow the instructions below.
+
 ## Compilation Instructions
 **Windows**
-Throw everything into a visual studio project. Make sure you have GLEW and GLFW installed. Ensure that the data and shader directory is
-accessible from the executable directory and you're good to go!
+Create a Visual Studio Project and add all the `.h` and `.cpp` files. Make sure to follow the instructions below to install OpengGL, glew, and GLFW. Make sure you are in x86 mode. To compile hit the `Local Windows Debugger` button and enjoy. 
+
 **Mac / Linux**
 In theory this program should compile if all of the files are compiled and linked, 
 however we did no testing on these operating systems so we make no guarantees about 
 compiling this project for them.
+
+## Installing OpenGL
+**Windows**
+1. The OpenGL library `opengl32.lib` comes with the Microsoft SDK which is
+installed by default when you install Visual Studios. 
+2. Add `opengl32.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`. Make sure you are in x86 mode.
 
 ## Installing GLEW
 **Windows**
@@ -27,7 +36,7 @@ compiling this project for them.
 2. Copy the `include\GL` folder into your Visual Studio include path. Usually it's `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\include`
 3. Copy the `.lib` files from `\lib\Release\Win32` into your Visual Studio library path. `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\lib\x86`
 4. Copy the `.dll` file from `\bin\Release\Win32` to your Windows runtime directory. Usually that's `C:\Windows\System32`
-5. Add `glew32s.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`
+5. Add `glew32s.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`. Make sure you are in x86 mode.
 
 ## Installing GLFW
 **Windows**
@@ -35,14 +44,14 @@ compiling this project for them.
 2. Copy the `include\GLFW` folder into your Visual Studio include path. Usually it's `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\include`
 3. Copy the two `.lib` files from the `lib-vc` folder corresponding to your version of Visual Studios into your Visual Studio library path. Usually it's `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\lib\x86`
 4. Copy the `.dll` file to your Windows runtime directory. Usually that's `C:\Windows\System32`
-5. Add `glfw3.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`
+5. Add `glfw3.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`. Make sure you are in x86 mode.
 
 ## Controls
 Player Movement - *W, A, S, D*
 
-Camera Movement - *Mouse (__Left click to toggle camera movement__)*
+Camera Movement - *Mouse*
 
-Debug Hitbox Toggle - *M*
+Shoot Fireball - *Right Mouse Button*
 
 Quit Game - *Escape Key*
 
@@ -67,6 +76,11 @@ Quit Game - *Escape Key*
 	- ~~Add collision between player and enemy~~
 	- ~~Allow player to shoot projectile along long vector with click~~
 	- ~~Add collision between enemy and projectile~~
+	- ~~Make different enemies~~
+	- ~~Add maximum mana~~
+	- ~~Add pickups~~
+	- ~~Add points for player~~
+	- ~~Add mana restricton for player~~
 	- Add sounds
 	- Add particle effects to projectiles
 	- Add a staff or hand for the player
@@ -74,20 +88,15 @@ Quit Game - *Escape Key*
 	- Improve collisions so players and enemies not allowed to walk through each other
 	- Implement progressive difficulty 
 	- Improve player stats when leveling up
-	- ~~Add points for player~~
-	- ~~Add mana restricton for player~~
 	- Add spell selection
 		- Add ice bolt spell
-	- ~~Make different enemies~~
-	- ~~Add maximum mana~~
-	- ~~Add pickups~~
-	
 
 
 - **Code improvement**
-	- Switch over from FLTK to GLFW for window (Makes for smoother gameplay)
+	- ~~Switch over from FLTK to GLFW for better window (Makes for smoother gameplay)~~
 	- Improve enemy storage
 	- Improve the textured and untextured sprite difference
+
 
 - **GUI**
 	- ~~Add crosshair~~

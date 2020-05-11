@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <cstdlib>
 #include "ply.h"
-#include "geometry.h"
 #include <math.h>
 
 

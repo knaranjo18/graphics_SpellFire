@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <math.h>
-
 #include "geometry.h"
 #include "ppm.h"
 

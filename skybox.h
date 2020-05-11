@@ -18,8 +18,6 @@
 #include "glm/gtx/string_cast.hpp"
 #include "glm/ext.hpp"
 
-#include "geometry.h"
-
 using namespace std;
 
 #if defined(__APPLE__)
