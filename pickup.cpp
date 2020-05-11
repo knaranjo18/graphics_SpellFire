@@ -1,7 +1,8 @@
 #include "pickup.h"
 
-#define PLYSIZE 0.5f;
-#define POTSIZE 0.2f;
+#define PLYSIZE 0.5f
+#define POTSIZE 0.2f
+#define ANIMATIONSPEED 0.05f
 
 void healthPotCB(HITDATA& h) {
 	h.health += 50;
@@ -31,7 +32,7 @@ Pickup::Pickup(glm::vec3 position, float angle, shaderType type) {
 	this->angle = angle;
 	this->type = type;
 	this->tick = 0;
-	this->duration = 6;
+	this->duration = 8;
 	this->spawnTime = time(0);
 	
 	if (type == HEALTHPOT) {
@@ -90,11 +91,14 @@ t_hitfunc Pickup::getHitFunc()
 glm::mat4 Pickup::placeObject() {
 	glm::mat4 transMat4(1.0f);
 
-
+	position.y = HEIGHT + sin(tick) * 0.03;
 
 	transMat4 = glm::translate(transMat4, position);
 	transMat4 = glm::scale(transMat4, scale);
 	transMat4 = glm::rotate(transMat4, angle, glm::vec3(0.0, 1.0, 0.0));
+
+	tick += ANIMATIONSPEED;
+	angle += ANIMATIONSPEED;
 
 	return transMat4;
 }

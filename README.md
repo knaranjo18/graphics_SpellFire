@@ -84,10 +84,19 @@ Quit Game - *Escape Key*
 	- ~~Add points for player~~
 	- ~~Add mana restricton for player~~
 	- Add sounds
+		- Add music over game
+		- Add enemy sound when hit
+		- Add enemy sound when attack
+		- Add spell cast sound
+		- Add death music
 	- Improve pickups
-		- Add duration
-		- Add animation
+		- ~~Add duration~~
+		- ~~Add animation~~
 		- Add flashing when they are about to despawn
+		- Add more potion types
+			- Exp potion
+			- Invisibility potion
+			- Time stop potion
 	- Add particle effects to projectiles
 	- Add a staff or hand for the player
 	- Add movement bob up and down
@@ -109,6 +118,6 @@ Quit Game - *Escape Key*
 - **GUI**
 	- ~~Add crosshair~~
 	- ~~Health bar~~
-	- Add a restart button
+	- ~~Add a restart button~~
 	- Add a start menu
 	- Figure out best way to add text to screen

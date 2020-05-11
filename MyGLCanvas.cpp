@@ -32,13 +32,14 @@ MyGLCanvas::MyGLCanvas() {
 	lightPos = glm::vec3(0.0, 10, 0.0);
 
 	player = new Player();
-
+	
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) 
 			spawnEnemy(COW); 
 		
 		spawnEnemy(BUNNY);
 	}
+
 
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
 	

@@ -13,6 +13,7 @@
 #include "BoundingBox.h"
 #include "gamedefs.h"
 
+
 class Pickup {
 public:
 	Pickup();
@@ -31,8 +32,7 @@ public:
 private:
 	BoundingBox* box;
 	glm::vec3 position, scale;
-	float angle, modelSize, duration;
-	int tick;
+	float angle, modelSize, duration, tick;
 
 	shaderType type;
 
