@@ -24,6 +24,7 @@ public:
 	
 	float getHealth();
 	glm::vec3 getPosition();
+	shaderType getType();
 	const BoundingBox* getBox();
 
 	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly);

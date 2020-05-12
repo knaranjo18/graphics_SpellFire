@@ -15,6 +15,22 @@ that is a placeholder from when we used the cow and bunny ply models as the enem
 ## How to Start
 If you just want to get straight to the game, place `Spellfire.exe` in the same directory as the `data` and `shader` folders. Then simply run it to play. If you wanna compile from source, follow the instructions below.
 
+## Controls
+Player Movement - *W, A, S, D*
+
+Camera Movement - *Mouse*
+
+Shoot Fireball - *Right Mouse Button*
+
+Restart Game - *R*
+
+Toggle Fullscreen - *F*
+
+Toggle Mouse Visibility - *Tab*
+
+Quit Game - *Escape Key*
+
+
 ## Compilation Instructions
 **Windows**
 Create a Visual Studio Project and add all the `.h` and `.cpp` files. Make sure to follow the instructions below to install OpengGL, glew, and GLFW. Make sure you are in x86 mode. To compile hit the `Local Windows Debugger` button and enjoy. 
@@ -46,20 +62,6 @@ installed by default when you install Visual Studios.
 4. Copy the `.dll` file to your Windows runtime directory. Usually that's `C:\Windows\System32`
 5. Add `glfw3.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`. Make sure you are in x86 mode.
 
-## Controls
-Player Movement - *W, A, S, D*
-
-Camera Movement - *Mouse*
-
-Shoot Fireball - *Right Mouse Button*
-
-Restart Game - *R*
-
-Toggle Fullscreen - *F*
-
-Toggle Mouse Visibility - *Tab*
-
-Quit Game - *Escape Key*
 
 
 ## Todo
@@ -118,6 +120,7 @@ Quit Game - *Escape Key*
 	- ~~Switch over from FLTK to GLFW for better window (Makes for smoother gameplay)~~
 	- Improve enemy storage
 	- Improve the textured and untextured sprite difference
+	- Stagger the loading of shaders and PLY
 
 
 - **GUI**

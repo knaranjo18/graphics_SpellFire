@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
 #include <time.h>
 
 #include "Enemy.h"
@@ -59,20 +60,20 @@ private:
 	void setupWindow(int w, int h);
 
 	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
-	void removeProjectile(shaderType projectileType, int index);
+	void removeProjectile(list<Projectile *>::iterator it);
 
 	void spawnPickup(shaderType, glm::vec3);
-	void removePickup(int);
+	void removePickup(list<Pickup *>::iterator it);
 
 	void spawnEnemy(shaderType enemyType);
 	void respawnEnemies();
-	void removeEnemy(shaderType enemyType, int index);
+	void removeEnemy(list<Enemy *>::iterator it);
 
-	void handleProjectiles(vector<Enemy*>&);
-	void applyProjectile(Projectile*, int, vector<Enemy*>&);
-	void handleMoveCollisions(glm::vec3, vector<Enemy*>&);
-	void handlePlayerCollisions(vector<Enemy*>&); 
-	int findEnemyCollision(Projectile*, vector<Enemy*>&);
+	void handleProjectiles();
+	void applyProjectile(Projectile*, list<Enemy *>::iterator it);
+	void handleMoveCollisions(glm::vec3);
+	void handlePlayerCollisions(); 
+	list<Enemy *>::iterator findEnemyCollision(Projectile*);
 
 	void handlePickups();
 
@@ -85,15 +86,18 @@ private:
 	bool isExpired(time_t spawnTime, float duration);
 
 	vector<ShaderManager *> shaderList;
-	vector<Enemy *> cowList, bunnyList;
 	vector<ply *> plyList;
-	vector<Projectile *> projectileList;
-	vector<Pickup*> pickupList;
 	vector<Sprite *> crossHair;
 	vector<Sprite *> healthBar;
 	vector<Sprite *> manaBar;
 	vector<Sprite *> expBar;
 	vector<Sprite *> deathScreen;
+
+	list<Projectile *> projectileList;
+	list<Enemy *> enemyList;
+	list<Pickup*> pickupList;
+
+	int numJad, numBlob, numManaPot, numHealthPot, numFireball;
 
 	Player *player;
 	Scenery *arena;

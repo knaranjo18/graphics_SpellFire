@@ -23,6 +23,7 @@
 
 #define DEBUGMODE false
 
+
 // Constructor to set everything up. Spawns some initial enemies
 MyGLCanvas::MyGLCanvas() {
 	setupWindow(800, 600);
@@ -32,6 +33,7 @@ MyGLCanvas::MyGLCanvas() {
 	prevX = prevY = 0;
 	firstTime = firstMouse = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
+	numBlob = numJad = numManaPot = numHealthPot = numFireball = 0;
 
 	player = new Player();
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
@@ -54,8 +56,8 @@ MyGLCanvas::MyGLCanvas() {
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++)
-			spawnEnemy(COW);
-		spawnEnemy(BUNNY);
+			spawnEnemy(BLOB);
+		spawnEnemy(JAD);
 	}
 }
 
@@ -159,24 +161,33 @@ void MyGLCanvas::drawScene() {
 		expBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
 		
 	/*--------------For the enemy---------------------------*/
-	for (int i = 0; i < cowList.size(); i++) 
-		cowList[i]->draw(modelViewMatrix, shaderList[COW], plyList[COW]);
+	list<Enemy *>::iterator itE, endPointE;
+	endPointE = enemyList.begin();
+	advance(endPointE, numBlob);
+	for (itE = enemyList.begin(); itE != endPointE; itE++) 
+		(*itE)->draw(modelViewMatrix, shaderList[BLOB], plyList[BLOB]);
 
-
-	for (int i = 0; i < bunnyList.size(); i++) 
-		bunnyList[i]->draw(modelViewMatrix, shaderList[BUNNY], plyList[BUNNY]);
+	advance(endPointE, numJad);
+	for (itE; itE != endPointE; itE++) 
+		(*itE)->draw(modelViewMatrix, shaderList[JAD], plyList[JAD]);
 
 	/*--------------draw projectiles---------------------------*/
-	for (int i = 0; i < projectileList.size(); i++) 
-		projectileList[i]->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
+	list<Projectile *>::iterator itP, endPointP;
+	endPointP = projectileList.begin();
+	advance(endPointP, numFireball);
+	for (itP = projectileList.begin(); itP != endPointP; itP++) 
+		(*itP)->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
 
 	/*--------------draw pickups---------------------------*/
-	for (int i = 0; i < pickupList.size(); i++) {
-		if (pickupList[i]->getType() == HEALTHPOT) 
-			pickupList[i]->draw(modelViewMatrix, shaderList[HEALTHPOT], plyList[HEALTHPOT]);
-		else if (pickupList[i]->getType() == MANAPOT) 
-			pickupList[i]->draw(modelViewMatrix, shaderList[MANAPOT], plyList[MANAPOT]);
-	}
+	list<Pickup *>::iterator itPU, endPointPU;
+	endPointPU = pickupList.begin();
+	advance(endPointPU, numManaPot);
+	for (itPU = pickupList.begin(); itPU != endPointPU; itPU++) 
+		(*itPU)->draw(modelViewMatrix, shaderList[MANAPOT], plyList[MANAPOT]);
+
+	advance(endPointPU, numHealthPot);
+	for (itPU; itPU != endPointPU; itPU++)
+		(*itPU)->draw(modelViewMatrix, shaderList[HEALTHPOT], plyList[HEALTHPOT]);
 }
 
 // Ensures that the game runs at the specified FPS regardless of machine
@@ -199,20 +210,11 @@ void MyGLCanvas::enforceFrameTime(GLint query) {
 // Handles all the game mechanics such as collisions, projectiles, movements, etc...
 void MyGLCanvas::doGameLogic() {
 	glm::vec3 playerPos = player->getPosition();
-	
-	// TODO: Make more cohesive instead of disjoint lists
-	vector<Enemy*> enemies;
-	for (int i = 0; i < cowList.size(); i++) {
-		enemies.push_back(cowList[i]);
-	}
-	for (int i = 0; i < bunnyList.size(); i++) {
-		enemies.push_back(bunnyList[i]);
-	}
 
-	handleMoveCollisions(playerPos, enemies);
-	handlePlayerCollisions(enemies);
+	handleMoveCollisions(playerPos);
+	handlePlayerCollisions();
 	
-	handleProjectiles(enemies);
+	handleProjectiles();
 	handlePickups();
 
 	handleManaBar();
@@ -236,22 +238,23 @@ void MyGLCanvas::respawnEnemies() {
 		startTime = time(0);
 		temp = rand() / float(RAND_MAX);
 
-		if (temp < 0.5) spawnEnemy(BUNNY);
-		if (temp < 0.75) spawnEnemy(COW);
+		if (temp < 0.5) spawnEnemy(JAD);
+		if (temp < 0.75) spawnEnemy(BLOB);
 	}
 }
 
 // refactor idea: replace pointers with NULL and periodically cull instead of
 // deleting immediately
-void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
+void MyGLCanvas::handlePlayerCollisions() {
 	const BoundingBox* p_box = player->getBox();
 	
-	for (int i = 0; i < pickupList.size(); i++) {
-		const BoundingBox* pot_box = pickupList[i]->getBox();
+	list<Pickup *>::iterator itPU;
+	for (itPU = pickupList.begin(); itPU != pickupList.end(); itPU++) {
+		const BoundingBox* pot_box = (*itPU)->getBox();
 		if (p_box->doesCollide(*pot_box)) { // pick up the potion
-			player->applyHit(pickupList[i]->getHitFunc());
-			removePickup(i);
-			i--;
+			player->applyHit((*itPU)->getHitFunc());
+			removePickup(itPU);
+			itPU--;
 		}
 	}
 
@@ -261,10 +264,11 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 		return;
 	}
 	
-	for (int i = 0; i < enemies.size(); i++) {
-		const BoundingBox* e_box = enemies[i]->getBox();
+	list<Enemy *>::iterator itE;
+	for (itE = enemyList.begin(); itE != enemyList.end(); itE++) {
+		const BoundingBox* e_box = (*itE)->getBox();
 		if (p_box->doesCollide(*e_box)) { // Gives invicibility frames after player is hit
-			player->applyHit(enemies[i]->getHitFunc());
+			player->applyHit((*itE)->getHitFunc());
 			player->setiFrames(IFRAME_AFTER_HIT);
 			return;
 		}
@@ -272,39 +276,43 @@ void MyGLCanvas::handlePlayerCollisions(vector<Enemy*>& enemies) {
 }
 
 // Returns the index of the enemy which is currently colliding with the projectile
-// or -1 if there is no collision
-int MyGLCanvas::findEnemyCollision(Projectile* p, vector<Enemy*>& enemies) {
+// or end() if there is no collision since it is one more than the last element
+list<Enemy *>::iterator MyGLCanvas::findEnemyCollision(Projectile* p) {
 	const BoundingBox* pBox = p->getBox();
-	for (int i = 0; i < enemies.size(); i++) {
-		const BoundingBox* eBox = enemies[i]->getBox();
+
+	list<Enemy *>::iterator itE;
+	for (itE = enemyList.begin(); itE != enemyList.end(); itE++) {
+		const BoundingBox* eBox = (*itE)->getBox();
 
 		if (pBox->doesCollide(*eBox)) {
-			return i;
+			return itE;
 		}
 	}
-	return -1;
+	return enemyList.end();
 }
 
 // Moves enemies towards players. If collision between enemies occurs
 // they will move apart from each other.
-void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos, vector<Enemy*>&enemies) {
-	for (int i = 0; i < enemies.size(); i++) {
+void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos) {
+	list<Enemy *>::iterator it1, it2;
+	for (it1 = enemyList.begin(); it1 != enemyList.end(); it1++) {
 		bool moved = false;
-		for (int j = i + 1; j < enemies.size(); j++) {
-			const BoundingBox* box1 = enemies[i]->getBox();
-			const BoundingBox* box2 = enemies[j]->getBox();
+		it2 = it1;
+		for (advance(it2, 1); it2 != enemyList.end(); it2++) {
+			const BoundingBox* box1 = (*it1)->getBox();
+			const BoundingBox* box2 = (*it2)->getBox();
 			if (box1->doesCollide(*box2) && !moved) {
 				glm::vec3 dir = box1->getCenter() - box2->getCenter();
 				// move enemies towards some faraway point in opposite directions
-				enemies[i]->moveEnemy((dir * 5.0f) + glm::vec3(box1->getCenter()));
-				enemies[j]->moveEnemy((-dir * 5.0f) + glm::vec3(box2->getCenter()));
-				box1 = enemies[i]->getBox();
-				box2 = enemies[j]->getBox();
+				(*it1)->moveEnemy((dir * 5.0f) + glm::vec3(box1->getCenter()));
+				(*it2)->moveEnemy((-dir * 5.0f) + glm::vec3(box2->getCenter()));
+				box1 = (*it1)->getBox();
+				box2 = (*it2)->getBox();
 				moved = true;
 			}
 		}
 		if (!moved) {
-			enemies[i]->moveEnemy(playerPos);
+			(*it1)->moveEnemy(playerPos);
 		}
 	}
 }
@@ -362,22 +370,24 @@ void MyGLCanvas::handleManaBar() {
 }
 
 // Move projectiles, delete if they expire, figure out collisions with enemies
-void MyGLCanvas::handleProjectiles(vector<Enemy*>&enemies) {
-	int hit;
-	for (int i = 0; i < projectileList.size(); i++) {
-		Projectile *p = projectileList[i];
+void MyGLCanvas::handleProjectiles() {
+	list<Enemy *>::iterator hit;
+
+	list<Projectile *>::iterator itP;
+	for (itP = projectileList.begin(); itP != projectileList.end(); itP++) {
+		Projectile *p = (*itP);
 
 		if (isExpired(p->getSpawnTime(), p->getDuration())) {
-			removeProjectile(FIREBALL, i);
-			i--;
+			removeProjectile(itP);
+			itP--;
 		} else if (p->hitFloor()) {
-			removeProjectile(FIREBALL, i);
-			i--;
-		} else if ((hit = findEnemyCollision(p, enemies)) != -1) {
+			removeProjectile(itP);
+			itP--;
+		} else if ((hit = findEnemyCollision(p)) != enemyList.end()) {
 			// deal damage to enemy here
-			applyProjectile(p, hit, enemies);
-			removeProjectile(FIREBALL, i);
-			i--;
+			applyProjectile(p, hit);
+			removeProjectile(itP);
+			itP--;
 		}
 		else {
 			p->moveProjectile();
@@ -387,19 +397,20 @@ void MyGLCanvas::handleProjectiles(vector<Enemy*>&enemies) {
 
 // Deletes pickup if they have expired
 void MyGLCanvas::handlePickups() {
-	for (int i = 0; i < pickupList.size(); i++) {
-		Pickup *p = pickupList[i];
+	list<Pickup *>::iterator itPU;
+	for (itPU = pickupList.begin(); itPU != pickupList.end(); itPU++) {
+		Pickup *p = (*itPU);
 		
 		if (isExpired(p->getSpawnTime(), p->getDuration())) {
-			removePickup(i);
-			i--;
+			removePickup(itPU);
+			itPU--;
 		}
 	}
 }
 
 // Handle all logic when enemy e is hit by projectile p
-void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
-	Enemy* e = enemies[i];
+void MyGLCanvas::applyProjectile(Projectile* p, list<Enemy *>::iterator itE) {
+	Enemy* e = (*itE);
 	e->applyHit(p->getHitfunc());
 
 	// if the enemy is dead remove it TODO: make this better its jank
@@ -412,14 +423,7 @@ void MyGLCanvas::applyProjectile(Projectile* p, int i, vector<Enemy*>&enemies) {
 			spawnPickup(rand() % 2 == 0 ? HEALTHPOT : MANAPOT, e->getPosition()); 
 		}
 
-		if (e->enemyType == COW) { 
-			removeEnemy(COW, i);
-		}
-		else if (e->enemyType == BUNNY) { 
-			removeEnemy(BUNNY, i - cowList.size()); 
-		}
-		
-		enemies.erase(enemies.begin() + i);
+		removeEnemy(itE);
 	}
 }
 
@@ -428,7 +432,16 @@ void MyGLCanvas::fireProjectile(shaderType projectileType, glm::vec3 originPoint
 	glm::vec3 startPoint = originPoint + (0.1f * glm::normalize(directionFired));
 	startPoint.y -= 0.08;
 
-	projectileList.push_back(new Projectile(projectileType, startPoint, directionFired));
+	switch (projectileType) {
+	case FIREBALL:
+		projectileList.push_front(new Projectile(projectileType, startPoint, directionFired));
+		numFireball++;
+		break;
+	default:
+		printf("NOT A VALID PROJECTILE");
+		exit(1);
+		break;
+	}
 }
 
 // Creates a new enemy of a given type somewhere around the edge of the arena
@@ -439,11 +452,13 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 	(rand() % 2 == 0) ? zPos *= -1 : zPos;
 
 	switch (enemyType) {
-	case(COW):
-		cowList.push_back(new Enemy(COW, glm::vec3(xPos, HEIGHT - 0.05, zPos)));
+	case(BLOB):
+		enemyList.push_front(new Enemy(BLOB, glm::vec3(xPos, HEIGHT - 0.05, zPos)));
+		numBlob++;
 		break;
-	case(BUNNY):
-		bunnyList.push_back(new Enemy(BUNNY, glm::vec3(xPos, HEIGHT, zPos)));
+	case(JAD):
+		enemyList.push_back(new Enemy(JAD, glm::vec3(xPos, HEIGHT, zPos)));
+		numJad++;
 		break;	
 	default:
 		printf("NOT A VALID ENEMY");
@@ -453,16 +468,18 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 }
 
 // Spawns a pickup of a given type in a given position
-// TODO: insert into list so that all potions of one type are contiguous,
-// right now they are scattered and that may reduce performance
 void MyGLCanvas::spawnPickup(shaderType type, glm::vec3 position) {
 	float angle = sin(rand());
 	position.y = HEIGHT - 0.05;
 
 	switch (type) {
-	case(HEALTHPOT):
 	case(MANAPOT):
+		pickupList.push_front(new Pickup(position, angle, type));
+		numManaPot++;
+		break;
+	case(HEALTHPOT):
 		pickupList.push_back(new Pickup(position, angle, type));
+		numHealthPot++;
 		break;
 	default:
 		fprintf(stderr, "NOT A VALID PICKUP\n");
@@ -471,41 +488,49 @@ void MyGLCanvas::spawnPickup(shaderType type, glm::vec3 position) {
 }
 
 // Removes an enemy from game and reclaims memory
-void MyGLCanvas::removeEnemy(shaderType enemyType, int index) {
-	switch (enemyType) {
-	case(COW):
-		delete cowList[index];
-		cowList.erase(cowList.begin() + index);
+void MyGLCanvas::removeEnemy(list<Enemy *>::iterator it) {
+	switch ((*it)->getType()) {
+	case(BLOB):
+		numBlob--;
 		break;
-	case(BUNNY):
-		delete bunnyList[index];
-		bunnyList.erase(bunnyList.begin() + index);
+	case(JAD):
+		numJad--;
 		break;
 	default:
 		printf("NOT A VALID ENEMY");
 		exit(1);
 		break;
 	} 
+
+	delete (*it);
+	enemyList.erase(it);
 }
 
 // Removes a projectile from game and reclaims memory
-void MyGLCanvas::removeProjectile(shaderType projectileType, int index) {
-	switch (projectileType) {
+void MyGLCanvas::removeProjectile(list<Projectile *>::iterator it) {
+	switch ((*it)->getType()) {
 	case(FIREBALL):
-		delete projectileList[index];
-		projectileList.erase(projectileList.begin() + index);
-		break;
-	default:
-		printf("NOT A VALID PROJECTILE");
-		exit(1);
+		numFireball--;
 		break;
 	}
+
+	delete (*it);
+	projectileList.erase(it);
 }
 
 // Removes a pickup from game and reclaims memory
-void MyGLCanvas::removePickup(int i) {
-	delete pickupList[i];
-	pickupList.erase(pickupList.begin() + i);
+void MyGLCanvas::removePickup(list<Pickup *>::iterator it) {
+	switch ((*it)->getType()) {
+	case MANAPOT:
+		numManaPot--;
+		break;
+	case HEALTHPOT:
+		numHealthPot--;
+		break;
+	}
+
+	delete (*it);
+	pickupList.erase(it);
 }
 
 // Updates the camera based on the width and height of the screen
@@ -564,7 +589,7 @@ void MyGLCanvas::setupShaders() {
 	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
 	// TODO, find a better way than going up to max value of enum
-	for (int i = COW; i <= MANAPOT; i++) {
+	for (int i = BLOB; i <= MANAPOT; i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
 			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
 		} else if (i == SPRITE) {
@@ -601,10 +626,10 @@ void MyGLCanvas::deallocate() {
 
 	for (int i = 0; i < shaderList.size(); i++) delete shaderList[i];
 	for (int i = 0; i < plyList.size(); i++) delete plyList[i];
-	for (int i = 0; i < cowList.size(); i++) delete cowList[i];
-	for (int i = 0; i < bunnyList.size(); i++) delete bunnyList[i];
-	for (int i = 0; i < projectileList.size(); i++) delete projectileList[i];
-	
+	for (list<Enemy *>::iterator itE = enemyList.begin(); itE != enemyList.end(); itE++) delete (*itE);
+	for (list<Projectile *>::iterator itP = projectileList.begin(); itP != projectileList.end(); itP++) delete (*itP);
+	for (list<Pickup *>::iterator itPU = pickupList.begin(); itPU != pickupList.end(); itPU++) delete (*itPU);
+
 	for (int i = 0; i < 2; i++) delete healthBar[i];
 	for (int i = 0; i < 2; i++) delete manaBar[i];
 	for (int i = 0; i < 2; i++) delete expBar[i];
@@ -738,32 +763,30 @@ void MyGLCanvas::pollInput() {
 // TODO: Organize a bit better (Make a despawn everything function)
 void MyGLCanvas::restartGame() {
 	printf("GAME RESTART\n");
-	for (int i = 0; i < cowList.size(); i++) {
-		removeEnemy(COW, i);
-		i--;
+
+	list<Enemy *>::iterator itE = enemyList.begin();
+	for (itE; itE != enemyList.end(); itE++) {
+		removeEnemy(itE);
+		itE--;
 	}
 
-	for (int i = 0; i < bunnyList.size(); i++) {
-		removeEnemy(BUNNY, i);
-		i--;
+	list<Projectile *>::iterator itP = projectileList.begin();
+	for (itP; itP != projectileList.end(); itP++) {
+		removeProjectile(itP);
+		itP--;
 	}
 
-	for (int i = 0; i < projectileList.size(); i++) {
-		removeProjectile(FIREBALL, i);
-		i--;
-	}
-
-	for (int i = 0; i < pickupList.size(); i++) {
-		removePickup(i);
-		i--;
+	list<Pickup *>::iterator itPU = pickupList.begin();
+	for (itPU; itPU != pickupList.end(); itPU++) {
+		removePickup(itPU);
+		itPU--;
 	}
 
 
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++)
-			spawnEnemy(COW);
-
-		spawnEnemy(BUNNY);
+			spawnEnemy(BLOB);
+		spawnEnemy(JAD);
 	}
 
 	firstMouse = true;

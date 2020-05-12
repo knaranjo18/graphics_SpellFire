@@ -22,6 +22,7 @@ public:
 	time_t getSpawnTime();
 	float  getDuration();
 	t_hitfunc getHitfunc();
+	shaderType getType();
 	const BoundingBox* getBox();
 	
 	

@@ -133,3 +133,7 @@ float Projectile::getDuration() {
 bool Projectile::hitFloor() {
 	return position.y < -0.15;
 }
+
+shaderType Projectile::getType() {
+	return projectileType;
+}

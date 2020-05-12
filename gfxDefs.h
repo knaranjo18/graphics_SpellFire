@@ -10,7 +10,7 @@ const float EPSILON = 1e-5;
 #define PLYSIZE 0.5f
 #define NEAR_PLANE 0.01f
 #define FAR_PLANE 20.0f
-enum shaderType { COW, BUNNY, FIREBALL, SPRITE, DEATH, ARENA, HEALTHPOT, MANAPOT };
+enum shaderType { BLOB, JAD, FIREBALL, SPRITE, DEATH, ARENA, HEALTHPOT, MANAPOT };
 enum groundType { FOREGROUND, BACKGROUND };
 enum GameState { START, PLAYING, DEAD };
 #endif
