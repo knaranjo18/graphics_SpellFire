@@ -1,7 +1,7 @@
 ply
 format ascii 1.0
 comment Created by ya boi Kevin
-element vertex 6
+element vertex 4
 property float x
 property float y
 property float z
@@ -16,8 +16,6 @@ end_header
 0.0 1.0 0.0 1.0 1.0 1.0 0.0 1.0  
 1.0 0.0 0.0 1.0 1.0 1.0 1.0 0.0  
 0.0 0.0 0.0 1.0 1.0 1.0 0.0 0.0   
-0.0 1.0 0.0 1.0 1.0 1.0 0.0 1.0   
 1.0 1.0 0.0 1.0 1.0 1.0 1.0 1.0   
-1.0 0.0 0.0 1.0 1.0 1.0 1.0 0.0    
 3 0 1 2
-3 3 4 5
+3 0 3 1

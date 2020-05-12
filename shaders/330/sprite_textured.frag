@@ -9,6 +9,6 @@ uniform sampler2D tex;
 out vec4 outputColor;
 
 void main() {
-	vec4 texColor = texture(tex, vec2(textureCoordinate.x - 0.3, textureCoordinate.y));
+	vec4 texColor = texture(tex, vec2(textureCoordinate.x , textureCoordinate.y));
 	outputColor = vec4(spriteColorFrag, 1.0) * texColor;
 }

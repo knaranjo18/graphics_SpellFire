@@ -21,7 +21,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE false
+#define DEBUGMODE true
 
 
 // Constructor to set everything up. Spawns some initial enemies
@@ -51,7 +51,7 @@ MyGLCanvas::MyGLCanvas() {
 	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
-	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND));
+	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0 , 1.0), FOREGROUND));
 
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
