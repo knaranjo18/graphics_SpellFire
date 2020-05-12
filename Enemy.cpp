@@ -20,7 +20,7 @@ Enemy::Enemy() {
 	initialAngle = 0;
 	currAngle = 0;
 	angularSpeed = PI / 350.0;
-	enemyType = BLOB;
+	enemyType = GOOP;
 	modelSize = COWSIZE * PLYSIZE;
 	box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
 	transMat4 = glm::mat4(1.0f);
@@ -32,7 +32,7 @@ Enemy::Enemy() {
 
 Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 	switch (_enemyType) {
-	case(BLOB):
+	case(GOOP):
 		health = 100.0;
 		speed = 0.002;
 		position = startPoint;

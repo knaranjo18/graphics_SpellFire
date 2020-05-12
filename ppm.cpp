@@ -1,6 +1,8 @@
 #include "ppm.h"
 #include <FL/gl.h>
 
+#define PRINT_STATS false
+
 //Desc:	Default constructor for a ppm
 ppm::ppm(std::string _fileName){
   /* Algorithm
@@ -17,7 +19,7 @@ ppm::ppm(std::string _fileName){
 	  std::string line;
 	  // Our loop invariant is to continue reading input until
 	  // we reach the end of the file and it reads in a NULL character
-	  std::cout << "Reading in ppm file: " << _fileName << std::endl;
+	  std::cout << "Reading in PPM file: " << _fileName << std::endl;
 	  // Our delimeter pointer which is used to store a single token in a given
 	  // string split up by some delimeter(s) specified in the strtok function
 	  char* delimeter_pointer;
@@ -35,16 +37,14 @@ ppm::ppm(std::string _fileName){
 		  // Read in the magic number
 		  if (iteration == 0) {
 			  magicNumber = delimeter_pointer;
-			  std::cout << "Magic Number: " << magicNumber << " ";
-			  std::cout << std::endl;
+			  if (PRINT_STATS) std::cout << "Magic Number: " << magicNumber << " " << std::endl;
 		  }
 		  // Read in dimensions
 		  else if (iteration == 1) {
 			  width = atoi(delimeter_pointer);
-			  std::cout << "width: " << width << " ";
 			  delimeter_pointer = strtok(NULL, " ");
 			  height = atoi(delimeter_pointer);
-			  std::cout << "height: " << height << std::endl;
+			  if (PRINT_STATS) 	std::cout << "width: " << width << " " << "height: " << height << std::endl;
 			  // Allocate memory for the color array
 			  if (width > 0 && height > 0) {
 				  color = new char[width*height * 3];
@@ -59,7 +59,7 @@ ppm::ppm(std::string _fileName){
 			  }
 		  }
 		  else if (iteration == 2) {
-			  std::cout << "color range: 0-" << delimeter_pointer << std::endl;
+			  if (PRINT_STATS) std::cout << "color range: 0-" << delimeter_pointer << std::endl;
 
 			  int num = width * height * 3;
 			  for (int i = 0; i < num; i++) {
@@ -73,6 +73,7 @@ ppm::ppm(std::string _fileName){
 		  iteration++;
 	  }
 	  ppmFile.close();
+	  std::cout << "PPM file parsed correctly: " << _fileName << std::endl;
   }
   else{
       std::cout << "Unable to open ppm file: " << _fileName << std::endl;

@@ -1,11 +1,7 @@
 #include "ShaderManager.h"
 
-
 ShaderManager::ShaderManager(){
 		// Return the version of OpenGL you are running.
-#ifndef __APPLE__
-		printf("Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-#endif
 		program = 0;
 		layer1 = NULL;
 		layer2 = NULL;

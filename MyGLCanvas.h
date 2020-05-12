@@ -60,14 +60,14 @@ private:
 	void setupWindow(int w, int h);
 
 	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
-	void removeProjectile(list<Projectile *>::iterator it);
+	void removeProjectile(list<Projectile *>::iterator &it);
 
 	void spawnPickup(shaderType, glm::vec3);
-	void removePickup(list<Pickup *>::iterator it);
+	void removePickup(list<Pickup *>::iterator &it);
 
 	void spawnEnemy(shaderType enemyType);
 	void respawnEnemies();
-	void removeEnemy(list<Enemy *>::iterator it);
+	void removeEnemy(list<Enemy *>::iterator &it);
 
 	void handleProjectiles();
 	void applyProjectile(Projectile*, list<Enemy *>::iterator it);

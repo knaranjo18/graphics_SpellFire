@@ -56,7 +56,7 @@ MyGLCanvas::MyGLCanvas() {
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++)
-			spawnEnemy(BLOB);
+			spawnEnemy(GOOP);
 		spawnEnemy(JAD);
 	}
 }
@@ -170,15 +170,15 @@ void MyGLCanvas::drawScene() {
 		expBar[i]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 		
 	/*--------------For the enemy---------------------------*/
-	shaderList[BLOB]->useShader();
-	modelView_id = glGetUniformLocation(shaderList[BLOB]->program, "myModelviewMatrix");
+	shaderList[GOOP]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[GOOP]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	list<Enemy *>::iterator itE, endPointE;
 	endPointE = enemyList.begin();
 	advance(endPointE, numBlob);
 	for (itE = enemyList.begin(); itE != endPointE; itE++) 
-		(*itE)->draw(shaderList[BLOB], plyList[BLOB]);
+		(*itE)->draw(shaderList[GOOP], plyList[GOOP]);
 
 
 	shaderList[JAD]->useShader();
@@ -270,7 +270,7 @@ void MyGLCanvas::respawnEnemies() {
 		temp = rand() / float(RAND_MAX);
 
 		if (temp < 0.5) spawnEnemy(JAD);
-		if (temp < 0.75) spawnEnemy(BLOB);
+		if (temp < 0.75) spawnEnemy(GOOP);
 	}
 }
 
@@ -279,13 +279,14 @@ void MyGLCanvas::respawnEnemies() {
 void MyGLCanvas::handlePlayerCollisions() {
 	const BoundingBox* p_box = player->getBox();
 	
-	list<Pickup *>::iterator itPU;
-	for (itPU = pickupList.begin(); itPU != pickupList.end(); itPU++) {
+	list<Pickup *>::iterator itPU = pickupList.begin();
+	while(itPU != pickupList.end()) {
 		const BoundingBox* pot_box = (*itPU)->getBox();
 		if (p_box->doesCollide(*pot_box)) { // pick up the potion
 			player->applyHit((*itPU)->getHitFunc());
 			removePickup(itPU);
-			itPU--;
+		} else {
+			itPU++;
 		}
 	}
 
@@ -404,37 +405,37 @@ void MyGLCanvas::handleManaBar() {
 void MyGLCanvas::handleProjectiles() {
 	list<Enemy *>::iterator hit;
 
-	list<Projectile *>::iterator itP;
-	for (itP = projectileList.begin(); itP != projectileList.end(); itP++) {
+	list<Projectile *>::iterator itP = projectileList.begin();
+	while(itP != projectileList.end()) {
 		Projectile *p = (*itP);
 
 		if (isExpired(p->getSpawnTime(), p->getDuration())) {
 			removeProjectile(itP);
-			itP--;
 		} else if (p->hitFloor()) {
 			removeProjectile(itP);
-			itP--;
 		} else if ((hit = findEnemyCollision(p)) != enemyList.end()) {
 			// deal damage to enemy here
 			applyProjectile(p, hit);
 			removeProjectile(itP);
-			itP--;
 		}
 		else {
 			p->moveProjectile();
+			itP++;
 		}
 	}
 }
 
 // Deletes pickup if they have expired
 void MyGLCanvas::handlePickups() {
-	list<Pickup *>::iterator itPU;
-	for (itPU = pickupList.begin(); itPU != pickupList.end(); itPU++) {
+	list<Pickup *>::iterator itPU = pickupList.begin();
+
+	while(itPU != pickupList.end()) {
 		Pickup *p = (*itPU);
 		
 		if (isExpired(p->getSpawnTime(), p->getDuration())) {
 			removePickup(itPU);
-			itPU--;
+		} else {
+			itPU++;
 		}
 	}
 }
@@ -483,8 +484,8 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 	(rand() % 2 == 0) ? zPos *= -1 : zPos;
 
 	switch (enemyType) {
-	case(BLOB):
-		enemyList.push_front(new Enemy(BLOB, glm::vec3(xPos, HEIGHT - 0.05, zPos)));
+	case(GOOP):
+		enemyList.push_front(new Enemy(GOOP, glm::vec3(xPos, HEIGHT - 0.05, zPos)));
 		numBlob++;
 		break;
 	case(JAD):
@@ -519,9 +520,9 @@ void MyGLCanvas::spawnPickup(shaderType type, glm::vec3 position) {
 }
 
 // Removes an enemy from game and reclaims memory
-void MyGLCanvas::removeEnemy(list<Enemy *>::iterator it) {
+void MyGLCanvas::removeEnemy(list<Enemy *>::iterator &it) {
 	switch ((*it)->getType()) {
-	case(BLOB):
+	case(GOOP):
 		numBlob--;
 		break;
 	case(JAD):
@@ -534,11 +535,11 @@ void MyGLCanvas::removeEnemy(list<Enemy *>::iterator it) {
 	} 
 
 	delete (*it);
-	enemyList.erase(it);
+	it = enemyList.erase(it);
 }
 
 // Removes a projectile from game and reclaims memory
-void MyGLCanvas::removeProjectile(list<Projectile *>::iterator it) {
+void MyGLCanvas::removeProjectile(list<Projectile *>::iterator &it) {
 	switch ((*it)->getType()) {
 	case(FIREBALL):
 		numFireball--;
@@ -546,11 +547,11 @@ void MyGLCanvas::removeProjectile(list<Projectile *>::iterator it) {
 	}
 
 	delete (*it);
-	projectileList.erase(it);
+	it = projectileList.erase(it);
 }
 
 // Removes a pickup from game and reclaims memory
-void MyGLCanvas::removePickup(list<Pickup *>::iterator it) {
+void MyGLCanvas::removePickup(list<Pickup *>::iterator &it) {
 	switch ((*it)->getType()) {
 	case MANAPOT:
 		numManaPot--;
@@ -561,7 +562,7 @@ void MyGLCanvas::removePickup(list<Pickup *>::iterator it) {
 	}
 
 	delete (*it);
-	pickupList.erase(it);
+	it = pickupList.erase(it);
 }
 
 // Updates the camera based on the width and height of the screen
@@ -590,6 +591,10 @@ void MyGLCanvas::updateCamera(int width, int height) {
 
 // Initializes all the shaderes with their ply files and textures
 void MyGLCanvas::setupShaders() {	
+	#ifndef __APPLE__
+		printf("Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+	#endif
+
 	shaderList.push_back(new ShaderManager()); // blob
 	shaderList.push_back(new ShaderManager()); // jad
 	shaderList.push_back(new ShaderManager()); // fireball
@@ -598,7 +603,6 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager()); // arena
 	shaderList.push_back(new ShaderManager()); // health pot
 	shaderList.push_back(new ShaderManager()); // mana pot
-
 	plyList.push_back(new ply("./data/blob.ply"));
 	plyList.push_back(new ply("./data/jad.ply"));
 	
@@ -797,27 +801,17 @@ void MyGLCanvas::restartGame() {
 	printf("GAME RESTART\n");
 
 	list<Enemy *>::iterator itE = enemyList.begin();
-	for (itE; itE != enemyList.end(); itE++) {
-		removeEnemy(itE);
-		itE--;
-	}
+	while(itE != enemyList.end()) removeEnemy(itE);
 
 	list<Projectile *>::iterator itP = projectileList.begin();
-	for (itP; itP != projectileList.end(); itP++) {
-		removeProjectile(itP);
-		itP--;
-	}
+	while(itP != projectileList.end()) removeProjectile(itP);
 
 	list<Pickup *>::iterator itPU = pickupList.begin();
-	for (itPU; itPU != pickupList.end(); itPU++) {
-		removePickup(itPU);
-		itPU--;
-	}
-
+	while(itPU != pickupList.end()) removePickup(itPU);
 
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++)
-			spawnEnemy(BLOB);
+			spawnEnemy(GOOP);
 		spawnEnemy(JAD);
 	}
 

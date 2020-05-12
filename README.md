@@ -77,8 +77,10 @@ installed by default when you install Visual Studios.
 
 
 - **Scenery**
-	- ~~Implement the complete Phong lighting model (Ambient, Diffuse, Specular)~~
+	- ~~Implement diffuse lighting~~
 	- ~~Add sky textures~~
+	- Implement ambient lighting
+	- Implement specular lighting
 
 
 - **Game Mechanics**
@@ -115,12 +117,11 @@ installed by default when you install Visual Studios.
 		- Add blink teleport spell
 
 
-
 - **Code improvement**
 	- ~~Switch over from FLTK to GLFW for better window (Makes for smoother gameplay)~~
 	- ~~Improve enemy storage~~
-	- Improve the textured and untextured sprite difference
-	- Stagger the loading of shaders and PLY
+	- ~~Improve the textured and untextured sprite difference~~
+	- Stagger the loading of shaders and PLY to avoid blackscreen
 
 
 - **GUI**
