@@ -12,6 +12,9 @@ texture coordinates from ply models we exported from 3D modeling tools (along wi
 their textures).  The code refers to COWs and BUNNYs as the two types of enemies; 
 that is a placeholder from when we used the cow and bunny ply models as the enemies.
 
+## Demo
+![Spellfire Demo](data/demo.gif)
+
 ## How to Start
 If you just want to get straight to the game, place `Spellfire.exe` in the same directory as the `data` and `shader` folders. Then simply run it to play. If you wanna compile from source, follow the instructions below.
 
