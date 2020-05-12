@@ -70,7 +70,7 @@ installed by default when you install Visual Studios.
 ## Todo
 - **Develop Enemies**
 	- ~~Get enemy PLY models~~
-	- Add enemy death animation (Fall over)
+	- Add death animation (Fall over instead of disappear)
 	- Apply textures
 	- Add movement animations (Basic is up and down bobbing)
 	- Make different types of enemies
@@ -96,11 +96,14 @@ installed by default when you install Visual Studios.
 	- ~~Add points for player~~
 	- ~~Add mana restricton for player~~
 	- Add sounds
+	 	- Add start menu music
+	 	- Add pause screen music
 		- Add music over game
-		- Add enemy sound when hit
-		- Add enemy sound when attack
-		- Add spell cast sound
-		- Add death music
+		- Add enemy sound when hit for each enemy
+		- Add enemy sound when attack for each enemy
+		- Add spell cast sound for each spell
+		- Add death screen music
+		- Add walking sounds (crunchy gravel)
 	- Improve pickups
 		- ~~Add duration~~
 		- ~~Add animation~~
@@ -111,13 +114,14 @@ installed by default when you install Visual Studios.
 			- Time stop potion
 	- Add particle effects to projectiles
 	- Add a staff or hand for the player
-	- Add movement bob up and down
+	- Add movement bob up and down when walking
 	- Improve collisions so players and enemies not allowed to walk through each other
-	- Implement progressive difficulty 
+	- Implement progressive difficulty (maybe through waves of enemies?)
 	- Improve player stats when leveling up
 	- Add spell selection
 		- Add ice bolt spell
 		- Add blink teleport spell
+		- Add thunderwave spell (Close quarters AOE)
 
 
 - **Code improvement**
@@ -130,7 +134,17 @@ installed by default when you install Visual Studios.
 - **GUI**
 	- ~~Add crosshair~~
 	- ~~Health bar~~
+	- ~~Figure out best way to add text to screen (Through textures)~~
 	- ~~Add a restart button~~
 	- Add a start menu
-	- ~~Figure out best way to add text to screen (Through textures)~~
-	- Add option to let user change graphics setting (Low, medium, high texture)
+	- Add a pause screen
+	- Add collectibles menu
+	- Add button to show controls list
+	- Add options menu
+		- Add option to let user change graphics setting (Low, medium, high texture)
+		- Add option to change mouse sensitivity
+		- Add option to change brightness
+
+- **Story**
+	- Add plot
+	- Add collectibles

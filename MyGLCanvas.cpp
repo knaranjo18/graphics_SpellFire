@@ -21,7 +21,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE false
+#define DEBUGMODE true
 
 
 // Constructor to set everything up. Spawns some initial enemies
@@ -784,7 +784,7 @@ void MyGLCanvas::setupWindow(int w, int h) {
 	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
 	if (DEBUGMODE) {
-		window = glfwCreateWindow(mode->width / 2, mode->height / 2, "Spellfire", NULL, NULL);
+		window = glfwCreateWindow(mode->width / 1.5, mode->height / 1.5, "Spellfire", NULL, NULL);
 		fullscreen = false;
 		cursorVisible = true;
 	}
@@ -807,7 +807,7 @@ void MyGLCanvas::setupWindow(int w, int h) {
 		glViewport(0, 0, mode->width, mode->height);
 	}
 	else {
-		glViewport(0, 0, mode->width / 2, mode->height / 2);
+		glViewport(0, 0, mode->width / 1.5, mode->height / 1.5);
 	}
 
 	glfwSetWindowUserPointer(window, this);
