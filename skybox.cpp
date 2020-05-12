@@ -106,9 +106,6 @@ void Skybox::draw(glm::mat4 modelView, glm::mat4 projectionMatrix) {
 	GLint modelView_id = glGetUniformLocation(shader->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, GL_FALSE, glm::value_ptr(modelView));
 
-	GLuint projection_id = glGetUniformLocation(shader->program, "myProjectionMatrix");
-	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(projectionMatrix));
-
 	glDepthMask(GL_FALSE);
 
 	glBindVertexArray(vao);

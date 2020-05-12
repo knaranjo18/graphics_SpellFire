@@ -47,6 +47,8 @@ public:
 
 	unsigned int getTextureID();
 
+	ShaderManager* shader;
+
 	GLuint vao;
 
 private:
@@ -58,7 +60,6 @@ private:
 
     GLuint vertexVBO_id, indicesVBO_id;
 
-    ShaderManager* shader;
 
 
     GLfloat skyboxVertices[N_FLOATS] = {

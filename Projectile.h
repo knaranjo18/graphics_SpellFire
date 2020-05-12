@@ -28,7 +28,7 @@ public:
 	
 	bool hitFloor();
 
-	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly);
+	void draw(ShaderManager *shader, ply *myPly);
 
 	void moveProjectile();
 

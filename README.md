@@ -118,7 +118,7 @@ installed by default when you install Visual Studios.
 
 - **Code improvement**
 	- ~~Switch over from FLTK to GLFW for better window (Makes for smoother gameplay)~~
-	- Improve enemy storage
+	- ~~Improve enemy storage~~
 	- Improve the textured and untextured sprite difference
 	- Stagger the loading of shaders and PLY
 

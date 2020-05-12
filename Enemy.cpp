@@ -100,12 +100,7 @@ t_hitfunc Enemy::getHitFunc() {
 	return onHit;
 }
 
-void Enemy::draw(glm::mat4 modelView, ShaderManager* shader, ply* myPly) {
-	shader->useShader();
-
-	GLint modelView_id = glGetUniformLocation(shader->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelView));
-
+void Enemy::draw(ShaderManager* shader, ply* myPly) {
 	GLint trans_id = glGetUniformLocation(shader->program, "translationMatrix");
 	glUniformMatrix4fv(trans_id, 1, false, glm::value_ptr(transMat4));
 

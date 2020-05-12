@@ -5,7 +5,7 @@ Sprite::Sprite() {
 	scale = glm::vec3(1.0, 1.0, 1.0);
 	color = glm::vec3(1.0, 1.0, 1.0);
 	angle = 0.0f;
-	spriteType = SPRITE;
+	spriteType = SPRITE_UNTEXTURED;
 	ground_type = BACKGROUND;
 }
 
@@ -22,12 +22,7 @@ Sprite::~Sprite() {
 
 }
 
-void Sprite::draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly) {
-	shader->useShader();
-
-	GLint modelView_id = glGetUniformLocation(shader->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelView));
-
+void Sprite::draw(ShaderManager *shader, ply *myPly) {
 	glm::mat4 transMat4(1.0f);
 	transMat4 = placeSprite();
 
@@ -37,7 +32,7 @@ void Sprite::draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly) {
 	GLint color_id = glGetUniformLocation(shader->program, "spriteColor");
 	glUniform3f(color_id, color.x, color.y, color.z);
 
-	if (spriteType == DEATH) {
+	if (spriteType != SPRITE_UNTEXTURED) {
 		// Pass scenery texture to the shader
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, myPly->getTextureID());

@@ -19,7 +19,7 @@ public:
 	Sprite(shaderType _spriteType, glm::vec2 _position, glm::vec2 _scale, float _angle, glm::vec3 _color, groundType type);
 	~Sprite();
 
-	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly);
+	void draw(ShaderManager *shader, ply *myPly);
 
 	void setEverything(shaderType _spriteType, glm::vec2 _position, glm::vec2 _scale, float _angle, glm::vec3 _color, groundType type);
 	

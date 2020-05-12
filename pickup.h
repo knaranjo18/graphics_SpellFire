@@ -20,7 +20,7 @@ public:
 	Pickup(glm::vec3, float, shaderType);
 	~Pickup();
 
-	void draw(glm::mat4, ShaderManager*, ply*);
+	void draw(ShaderManager*, ply*);
 
 	const BoundingBox* getBox();
 	shaderType getType();

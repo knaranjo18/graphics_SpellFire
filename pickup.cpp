@@ -53,12 +53,7 @@ Pickup::~Pickup() {
 	delete box;
 }
 
-void Pickup::draw(glm::mat4 modelView, ShaderManager* shader, ply* myPly) {
-	shader->useShader();
-
-	GLint modelView_id = glGetUniformLocation(shader->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelView));
-
+void Pickup::draw(ShaderManager* shader, ply* myPly) {
 	glm::mat4 transMat4(1.0f);
 	transMat4 = placeObject();
 

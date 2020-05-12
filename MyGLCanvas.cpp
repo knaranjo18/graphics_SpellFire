@@ -38,20 +38,20 @@ MyGLCanvas::MyGLCanvas() {
 	player = new Player();
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
 
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
-	healthBar.push_back(new Sprite(SPRITE, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
+	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
 
-	manaBar.push_back(new Sprite(SPRITE, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND));
-	manaBar.push_back(new Sprite(SPRITE, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND));
+	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
 
-	expBar.push_back(new Sprite(SPRITE, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND));
-	expBar.push_back(new Sprite(SPRITE, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND));
+	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
 
 	glm::vec2 pos(mode->width / 2.0 - 2, mode->height / 2.0 + 40);
-	crossHair.push_back(new Sprite(SPRITE, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	crossHair.push_back(new Sprite(SPRITE, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
-	deathScreen.push_back(new Sprite(DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND));
+	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(0.7, 0.0, 0.1), FOREGROUND));
 
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
@@ -135,7 +135,11 @@ void MyGLCanvas::draw() {
 void MyGLCanvas::drawDeathScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
-	deathScreen[0]->draw(modelViewMatrix, shaderList[DEATH], plyList[DEATH]);
+	shaderList[SPRITE_DEATH]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_DEATH]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+
+	deathScreen[0]->draw(shaderList[SPRITE_DEATH], plyList[SPRITE_DEATH]);
 }
 
 // Draws all the elements of the main game
@@ -143,51 +147,78 @@ void MyGLCanvas::drawScene() {
 	//setting up camera info
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 	
+
 	/*-----------------------For the scenary----------------------------------------*/
 	skybox->draw(modelViewMatrix, player->myCam->getProjectionMatrix());
 	arena->draw(modelViewMatrix, shaderList[ARENA], plyList[ARENA]);
 
 	/*------------------------For GUI-----------------------------------------------*/
-	for (int i = 0; i < 2; i++)
-		healthBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
-
-	for (int i = 0; i < 2; i++) 
-		crossHair[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	for (int i = 0; i < 2; i++)
-		manaBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+		healthBar[i]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 
 	for (int i = 0; i < 2; i++) 
-		expBar[i]->draw(modelViewMatrix, shaderList[SPRITE], plyList[SPRITE]);
+		crossHair[i]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	for (int i = 0; i < 2; i++)
+		manaBar[i]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	for (int i = 0; i < 2; i++) 
+		expBar[i]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 		
 	/*--------------For the enemy---------------------------*/
+	shaderList[BLOB]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BLOB]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+
 	list<Enemy *>::iterator itE, endPointE;
 	endPointE = enemyList.begin();
 	advance(endPointE, numBlob);
 	for (itE = enemyList.begin(); itE != endPointE; itE++) 
-		(*itE)->draw(modelViewMatrix, shaderList[BLOB], plyList[BLOB]);
+		(*itE)->draw(shaderList[BLOB], plyList[BLOB]);
+
+
+	shaderList[JAD]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[JAD]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	advance(endPointE, numJad);
 	for (itE; itE != endPointE; itE++) 
-		(*itE)->draw(modelViewMatrix, shaderList[JAD], plyList[JAD]);
+		(*itE)->draw(shaderList[JAD], plyList[JAD]);
 
 	/*--------------draw projectiles---------------------------*/
+	shaderList[FIREBALL]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[FIREBALL]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+
 	list<Projectile *>::iterator itP, endPointP;
 	endPointP = projectileList.begin();
 	advance(endPointP, numFireball);
 	for (itP = projectileList.begin(); itP != endPointP; itP++) 
-		(*itP)->draw(modelViewMatrix, shaderList[FIREBALL], plyList[FIREBALL]);
+		(*itP)->draw(shaderList[FIREBALL], plyList[FIREBALL]);
 
 	/*--------------draw pickups---------------------------*/
+	shaderList[MANAPOT]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[MANAPOT]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+
 	list<Pickup *>::iterator itPU, endPointPU;
 	endPointPU = pickupList.begin();
 	advance(endPointPU, numManaPot);
 	for (itPU = pickupList.begin(); itPU != endPointPU; itPU++) 
-		(*itPU)->draw(modelViewMatrix, shaderList[MANAPOT], plyList[MANAPOT]);
+		(*itPU)->draw(shaderList[MANAPOT], plyList[MANAPOT]);
+
+
+	shaderList[HEALTHPOT]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[HEALTHPOT]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 
 	advance(endPointPU, numHealthPot);
 	for (itPU; itPU != endPointPU; itPU++)
-		(*itPU)->draw(modelViewMatrix, shaderList[HEALTHPOT], plyList[HEALTHPOT]);
+		(*itPU)->draw(shaderList[HEALTHPOT], plyList[HEALTHPOT]);
 }
 
 // Ensures that the game runs at the specified FPS regardless of machine
@@ -549,7 +580,7 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
 		
-		if (i == SPRITE || i == DEATH) {
+		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH) {
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
 		} else{
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
@@ -577,7 +608,7 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[DEATH]->applyTexture("./data/skull.ppm");
+	plyList[SPRITE_DEATH]->applyTexture("./data/skull.ppm");
 
 	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_1024.ppm");
@@ -588,22 +619,21 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/potion.ply"));
 	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
-	// TODO, find a better way than going up to max value of enum
-	for (int i = BLOB; i <= MANAPOT; i++) {
+	for (int i = 0; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
-			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/scene.frag");
-		} else if (i == SPRITE) {
-			shaderList[i]->initShader("./shaders/330/sprite.vert", "./shaders/330/sprite.frag");
-		} else if (i == DEATH) {
-			shaderList[i]->initShader("./shaders/330/death.vert", "./shaders/330/death.frag");
+			shaderList[i]->initShader("./shaders/330/model_textured.vert", "./shaders/330/model_textured.frag");
+		} else if (i == SPRITE_UNTEXTURED) {
+			shaderList[i]->initShader("./shaders/330/sprite_untextured.vert", "./shaders/330/sprite_untextured.frag");
+		} else if (i == SPRITE_DEATH) {
+			shaderList[i]->initShader("./shaders/330/sprite_textured.vert", "./shaders/330/sprite_textured.frag");
 		} else {
-			shaderList[i]->initShader("./shaders/330/scene.vert", "./shaders/330/enemyColor.frag");
+			shaderList[i]->initShader("./shaders/330/model_untextured.vert", "./shaders/330/model_untextured.frag");
 		}
 
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
 		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
-		if (i == SPRITE || i == DEATH) {
+		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH) {
 			plyList[i]->buildArraysSprite();
 			plyList[i]->bindVBOsprites(shaderList[i]->program);
 		} else {
@@ -616,7 +646,9 @@ void MyGLCanvas::setupShaders() {
 		"./data/red_right.ppm", "./data/red_left.ppm", "./data/red_top.ppm",
 		"./data/red_bottom.ppm", "./data/red_front.ppm", "./data/red_back.ppm"
 	};
+
 	skybox = new Skybox(filenames);
+	shaderList.push_back(skybox->shader); // Skybox
 }
 
 // Frees all memory that used 

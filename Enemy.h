@@ -27,7 +27,7 @@ public:
 	shaderType getType();
 	const BoundingBox* getBox();
 
-	void draw(glm::mat4 modelView, ShaderManager *shader, ply *myPly);
+	void draw(ShaderManager *shader, ply *myPly);
 	
 	void moveEnemy(glm::vec3 playerPos);
 
