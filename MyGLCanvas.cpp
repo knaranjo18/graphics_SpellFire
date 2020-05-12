@@ -21,7 +21,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE true
+#define DEBUGMODE false
 
 
 // Constructor to set everything up. Spawns some initial enemies
@@ -52,7 +52,8 @@ MyGLCanvas::MyGLCanvas() {
 	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
 	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0 , 1.0), FOREGROUND));
-
+	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
+	
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++)
@@ -108,6 +109,7 @@ void MyGLCanvas::draw() {
 	
 	switch (currState) {
 	case PLAYING:
+		//while (true) loadingScreen->draw(shaderList[SPRITE_LOADING], plyList[SPRITE_LOADING]);
 		// set up frame timing
 		GLuint query;
 		glGenQueries(1, &query);
@@ -131,6 +133,7 @@ void MyGLCanvas::draw() {
 	}
 }
 
+
 // Draws the death scene with the skull
 void MyGLCanvas::drawDeathScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
@@ -141,6 +144,7 @@ void MyGLCanvas::drawDeathScene() {
 
 	deathScreen[0]->draw(shaderList[SPRITE_DEATH], plyList[SPRITE_DEATH]);
 }
+
 
 // Draws all the elements of the main game
 void MyGLCanvas::drawScene() {
@@ -577,13 +581,13 @@ void MyGLCanvas::updateCamera(int width, int height) {
 	glm::mat4 orthoMatrix = glm::ortho(0.0f, float(mode->width), float(mode->height), 0.0f, -1.0f, 1.0f);
 	
 	int size = shaderList.size();
-	for (int i = 0; i < size; i++) {
+	for (int i = 1; i < size; i++) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
 		
 		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH) {
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
-		} else{
+		} else{;
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
 		}
 	}
@@ -594,8 +598,11 @@ void MyGLCanvas::setupShaders() {
 	#ifndef __APPLE__
 		printf("Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 	#endif
+	
+	shaderList.push_back(new ShaderManager());  // loading
+	drawLoading(); // We draw loading screen now to mask the time needed to load all the other resources
 
-	shaderList.push_back(new ShaderManager()); // blob
+	shaderList.push_back(new ShaderManager()); // goop
 	shaderList.push_back(new ShaderManager()); // jad
 	shaderList.push_back(new ShaderManager()); // fireball
 	shaderList.push_back(new ShaderManager()); // sprite
@@ -607,15 +614,15 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/jad.ply"));
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
-	plyList[FIREBALL]->applyTexture("./data/fireball_256.ppm");
+	plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE_DEATH]->applyTexture("./data/skull.ppm");
+	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
-	plyList.push_back(new ply("./data/arena_4_tex_2.ply"));
-	plyList[ARENA]->applyTexture("./data/arena_1024.ppm");
+	plyList.push_back(new ply("./data/arena.ply"));
+	plyList[ARENA]->applyTexture("./data/arena_large.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
 	plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
@@ -623,7 +630,7 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/potion.ply"));
 	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
-	for (int i = 0; i < shaderList.size(); i++) {
+	for (int i = 1; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
 			shaderList[i]->initShader("./shaders/330/model_textured.vert", "./shaders/330/model_textured.frag");
 		} else if (i == SPRITE_UNTEXTURED) {
@@ -655,6 +662,28 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(skybox->shader); // Skybox
 }
 
+// Sets up everything required to draw a single image of the loading screen
+void MyGLCanvas::drawLoading() {
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_LOADING]->applyTexture("./data/loading_tiny.ppm");
+	shaderList[SPRITE_LOADING]->initShader("./shaders/330/sprite_textured.vert", "./shaders/330/sprite_textured.frag");
+	plyList[SPRITE_LOADING]->buildArraysSprite();
+	plyList[SPRITE_LOADING]->bindVBOsprites(shaderList[SPRITE_LOADING]->program);
+	shaderList[SPRITE_LOADING]->useShader();
+
+	glm::mat4 orthoMatrix = glm::ortho(0.0f, float(mode->width), float(mode->height), 0.0f, -1.0f, 1.0f);
+	GLint projection_id = glGetUniformLocation(shaderList[SPRITE_LOADING]->program, "myProjectionMatrix");
+	glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
+	
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_LOADING]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	loadingScreen->draw(shaderList[SPRITE_LOADING], plyList[SPRITE_LOADING]);
+	glfwSwapBuffers(window);
+}
+
 // Frees all memory that used 
 void MyGLCanvas::deallocate() {
 	delete player;
@@ -671,6 +700,7 @@ void MyGLCanvas::deallocate() {
 	for (int i = 0; i < 2; i++) delete expBar[i];
 	for (int i = 0; i < 2; i++) delete crossHair[i];
 	for (int i = 0; i < 2; i++) delete deathScreen[i];
+	delete loadingScreen;
 }
 
 // Callback for keyboard key
@@ -721,7 +751,7 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				c->player->changeMana(-c->player->getSpellCost(spellAttempt));
 			}
 			else {
-				printf("Need to charge my mana!\n");
+				// TODO: Add some visual cue or sound
 			}
 		}
 	}

@@ -50,6 +50,7 @@ private:
 	void draw();
 	void drawScene();
 	void drawDeathScene();
+	void drawLoading();
 
 	void setupShaders();
 	void restartGame();
@@ -92,6 +93,7 @@ private:
 	vector<Sprite *> manaBar;
 	vector<Sprite *> expBar;
 	vector<Sprite *> deathScreen;
+	Sprite *loadingScreen;
 
 	list<Projectile *> projectileList;
 	list<Enemy *> enemyList;

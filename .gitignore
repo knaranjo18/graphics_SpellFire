@@ -2,4 +2,4 @@ Debug/*
 Release/*
 *.vcxproj*
 *.o
-Resources/*
+*data/Resources/*

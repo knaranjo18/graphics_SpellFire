@@ -121,7 +121,7 @@ installed by default when you install Visual Studios.
 	- ~~Switch over from FLTK to GLFW for better window (Makes for smoother gameplay)~~
 	- ~~Improve enemy storage~~
 	- ~~Improve the textured and untextured sprite difference~~
-	- Stagger the loading of shaders and PLY to avoid blackscreen (Seems like the lag comes from loading skeleton and arena ppms so put up loading screen before that)
+	- ~~Stagger the loading of shaders and PLY to avoid blackscreen (Seems like the lag comes from loading skeleton and arena ppms so put up loading screen before that)~~
 
 
 - **GUI**
@@ -129,4 +129,5 @@ installed by default when you install Visual Studios.
 	- ~~Health bar~~
 	- ~~Add a restart button~~
 	- Add a start menu
-	- Figure out best way to add text to screen
+	- ~~Figure out best way to add text to screen (Through textures)~~
+	- Add option to let user change graphics setting (Low, medium, high texture)
