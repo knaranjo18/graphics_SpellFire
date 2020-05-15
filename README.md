@@ -36,7 +36,7 @@ Quit Game - *Escape Key*
 
 ## Compilation Instructions
 **Windows**
-Create a Visual Studio Project and add all the `.h` and `.cpp` files. Make sure to follow the instructions below to install OpengGL, glew, and GLFW. Make sure you are in x86 mode. To compile hit the `Local Windows Debugger` button and enjoy. 
+Create a Visual Studio Project and add all the `.h` and `.cpp` files. Make sure to follow the instructions below to install OpengGL, glew, GLFW, and irrKlang. Make sure you are in x86 mode. To compile hit the `Local Windows Debugger` button and enjoy. 
 
 **Mac / Linux**
 In theory this program should compile if all of the files are compiled and linked, 
@@ -65,6 +65,13 @@ installed by default when you install Visual Studios.
 4. Copy the `.dll` file to your Windows runtime directory. Usually that's `C:\Windows\System32`
 5. Add `glfw3.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`. Make sure you are in x86 mode.
 
+## Installing IrrKlang
+**Windows**
+1. Go to the [irrKlang website](https://www.ambiera.com/irrklang/downloads.html) and download/extract 32 bit binaries of for v1.6
+2. Copy the files in the `include` folder into your Visual Studio include path. Usually it's `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\include\irrKlang`. *Note: You will have to create the irrKlang folder*.
+3. Copy the `.lib` file from the `lib\Win32-visualStudio` folder into your Visual Studio library path. `C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\VS\lib\x86`
+4. The `.dll` files should already be in the git repo. Make sure they are in the same folder as the .exe file.
+5. Add `irrKlang.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`. Make sure you are in x86 mode.
 
 
 ## Todo

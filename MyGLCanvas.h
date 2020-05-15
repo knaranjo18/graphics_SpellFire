@@ -21,6 +21,7 @@
 #include <vector>
 #include <list>
 #include <time.h>
+#include <irrKlang/irrKlang.h>
 
 #include "Enemy.h"
 #include "Player.h"
@@ -37,6 +38,8 @@
 
 #include <chrono>
 #include <thread>
+
+using namespace irrklang;
 
 
 class MyGLCanvas {

@@ -60,6 +60,11 @@ MyGLCanvas::MyGLCanvas() {
 			spawnEnemy(GOOP);
 		spawnEnemy(JAD);
 	}
+
+	ISoundEngine *soundEngine = createIrrKlangDevice();
+	if (!soundEngine) exit(1);
+	soundEngine->play2D("./audio/weezer.mp3", true);
+
 }
 
 // Makes sure to reclaim all memory taken by new
@@ -701,6 +706,7 @@ void MyGLCanvas::deallocate() {
 	for (int i = 0; i < 2; i++) delete crossHair[i];
 	for (int i = 0; i < 2; i++) delete deathScreen[i];
 	delete loadingScreen;
+	//engine->drop();
 }
 
 // Callback for keyboard key
