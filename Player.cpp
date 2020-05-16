@@ -5,7 +5,7 @@
 #define PLAYERSIZE 0.15f
 #define PLAYERSPEED 0.02f
 
-Player::Player() {
+Player::Player(ISoundEngine *engine) {
 	glm::vec3 startPoint(0.0, HEIGHT, 0.0);
 	glm::vec3 startLook(1.0, 0.0, 0.0);
 	glm::vec3 upVec(0.0, 1.0, 0.0);
@@ -23,6 +23,7 @@ Player::Player() {
 	spellSelected = FIREBALL;
 	box = new BoundingBox(glm::vec4(getPosition(), 1.0), PLAYERSIZE);
 	iFrames = 0;
+	soundEngine = engine;
 }
 
 Player::~Player() {
@@ -237,3 +238,18 @@ void Player::restartPlayer() {
 	box->setCenter(glm::vec4(getPosition(), 1.0f));
 }
 
+void Player::hurtSound() {
+	int random = rand() % 3;
+
+	switch (random) {
+	case 0:
+		soundEngine->play2D("./audio/player_hurt1.mp3");
+		break;
+	case 1:
+		soundEngine->play2D("./audio/player_hurt2.mp3");
+		break;
+	case 2:
+		soundEngine->play2D("./audio/player_hurt3.mp3");
+		break;
+	}
+}

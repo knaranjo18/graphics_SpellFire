@@ -30,7 +30,7 @@ Enemy::Enemy() {
 	onHit = &smackAttackCB;
 }
 
-Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
+Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint, ISoundEngine *engine) {
 	switch (_enemyType) {
 	case(GOOP):
 		health = 100.0;
@@ -63,6 +63,7 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint) {
 		exit(1);
 		break;
 	}
+	soundEngine = engine;
 	box = new BoundingBox(glm::vec4(startPoint, 1.0f), modelSize);
 	transMat4 = glm::mat4(1.0f);
 	transMat4 = glm::translate(transMat4, position);

@@ -39,7 +39,7 @@ MyGLCanvas::MyGLCanvas() {
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	numBlob = numJad = numManaPot = numHealthPot = numFireball = 0;
 
-	player = new Player();
+	player = new Player(soundEngine);
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
 
 	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
@@ -326,27 +326,13 @@ void MyGLCanvas::handlePlayerCollisions() {
 			int random = rand() % 3;
 			player->applyHit((*itE)->getHitFunc());
 			player->setiFrames(IFRAME_AFTER_HIT);
-			playerHurtSound();
+			player->hurtSound();
 			return;
 		}
 	}
 }
 
-void MyGLCanvas::playerHurtSound() {
-	int random = rand() % 3;
 
-	switch (random) {
-	case 0:
-		soundEngine->play2D("./audio/player_hurt1.mp3");
-		break;
-	case 1:
-		soundEngine->play2D("./audio/player_hurt2.mp3");
-		break;
-	case 2:
-		soundEngine->play2D("./audio/player_hurt3.mp3");
-		break;
-	}
-}
 
 // Returns the index of the enemy which is currently colliding with the projectile
 // or end() if there is no collision since it is one more than the last element
@@ -523,11 +509,11 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 
 	switch (enemyType) {
 	case(GOOP):
-		enemyList.push_front(new Enemy(GOOP, glm::vec3(xPos, HEIGHT - 0.05, zPos)));
+		enemyList.push_front(new Enemy(GOOP, glm::vec3(xPos, HEIGHT - 0.05, zPos), soundEngine));
 		numBlob++;
 		break;
 	case(JAD):
-		enemyList.push_back(new Enemy(JAD, glm::vec3(xPos, HEIGHT, zPos)));
+		enemyList.push_back(new Enemy(JAD, glm::vec3(xPos, HEIGHT, zPos), soundEngine));
 		numJad++;
 		break;	
 	default:

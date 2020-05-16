@@ -132,7 +132,6 @@ private:
 
 	vec3df vec3cov(glm::vec3 input);
 	void stopSound(ISound *sound);
-	void playerHurtSound();
 };
 
 
