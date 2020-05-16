@@ -147,7 +147,6 @@ void MyGLCanvas::draw() {
 	}
 }
 
-
 // Draws the death scene with the skull
 void MyGLCanvas::drawDeathScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
@@ -262,7 +261,7 @@ void MyGLCanvas::doGameLogic() {
 
 	soundEngine->setListenerPosition(TO_VEC3(playerPos), TO_VEC3(playerLook));
 
-
+	handleEnemySound();
 	handleMoveCollisions(playerPos);
 	handlePlayerCollisions();
 	
@@ -370,6 +369,16 @@ void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos) {
 		if (!moved) {
 			(*it1)->moveEnemy(playerPos);
 		}
+	}
+}
+
+// Randomly determines if an enemy should make their call sound
+void MyGLCanvas::handleEnemySound() {
+	int random;
+
+	list<Enemy *>::iterator itE;
+	for (itE = enemyList.begin(); itE != enemyList.end(); itE++) {
+		if ((rand() % 800) == 0) (*itE)->callSound();
 	}
 }
 

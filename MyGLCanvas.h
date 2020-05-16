@@ -78,6 +78,7 @@ private:
 	void applyProjectile(Projectile*, list<Enemy *>::iterator it);
 	void handleMoveCollisions(glm::vec3);
 	void handlePlayerCollisions(); 
+	void handleEnemySound();
 	list<Enemy *>::iterator findEnemyCollision(Projectile*);
 
 	void handlePickups();

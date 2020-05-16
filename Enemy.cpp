@@ -1,7 +1,7 @@
 #include "Enemy.h"
 
-#define COWSIZE 0.3f
-#define BUNNYSIZE 0.5f
+#define GOOPSIZE 0.3f
+#define JADSIZE 0.5f
 
 
 bool Enemy::debug_draw_hitbox = false;
@@ -22,7 +22,7 @@ Enemy::Enemy() {
 	currAngle = 0;
 	angularSpeed = PI / 350.0;
 	enemyType = GOOP;
-	modelSize = COWSIZE * PLYSIZE;
+	modelSize = GOOPSIZE * PLYSIZE;
 	box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
 	transMat4 = glm::mat4(1.0f);
 	transMat4 = glm::translate(transMat4, position);
@@ -38,26 +38,26 @@ Enemy::Enemy(shaderType _enemyType, glm::vec3 startPoint, ISoundEngine *engine) 
 		speed = 0.002;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
-		scaleSize = glm::vec3(1, 1, 1) * COWSIZE;
+		scaleSize = glm::vec3(1, 1, 1) * GOOPSIZE;
 		pointValue = 1;
 		initialAngle = 0;
 		currAngle = 0;
 		angularSpeed = PI / 350.0;
 		enemyType = _enemyType;
-		modelSize = PLYSIZE * COWSIZE;
+		modelSize = PLYSIZE * GOOPSIZE;
 		break;
 	case(JAD):
 		health = 200.0;
 		speed = 0.004;
 		position = startPoint;
 		lookVector = glm::vec3(1.0, 0.0, 0.0);
-		scaleSize = glm::vec3(1, 1, 1) * BUNNYSIZE;
+		scaleSize = glm::vec3(1, 1, 1) * JADSIZE;
 		pointValue = 3;
 		initialAngle = PI;
 		currAngle = 0;
 		angularSpeed = PI / 300.0;
 		enemyType = _enemyType;
-		modelSize = PLYSIZE * BUNNYSIZE;
+		modelSize = PLYSIZE * JADSIZE;
 		break;
 	default:
 		printf("NOT A VALID ENEMY");
@@ -177,7 +177,7 @@ shaderType Enemy::getType() {
 
 
 void Enemy::callSound() {
-	ISound *sound;
+	ISound *sound = NULL;
 	switch (enemyType) {
 	case GOOP:
 		sound = soundEngine->play3D("./audio/goop_call.mp3", TO_VEC3(position), false, false, true);
@@ -186,6 +186,9 @@ void Enemy::callSound() {
 		sound = soundEngine->play3D("./audio/jad_call.mp3", TO_VEC3(position), false, false, true);
 		break;
 	}
+	sound->setVolume(ENEMY_VOLUME);
+	sound->setMinDistance(0.25f);
+	sound->drop();
 }
 
 void Enemy::deathSound() {
@@ -204,5 +207,6 @@ void Enemy::deathSound() {
 	}
 
 	sound->setVolume(ENEMY_VOLUME);
+	sound->setMinDistance(0.25f);
 	sound->drop();
 }

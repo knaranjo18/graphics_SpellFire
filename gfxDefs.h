@@ -8,7 +8,7 @@ const float EPSILON = 1e-5;
 #define TO_VEC3(v)		vec3df(v.x, v.y, v.z)
 #define ARENA_SIZE 2.75f
 #define HEIGHT 0.0
-#define PLYSIZE 0.5f
+#define PLYSIZE 0.35f
 #define NEAR_PLANE 0.01f
 #define FAR_PLANE 20.0f
 
