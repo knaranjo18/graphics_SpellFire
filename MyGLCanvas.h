@@ -54,7 +54,8 @@ private:
 	void drawScene();
 	void drawDeathScene();
 	void drawLoading();
-
+	
+	void setupSound();
 	void setupShaders();
 	void restartGame();
 	
@@ -128,6 +129,10 @@ private:
 	void pollInput();
 	void toggleFullScreen();
 	void toggleCursor();
+
+	vec3df vec3cov(glm::vec3 input);
+	void stopSound(ISound *sound);
 };
+
 
 #endif 

@@ -24,7 +24,7 @@ Projectile::Projectile() {
 	onHit = &fireball_hitCB;
 }
 
-Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired) {
+Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired, ISoundEngine *engine) {
 	switch (_type) {
 	case(FIREBALL):
 		speed = 0.05;
@@ -40,6 +40,7 @@ Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 direction
 		box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
 		spawnTime = time(0);
 		onHit = &fireball_hitCB;
+		engine->play2D("./audio/fireball.mp3");
 		break;
 	default:
 		printf("NOT A VALID SPELL");

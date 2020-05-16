@@ -73,6 +73,8 @@ installed by default when you install Visual Studios.
 4. The `.dll` files should already be in the git repo. Make sure they are in the same folder as the .exe file.
 5. Add `irrKlang.lib` in Visual Studios to `Project->Linker->Input->Additional Dependencies`. Make sure you are in x86 mode.
 
+## Credit
+Music and effects from https://www.bensound.com and https://www.zapsplat.com/music/
 
 ## Todo
 - **Develop Enemies**
@@ -155,3 +157,4 @@ installed by default when you install Visual Studios.
 - **Story**
 	- Add plot
 	- Add collectibles
+

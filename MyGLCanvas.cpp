@@ -1,5 +1,7 @@
  #include "MyGLCanvas.h"
 
+#define MASTER_VOLUME 0.1f
+#define MUSIC_VOLUME 0.5f
 #define SENSITIVITY 0.5f
 #define IFRAME_AFTER_HIT 60
 #define MAX_ENEMIES 20
@@ -23,16 +25,15 @@
 
 #define DEBUGMODE true
 
-vec3df vec3cov(glm::vec3 input) {
-	return vec3df(input.x, input.y, input.z);
-}
+
 
 // Constructor to set everything up. Spawns some initial enemies
 MyGLCanvas::MyGLCanvas() {
 	setupWindow(800, 600);
+	setupSound();
 	srand(time(0));
 
-	currState = PLAYING;
+	currState = LOADING;
 	prevX = prevY = 0;
 	firstTime = firstMouse = firstDeath = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
@@ -63,11 +64,6 @@ MyGLCanvas::MyGLCanvas() {
 			spawnEnemy(GOOP);
 		spawnEnemy(JAD);
 	}
-
-	soundEngine = createIrrKlangDevice();
-	if (!soundEngine) exit(1);
-	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
-	soundEngine->setSoundVolume(0.1f);
 }
 
 // Makes sure to reclaim all memory taken by new
@@ -106,14 +102,14 @@ void MyGLCanvas::draw() {
 			setupShaders();
 		}
 
-		music->stop();
-		music->drop();
-		
+		stopSound(music);
 		music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
+		music->setVolume(MUSIC_VOLUME);
 
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
+		currState = PLAYING;
 	}
 
 	// Clear the buffer of colors in each bit plane.
@@ -122,7 +118,6 @@ void MyGLCanvas::draw() {
 	
 	switch (currState) {
 	case PLAYING:
-		//while (true) loadingScreen->draw(shaderList[SPRITE_LOADING], plyList[SPRITE_LOADING]);
 		// set up frame timing
 		GLuint query;
 		glGenQueries(1, &query);
@@ -136,9 +131,9 @@ void MyGLCanvas::draw() {
 		break;
 	case DEAD:
 		if (firstDeath) {
-			music->stop();
-			music->drop();
+			stopSound(music);
 			music = soundEngine->play2D("./audio/coffin.mp3", true, false, true);
+			music->setVolume(MUSIC_VOLUME);
 			firstDeath = false;
 		}
 
@@ -473,9 +468,6 @@ void MyGLCanvas::applyProjectile(Projectile* p, list<Enemy *>::iterator itE) {
 	Enemy* e = (*itE);
 	e->applyHit(p->getHitfunc());
 
-	// if the enemy is dead remove it TODO: make this better its jank
-	// probably make it better by making the one list of enemies THE list and using
-	// counts of enemy types to tell what pointer is what
 	if (e->isDead()) {
 		player->changePoints(e->pointValue);
 
@@ -494,7 +486,7 @@ void MyGLCanvas::fireProjectile(shaderType projectileType, glm::vec3 originPoint
 
 	switch (projectileType) {
 	case FIREBALL:
-		projectileList.push_front(new Projectile(projectileType, startPoint, directionFired));
+		projectileList.push_front(new Projectile(projectileType, startPoint, directionFired, soundEngine));
 		numFireball++;
 		break;
 	default:
@@ -771,14 +763,17 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 
 	if (action == GLFW_PRESS) {
 		if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-			shaderType spellAttempt = c->player->spellSelected;
+			if (c->currState == PLAYING) {
+				shaderType spellAttempt = c->player->spellSelected;
 
-			if (c->player->getSpellCost(spellAttempt) <= c->player->getMana()) {
-				c->fireProjectile(c->player->spellSelected, c->player->getPosition(), c->player->getLookVec());
-				c->player->changeMana(-c->player->getSpellCost(spellAttempt));
-			}
-			else {
-				// TODO: Add some visual cue or sound
+				if (c->player->getSpellCost(spellAttempt) <= c->player->getMana()) {
+					c->fireProjectile(c->player->spellSelected, c->player->getPosition(), c->player->getLookVec());
+					c->player->changeMana(-c->player->getSpellCost(spellAttempt));
+				}
+				else {
+					// TODO: Add some visual cue
+					c->soundEngine->play2D("./audio/fizzle.mp3");
+				}
 			}
 		}
 	}
@@ -853,7 +848,6 @@ void MyGLCanvas::pollInput() {
 }
 
 // Removes all objects from scene and start initial enemies. Places player back at start.
-// TODO: Organize a bit better (Make a despawn everything function)
 void MyGLCanvas::restartGame() {
 	printf("GAME RESTART\n");
 
@@ -872,10 +866,10 @@ void MyGLCanvas::restartGame() {
 		spawnEnemy(JAD);
 	}
 
-	music->stop();
-	music->drop();
-
+	stopSound(music);
 	music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
+	music->setVolume(MUSIC_VOLUME);
+	
 	firstMouse = firstDeath = true;
 	currState = PLAYING;
 	player->restartPlayer();
@@ -909,3 +903,26 @@ void MyGLCanvas::toggleCursor() {
 	}
 }
 
+// Setups up sound engine and initial sound options
+void MyGLCanvas::setupSound() {
+	soundEngine = createIrrKlangDevice();
+	if (!soundEngine) exit(1);
+
+
+	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
+	music->setVolume(MUSIC_VOLUME);
+	soundEngine->setSoundVolume(MASTER_VOLUME);
+}
+
+
+// Helper function to convert from GLM vec3 to irrKlang vec3
+vec3df MyGLCanvas::vec3cov(glm::vec3 input) {
+	return vec3df(input.x, input.y, input.z);
+}
+
+// Combines to irrKlang function calls to stop the current sound and free up
+// the sound pointer
+void MyGLCanvas::stopSound(ISound *sound) {
+	sound->stop();
+	sound->drop();
+}
