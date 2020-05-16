@@ -132,7 +132,7 @@ void MyGLCanvas::draw() {
 	case DEAD:
 		if (firstDeath) {
 			stopSound(music);
-			music = soundEngine->play2D("./audio/coffin.mp3", true, false, true);
+			music = soundEngine->play2D("./audio/sad_dark.mp3", true, false, true);
 			music->setVolume(MUSIC_VOLUME);
 			firstDeath = false;
 		}
@@ -323,10 +323,28 @@ void MyGLCanvas::handlePlayerCollisions() {
 	for (itE = enemyList.begin(); itE != enemyList.end(); itE++) {
 		const BoundingBox* e_box = (*itE)->getBox();
 		if (p_box->doesCollide(*e_box)) { // Gives invicibility frames after player is hit
+			int random = rand() % 3;
 			player->applyHit((*itE)->getHitFunc());
 			player->setiFrames(IFRAME_AFTER_HIT);
+			playerHurtSound();
 			return;
 		}
+	}
+}
+
+void MyGLCanvas::playerHurtSound() {
+	int random = rand() % 3;
+
+	switch (random) {
+	case 0:
+		soundEngine->play2D("./audio/player_hurt1.mp3");
+		break;
+	case 1:
+		soundEngine->play2D("./audio/player_hurt2.mp3");
+		break;
+	case 2:
+		soundEngine->play2D("./audio/player_hurt3.mp3");
+		break;
 	}
 }
 
