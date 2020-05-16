@@ -26,6 +26,7 @@ public:
 	float getMana();
 	float getSpellCost(shaderType spellType);
 	glm::vec3 getPosition();
+	glm::vec3 getLookVec();
 	const BoundingBox* getBox();
 	int getiFrames();
 

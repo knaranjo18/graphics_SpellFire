@@ -23,6 +23,9 @@
 
 #define DEBUGMODE true
 
+vec3df vec3cov(glm::vec3 input) {
+	return vec3df(input.x, input.y, input.z);
+}
 
 // Constructor to set everything up. Spawns some initial enemies
 MyGLCanvas::MyGLCanvas() {
@@ -53,17 +56,21 @@ MyGLCanvas::MyGLCanvas() {
 
 	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0 , 1.0), FOREGROUND));
 	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
-	
+	/*
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++)
 			spawnEnemy(GOOP);
 		spawnEnemy(JAD);
-	}
+	}*/
 
-	ISoundEngine *soundEngine = createIrrKlangDevice();
+	soundEngine = createIrrKlangDevice();
 	if (!soundEngine) exit(1);
-	soundEngine->play2D("./audio/weezer.mp3", true);
+	music = soundEngine->play3D("./audio/weezer.mp3", vec3df(0, 0, 0), true, true, true);
+	if (music) music->setMinDistance(0.2f);
+
+
+
 
 }
 
@@ -102,6 +109,7 @@ void MyGLCanvas::draw() {
 		} else {
 			setupShaders();
 		}
+		music->setIsPaused(false);
 
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
@@ -250,6 +258,10 @@ void MyGLCanvas::enforceFrameTime(GLint query) {
 // Handles all the game mechanics such as collisions, projectiles, movements, etc...
 void MyGLCanvas::doGameLogic() {
 	glm::vec3 playerPos = player->getPosition();
+	glm::vec3 playerLook = player->getLookVec();
+
+	soundEngine->setListenerPosition(vec3cov(playerPos), vec3cov(playerLook));
+
 
 	handleMoveCollisions(playerPos);
 	handlePlayerCollisions();
@@ -266,7 +278,7 @@ void MyGLCanvas::doGameLogic() {
 	player->chargeMana();
 	player->tickHeal();
 
-	respawnEnemies();
+	//respawnEnemies();
 }
 
 // Has a random chance to spawn new enemies
@@ -706,7 +718,9 @@ void MyGLCanvas::deallocate() {
 	for (int i = 0; i < 2; i++) delete crossHair[i];
 	for (int i = 0; i < 2; i++) delete deathScreen[i];
 	delete loadingScreen;
-	//engine->drop();
+	music->drop();
+	soundEngine->drop();
+
 }
 
 // Callback for keyboard key
@@ -753,7 +767,7 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 			shaderType spellAttempt = c->player->spellSelected;
 
 			if (c->player->getSpellCost(spellAttempt) <= c->player->getMana()) {
-				c->fireProjectile(c->player->spellSelected, c->player->getPosition(), c->player->myCam->getLookVector());
+				c->fireProjectile(c->player->spellSelected, c->player->getPosition(), c->player->getLookVec());
 				c->player->changeMana(-c->player->getSpellCost(spellAttempt));
 			}
 			else {
@@ -883,3 +897,4 @@ void MyGLCanvas::toggleCursor() {
 	    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 }
+

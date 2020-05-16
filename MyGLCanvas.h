@@ -107,6 +107,8 @@ private:
 	Player *player;
 	Scenery *arena;
 	Skybox* skybox;
+	ISoundEngine *soundEngine;
+	ISound *music;
 	
 
 	glm::vec3 lightPos;

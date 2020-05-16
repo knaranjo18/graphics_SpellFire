@@ -216,6 +216,10 @@ glm::vec3 Player::getPosition() {
 	return myCam->getEyePoint();
 }
 
+glm::vec3 Player::getLookVec() {
+	return myCam->getLookVector();
+}
+
 void Player::restartPlayer() {
 	glm::vec3 startPoint(0.0, HEIGHT, 0.0);
 	glm::vec3 startLook(1.0, 0.0, 0.0);
