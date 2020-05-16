@@ -3,6 +3,7 @@
 #define COWSIZE 0.3f
 #define BUNNYSIZE 0.5f
 
+
 bool Enemy::debug_draw_hitbox = false;
 
 void smackAttackCB(HITDATA& h) {
@@ -172,4 +173,36 @@ glm::vec3 Enemy::getPosition() {
 
 shaderType Enemy::getType() {
 	return enemyType;
+}
+
+
+void Enemy::callSound() {
+	ISound *sound;
+	switch (enemyType) {
+	case GOOP:
+		sound = soundEngine->play3D("./audio/goop_call.mp3", TO_VEC3(position), false, false, true);
+		break;
+	case JAD:
+		sound = soundEngine->play3D("./audio/jad_call.mp3", TO_VEC3(position), false, false, true);
+		break;
+	}
+}
+
+void Enemy::deathSound() {
+	ISound *sound = NULL;
+	int random = rand() % 3;
+	switch (enemyType) {
+	case GOOP:
+		if (random == 0) sound = soundEngine->play3D("./audio/goop_death1.mp3", TO_VEC3(position), false, false, true);
+		else if (random == 1) sound = soundEngine->play3D("./audio/goop_death2.mp3", TO_VEC3(position), false, false, true);
+		else sound = soundEngine->play3D("./audio/goop_death3.mp3", TO_VEC3(position), false, false, true);
+		
+		break;
+	case JAD:
+		sound = soundEngine->play3D("./audio/jad_death.mp3", TO_VEC3(position), false, false, true);
+		break;
+	}
+
+	sound->setVolume(ENEMY_VOLUME);
+	sound->drop();
 }

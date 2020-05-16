@@ -1,8 +1,7 @@
  #include "MyGLCanvas.h"
 
-#define MASTER_VOLUME 0.1f
-#define MUSIC_VOLUME 0.5f
 #define SENSITIVITY 0.5f
+
 #define IFRAME_AFTER_HIT 60
 #define MAX_ENEMIES 20
 
@@ -160,7 +159,6 @@ void MyGLCanvas::drawDeathScene() {
 	deathScreen[0]->draw(shaderList[SPRITE_DEATH], plyList[SPRITE_DEATH]);
 }
 
-
 // Draws all the elements of the main game
 void MyGLCanvas::drawScene() {
 	//setting up camera info
@@ -262,7 +260,7 @@ void MyGLCanvas::doGameLogic() {
 	glm::vec3 playerPos = player->getPosition();
 	glm::vec3 playerLook = player->getLookVec();
 
-	soundEngine->setListenerPosition(vec3cov(playerPos), vec3cov(playerLook));
+	soundEngine->setListenerPosition(TO_VEC3(playerPos), TO_VEC3(playerLook));
 
 
 	handleMoveCollisions(playerPos);
@@ -307,6 +305,7 @@ void MyGLCanvas::handlePlayerCollisions() {
 		const BoundingBox* pot_box = (*itPU)->getBox();
 		if (p_box->doesCollide(*pot_box)) { // pick up the potion
 			player->applyHit((*itPU)->getHitFunc());
+			(*itPU)->usePickupSound();
 			removePickup(itPU);
 		} else {
 			itPU++;
@@ -331,8 +330,6 @@ void MyGLCanvas::handlePlayerCollisions() {
 		}
 	}
 }
-
-
 
 // Returns the index of the enemy which is currently colliding with the projectile
 // or end() if there is no collision since it is one more than the last element
@@ -474,6 +471,7 @@ void MyGLCanvas::applyProjectile(Projectile* p, list<Enemy *>::iterator itE) {
 
 	if (e->isDead()) {
 		player->changePoints(e->pointValue);
+		e->deathSound();
 
 		if (rand() % 3 == 0) { // enemies have a 1/3 chance to spawn a potion on death
 			spawnPickup(rand() % 2 == 0 ? HEALTHPOT : MANAPOT, e->getPosition()); 
@@ -530,11 +528,11 @@ void MyGLCanvas::spawnPickup(shaderType type, glm::vec3 position) {
 
 	switch (type) {
 	case(MANAPOT):
-		pickupList.push_front(new Pickup(position, angle, type));
+		pickupList.push_front(new Pickup(position, angle, type, soundEngine));
 		numManaPot++;
 		break;
 	case(HEALTHPOT):
-		pickupList.push_back(new Pickup(position, angle, type));
+		pickupList.push_back(new Pickup(position, angle, type, soundEngine));
 		numHealthPot++;
 		break;
 	default:
@@ -775,8 +773,11 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 					c->player->changeMana(-c->player->getSpellCost(spellAttempt));
 				}
 				else {
+					ISound *sound;
 					// TODO: Add some visual cue
-					c->soundEngine->play2D("./audio/fizzle.mp3");
+					sound = c->soundEngine->play2D("./audio/fizzle.mp3", false, false, true);
+					sound->setVolume(PROJECTILE_VOLUME);
+					sound->drop();
 				}
 			}
 		}
@@ -916,12 +917,6 @@ void MyGLCanvas::setupSound() {
 	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
 	music->setVolume(MUSIC_VOLUME);
 	soundEngine->setSoundVolume(MASTER_VOLUME);
-}
-
-
-// Helper function to convert from GLM vec3 to irrKlang vec3
-vec3df MyGLCanvas::vec3cov(glm::vec3 input) {
-	return vec3df(input.x, input.y, input.z);
 }
 
 // Combines to irrKlang function calls to stop the current sound and free up

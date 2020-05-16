@@ -35,6 +35,8 @@ public:
 	void moveEnemy(glm::vec3 playerPos);
 
 	void applyHit(t_hitfunc);
+	void callSound();
+	void deathSound();
 
 	bool isDead();
 

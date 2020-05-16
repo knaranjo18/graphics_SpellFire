@@ -26,7 +26,7 @@ Pickup::Pickup() {
 	spawnTime = time(0);
 }
 
-Pickup::Pickup(glm::vec3 position, float angle, shaderType type) {
+Pickup::Pickup(glm::vec3 position, float angle, shaderType type, ISoundEngine *engine) {
 	this->position = position;
 	this->scale = glm::vec3(1, 1, 1) * POTSIZE;
 	this->angle = angle;
@@ -34,6 +34,7 @@ Pickup::Pickup(glm::vec3 position, float angle, shaderType type) {
 	this->tick = 0;
 	this->duration = 8;
 	this->spawnTime = time(0);
+	this->soundEngine = engine;
 	
 	if (type == HEALTHPOT) {
 		onHit = &healthPotCB;
@@ -104,4 +105,17 @@ time_t Pickup::getSpawnTime() {
 
 float Pickup::getDuration() {
 	return duration;
+}
+
+void Pickup::usePickupSound() {
+	ISound *sound = NULL;
+	switch (type) {
+	case HEALTHPOT:
+	case MANAPOT:
+		sound = soundEngine->play2D("./audio/potion_swallow.mp3", false, false, true);
+		break;
+	}
+
+	sound->setVolume(PICKUP_VOLUME);
+	sound->drop();
 }

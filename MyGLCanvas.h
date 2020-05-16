@@ -130,7 +130,6 @@ private:
 	void toggleFullScreen();
 	void toggleCursor();
 
-	vec3df vec3cov(glm::vec3 input);
 	void stopSound(ISound *sound);
 };
 

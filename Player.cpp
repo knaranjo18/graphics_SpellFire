@@ -5,6 +5,7 @@
 #define PLAYERSIZE 0.15f
 #define PLAYERSPEED 0.02f
 
+
 Player::Player(ISoundEngine *engine) {
 	glm::vec3 startPoint(0.0, HEIGHT, 0.0);
 	glm::vec3 startLook(1.0, 0.0, 0.0);
@@ -239,17 +240,13 @@ void Player::restartPlayer() {
 }
 
 void Player::hurtSound() {
+	ISound *sound = NULL;
 	int random = rand() % 3;
 
-	switch (random) {
-	case 0:
-		soundEngine->play2D("./audio/player_hurt1.mp3");
-		break;
-	case 1:
-		soundEngine->play2D("./audio/player_hurt2.mp3");
-		break;
-	case 2:
-		soundEngine->play2D("./audio/player_hurt3.mp3");
-		break;
-	}
+	if (random == 0) sound = soundEngine->play2D("./audio/player_hurt1.mp3", false, false, true);
+	else if (random == 1) sound = soundEngine->play2D("./audio/player_hurt2.mp3", false, false, true);
+	else sound = soundEngine->play2D("./audio/player_hurt3.mp3", false, false, true);
+
+	sound->setVolume(PLAYER_VOLUME);
+	sound->drop();
 }
