@@ -34,7 +34,7 @@ MyGLCanvas::MyGLCanvas() {
 
 	currState = PLAYING;
 	prevX = prevY = 0;
-	firstTime = firstMouse = true;
+	firstTime = firstMouse = firstDeath = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	numBlob = numJad = numManaPot = numHealthPot = numFireball = 0;
 
@@ -56,22 +56,18 @@ MyGLCanvas::MyGLCanvas() {
 
 	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0 , 1.0), FOREGROUND));
 	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
-	/*
+	
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++)
 			spawnEnemy(GOOP);
 		spawnEnemy(JAD);
-	}*/
+	}
 
 	soundEngine = createIrrKlangDevice();
 	if (!soundEngine) exit(1);
-	music = soundEngine->play3D("./audio/weezer.mp3", vec3df(0, 0, 0), true, true, true);
-	if (music) music->setMinDistance(0.2f);
-
-
-
-
+	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
+	soundEngine->setSoundVolume(0.1f);
 }
 
 // Makes sure to reclaim all memory taken by new
@@ -109,7 +105,11 @@ void MyGLCanvas::draw() {
 		} else {
 			setupShaders();
 		}
-		music->setIsPaused(false);
+
+		music->stop();
+		music->drop();
+		
+		music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
 
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
@@ -135,6 +135,13 @@ void MyGLCanvas::draw() {
 		enforceFrameTime(query);
 		break;
 	case DEAD:
+		if (firstDeath) {
+			music->stop();
+			music->drop();
+			music = soundEngine->play2D("./audio/coffin.mp3", true, false, true);
+			firstDeath = false;
+		}
+
 		drawDeathScene();
 		break;
 	case START:
@@ -278,7 +285,7 @@ void MyGLCanvas::doGameLogic() {
 	player->chargeMana();
 	player->tickHeal();
 
-	//respawnEnemies();
+	respawnEnemies();
 }
 
 // Has a random chance to spawn new enemies
@@ -865,7 +872,11 @@ void MyGLCanvas::restartGame() {
 		spawnEnemy(JAD);
 	}
 
-	firstMouse = true;
+	music->stop();
+	music->drop();
+
+	music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
+	firstMouse = firstDeath = true;
 	currState = PLAYING;
 	player->restartPlayer();
 }

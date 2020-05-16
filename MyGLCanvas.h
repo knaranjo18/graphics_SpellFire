@@ -113,7 +113,7 @@ private:
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
-	bool firstTime, firstMouse, fullscreen, cursorVisible;
+	bool firstTime, firstMouse, fullscreen, cursorVisible, firstDeath;
 
 	GameState currState;
 
