@@ -107,12 +107,14 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 	- Add sounds
 	 	- Add start menu music
 	 	- Add pause screen music
-		- Add music over game
-		- Add enemy sound when hit for each enemy
-		- Add enemy sound when attack for each enemy
-		- Add spell cast sound for each spell
-		- Add death screen music
-		- Add walking sounds (crunchy gravel)
+	 	- ~~Add loading screen music~~	
+		- ~~Add music over game~~
+		- ~~Add enemy sound when hit for each enemy~~
+		- ~~Add enemy call sound for each enemy~~
+		- ~~Add spell cast sound for each spell~~
+		- ~~Add death screen music~~
+		- ~~Add potion pickup sound~~
+		- ~~Add player damage sound~~
 	- Improve pickups
 		- ~~Add duration~~
 		- ~~Add animation~~
@@ -153,6 +155,7 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 		- Add option to let user change graphics setting (Low, medium, high texture)
 		- Add option to change mouse sensitivity
 		- Add option to change brightness
+		- Add option to change sound volume
 
 - **Story**
 	- Add plot
