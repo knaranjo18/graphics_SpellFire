@@ -54,6 +54,7 @@ private:
 	void drawScene();
 	void drawDeathScene();
 	void drawLoading();
+	void drawMainMenu();
 	
 	void setupSound();
 	void setupShaders();
@@ -98,6 +99,7 @@ private:
 	vector<Sprite *> manaBar;
 	vector<Sprite *> expBar;
 	vector<Sprite *> deathScreen;
+	vector<Sprite *> mainMenu;
 	Sprite *loadingScreen;
 
 	list<Projectile *> projectileList;

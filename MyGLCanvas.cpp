@@ -22,7 +22,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE false
+#define DEBUGMODE true
 
 
 
@@ -57,6 +57,8 @@ MyGLCanvas::MyGLCanvas() {
 	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0 , 1.0), FOREGROUND));
 	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 	
+	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++)
@@ -108,7 +110,7 @@ void MyGLCanvas::draw() {
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
-		currState = PLAYING;
+		currState = MAIN_MENU;
 	}
 
 	// Clear the buffer of colors in each bit plane.
@@ -138,13 +140,25 @@ void MyGLCanvas::draw() {
 
 		drawDeathScene();
 		break;
-	case START:
-		//TODO
+	case MAIN_MENU:
+		drawMainMenu();
 		break;
 	default:
 		printf("INVALID GAME STATE\n");
 		exit(1);
 	}
+}
+
+
+// Draw start screen
+void MyGLCanvas::drawMainMenu() {
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+
+	shaderList[SPRITE_MAIN]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_MAIN]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+
+	mainMenu[0]->draw(shaderList[SPRITE_MAIN], plyList[SPRITE_MAIN]);
 }
 
 // Draws the death scene with the skull
@@ -611,7 +625,7 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
 		
-		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH) {
+		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH || i == SPRITE_MAIN) {
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
 		} else{;
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
@@ -620,6 +634,7 @@ void MyGLCanvas::updateCamera(int width, int height) {
 }
 
 // Initializes all the shaderes with their ply files and textures
+// They have to be in the same order as the shaderType enum in gfxDefs.h
 void MyGLCanvas::setupShaders() {	
 	#ifndef __APPLE__
 		printf("Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
@@ -636,6 +651,8 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager()); // arena
 	shaderList.push_back(new ShaderManager()); // health pot
 	shaderList.push_back(new ShaderManager()); // mana pot
+	shaderList.push_back(new ShaderManager()); // main menu
+
 	plyList.push_back(new ply("./data/blob.ply"));
 	plyList.push_back(new ply("./data/jad.ply"));
 	
@@ -656,12 +673,15 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/potion.ply"));
 	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
+
 	for (int i = 1; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
 			shaderList[i]->initShader("./shaders/330/model_textured.vert", "./shaders/330/model_textured.frag");
 		} else if (i == SPRITE_UNTEXTURED) {
 			shaderList[i]->initShader("./shaders/330/sprite_untextured.vert", "./shaders/330/sprite_untextured.frag");
-		} else if (i == SPRITE_DEATH) {
+		} else if (i == SPRITE_DEATH || i == SPRITE_MAIN) {
 			shaderList[i]->initShader("./shaders/330/sprite_textured.vert", "./shaders/330/sprite_textured.frag");
 		} else {
 			shaderList[i]->initShader("./shaders/330/model_untextured.vert", "./shaders/330/model_untextured.frag");
@@ -670,7 +690,7 @@ void MyGLCanvas::setupShaders() {
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
 		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
-		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH) {
+		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH || i == SPRITE_MAIN) {
 			plyList[i]->buildArraysSprite();
 			plyList[i]->bindVBOsprites(shaderList[i]->program);
 		} else {

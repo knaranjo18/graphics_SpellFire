@@ -156,6 +156,7 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 		- Add option to change mouse sensitivity
 		- Add option to change brightness
 		- Add option to change sound volume
+	- Add a way to save options locally (Maybe read a file, if empty use default values)
 
 - **Story**
 	- Add plot
