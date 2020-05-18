@@ -12,11 +12,14 @@
 #include "ShaderManager.h"
 #include "ply.h"
 #include "gfxDefs.h"
+#include <irrKlang/irrKlang.h>
+
+using namespace irrklang;
 
 class Projectile {
 public:
 	Projectile();
-	Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired);
+	Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired, ISoundEngine *engine);
 	~Projectile();
 
 	time_t getSpawnTime();

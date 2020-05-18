@@ -12,12 +12,15 @@
 #include "gfxDefs.h"
 #include "BoundingBox.h"
 #include "gamedefs.h"
+#include <irrKlang/irrKlang.h>
+
+using namespace irrklang;
 
 
 class Pickup {
 public:
 	Pickup();
-	Pickup(glm::vec3, float, shaderType);
+	Pickup(glm::vec3, float, shaderType, ISoundEngine *engine);
 	~Pickup();
 
 	void draw(ShaderManager*, ply*);
@@ -28,6 +31,7 @@ public:
 	float getDuration();
 
 	t_hitfunc getHitFunc();
+	void usePickupSound();
 
 private:
 	BoundingBox* box;
@@ -38,6 +42,7 @@ private:
 
 	t_hitfunc onHit;
 	time_t spawnTime;
+	ISoundEngine *soundEngine;
 
 	glm::mat4 placeObject();
 };

@@ -1,6 +1,7 @@
  #include "MyGLCanvas.h"
 
 #define SENSITIVITY 0.5f
+
 #define IFRAME_AFTER_HIT 60
 #define MAX_ENEMIES 20
 
@@ -21,21 +22,23 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE true
+#define DEBUGMODE false
+
 
 
 // Constructor to set everything up. Spawns some initial enemies
 MyGLCanvas::MyGLCanvas() {
 	setupWindow(800, 600);
+	setupSound();
 	srand(time(0));
 
-	currState = PLAYING;
+	currState = LOADING;
 	prevX = prevY = 0;
-	firstTime = firstMouse = true;
+	firstTime = firstMouse = firstDeath = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	numBlob = numJad = numManaPot = numHealthPot = numFireball = 0;
 
-	player = new Player();
+	player = new Player(soundEngine);
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
 
 	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
@@ -98,9 +101,14 @@ void MyGLCanvas::draw() {
 			setupShaders();
 		}
 
+		stopSound(music);
+		music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
+		music->setVolume(MUSIC_VOLUME);
+
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
+		currState = PLAYING;
 	}
 
 	// Clear the buffer of colors in each bit plane.
@@ -109,7 +117,6 @@ void MyGLCanvas::draw() {
 	
 	switch (currState) {
 	case PLAYING:
-		//while (true) loadingScreen->draw(shaderList[SPRITE_LOADING], plyList[SPRITE_LOADING]);
 		// set up frame timing
 		GLuint query;
 		glGenQueries(1, &query);
@@ -122,6 +129,13 @@ void MyGLCanvas::draw() {
 		enforceFrameTime(query);
 		break;
 	case DEAD:
+		if (firstDeath) {
+			stopSound(music);
+			music = soundEngine->play2D("./audio/sad_dark.mp3", true, false, true);
+			music->setVolume(MUSIC_VOLUME);
+			firstDeath = false;
+		}
+
 		drawDeathScene();
 		break;
 	case START:
@@ -133,7 +147,6 @@ void MyGLCanvas::draw() {
 	}
 }
 
-
 // Draws the death scene with the skull
 void MyGLCanvas::drawDeathScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
@@ -144,7 +157,6 @@ void MyGLCanvas::drawDeathScene() {
 
 	deathScreen[0]->draw(shaderList[SPRITE_DEATH], plyList[SPRITE_DEATH]);
 }
-
 
 // Draws all the elements of the main game
 void MyGLCanvas::drawScene() {
@@ -245,7 +257,11 @@ void MyGLCanvas::enforceFrameTime(GLint query) {
 // Handles all the game mechanics such as collisions, projectiles, movements, etc...
 void MyGLCanvas::doGameLogic() {
 	glm::vec3 playerPos = player->getPosition();
+	glm::vec3 playerLook = player->getLookVec();
 
+	soundEngine->setListenerPosition(TO_VEC3(playerPos), TO_VEC3(playerLook));
+
+	handleEnemySound();
 	handleMoveCollisions(playerPos);
 	handlePlayerCollisions();
 	
@@ -288,6 +304,7 @@ void MyGLCanvas::handlePlayerCollisions() {
 		const BoundingBox* pot_box = (*itPU)->getBox();
 		if (p_box->doesCollide(*pot_box)) { // pick up the potion
 			player->applyHit((*itPU)->getHitFunc());
+			(*itPU)->usePickupSound();
 			removePickup(itPU);
 		} else {
 			itPU++;
@@ -306,6 +323,7 @@ void MyGLCanvas::handlePlayerCollisions() {
 		if (p_box->doesCollide(*e_box)) { // Gives invicibility frames after player is hit
 			player->applyHit((*itE)->getHitFunc());
 			player->setiFrames(IFRAME_AFTER_HIT);
+			player->hurtSound();
 			return;
 		}
 	}
@@ -350,6 +368,16 @@ void MyGLCanvas::handleMoveCollisions(glm::vec3 playerPos) {
 		if (!moved) {
 			(*it1)->moveEnemy(playerPos);
 		}
+	}
+}
+
+// Randomly determines if an enemy should make their call sound
+void MyGLCanvas::handleEnemySound() {
+	int random;
+
+	list<Enemy *>::iterator itE;
+	for (itE = enemyList.begin(); itE != enemyList.end(); itE++) {
+		if ((rand() % 800) == 0) (*itE)->callSound();
 	}
 }
 
@@ -449,11 +477,9 @@ void MyGLCanvas::applyProjectile(Projectile* p, list<Enemy *>::iterator itE) {
 	Enemy* e = (*itE);
 	e->applyHit(p->getHitfunc());
 
-	// if the enemy is dead remove it TODO: make this better its jank
-	// probably make it better by making the one list of enemies THE list and using
-	// counts of enemy types to tell what pointer is what
 	if (e->isDead()) {
 		player->changePoints(e->pointValue);
+		e->deathSound();
 
 		if (rand() % 3 == 0) { // enemies have a 1/3 chance to spawn a potion on death
 			spawnPickup(rand() % 2 == 0 ? HEALTHPOT : MANAPOT, e->getPosition()); 
@@ -470,7 +496,7 @@ void MyGLCanvas::fireProjectile(shaderType projectileType, glm::vec3 originPoint
 
 	switch (projectileType) {
 	case FIREBALL:
-		projectileList.push_front(new Projectile(projectileType, startPoint, directionFired));
+		projectileList.push_front(new Projectile(projectileType, startPoint, directionFired, soundEngine));
 		numFireball++;
 		break;
 	default:
@@ -489,11 +515,11 @@ void MyGLCanvas::spawnEnemy(shaderType enemyType) {
 
 	switch (enemyType) {
 	case(GOOP):
-		enemyList.push_front(new Enemy(GOOP, glm::vec3(xPos, HEIGHT - 0.05, zPos)));
+		enemyList.push_front(new Enemy(GOOP, glm::vec3(xPos, HEIGHT - 0.05, zPos), soundEngine));
 		numBlob++;
 		break;
 	case(JAD):
-		enemyList.push_back(new Enemy(JAD, glm::vec3(xPos, HEIGHT, zPos)));
+		enemyList.push_back(new Enemy(JAD, glm::vec3(xPos, HEIGHT, zPos), soundEngine));
 		numJad++;
 		break;	
 	default:
@@ -510,11 +536,11 @@ void MyGLCanvas::spawnPickup(shaderType type, glm::vec3 position) {
 
 	switch (type) {
 	case(MANAPOT):
-		pickupList.push_front(new Pickup(position, angle, type));
+		pickupList.push_front(new Pickup(position, angle, type, soundEngine));
 		numManaPot++;
 		break;
 	case(HEALTHPOT):
-		pickupList.push_back(new Pickup(position, angle, type));
+		pickupList.push_back(new Pickup(position, angle, type, soundEngine));
 		numHealthPot++;
 		break;
 	default:
@@ -701,6 +727,9 @@ void MyGLCanvas::deallocate() {
 	for (int i = 0; i < 2; i++) delete crossHair[i];
 	for (int i = 0; i < 2; i++) delete deathScreen[i];
 	delete loadingScreen;
+	music->drop();
+	soundEngine->drop();
+
 }
 
 // Callback for keyboard key
@@ -744,14 +773,20 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 
 	if (action == GLFW_PRESS) {
 		if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-			shaderType spellAttempt = c->player->spellSelected;
+			if (c->currState == PLAYING) {
+				shaderType spellAttempt = c->player->spellSelected;
 
-			if (c->player->getSpellCost(spellAttempt) <= c->player->getMana()) {
-				c->fireProjectile(c->player->spellSelected, c->player->getPosition(), c->player->myCam->getLookVector());
-				c->player->changeMana(-c->player->getSpellCost(spellAttempt));
-			}
-			else {
-				// TODO: Add some visual cue or sound
+				if (c->player->getSpellCost(spellAttempt) <= c->player->getMana()) {
+					c->fireProjectile(c->player->spellSelected, c->player->getPosition(), c->player->getLookVec());
+					c->player->changeMana(-c->player->getSpellCost(spellAttempt));
+				}
+				else {
+					ISound *sound;
+					// TODO: Add some visual cue
+					sound = c->soundEngine->play2D("./audio/fizzle.mp3", false, false, true);
+					sound->setVolume(PROJECTILE_VOLUME);
+					sound->drop();
+				}
 			}
 		}
 	}
@@ -826,7 +861,6 @@ void MyGLCanvas::pollInput() {
 }
 
 // Removes all objects from scene and start initial enemies. Places player back at start.
-// TODO: Organize a bit better (Make a despawn everything function)
 void MyGLCanvas::restartGame() {
 	printf("GAME RESTART\n");
 
@@ -845,7 +879,11 @@ void MyGLCanvas::restartGame() {
 		spawnEnemy(JAD);
 	}
 
-	firstMouse = true;
+	stopSound(music);
+	music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
+	music->setVolume(MUSIC_VOLUME);
+	
+	firstMouse = firstDeath = true;
 	currState = PLAYING;
 	player->restartPlayer();
 }
@@ -876,4 +914,22 @@ void MyGLCanvas::toggleCursor() {
 	else {
 	    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
+}
+
+// Setups up sound engine and initial sound options
+void MyGLCanvas::setupSound() {
+	soundEngine = createIrrKlangDevice();
+	if (!soundEngine) exit(1);
+
+
+	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
+	music->setVolume(MUSIC_VOLUME);
+	soundEngine->setSoundVolume(MASTER_VOLUME);
+}
+
+// Combines to irrKlang function calls to stop the current sound and free up
+// the sound pointer
+void MyGLCanvas::stopSound(ISound *sound) {
+	sound->stop();
+	sound->drop();
 }
