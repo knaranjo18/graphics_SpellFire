@@ -22,7 +22,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE true
+#define DEBUGMODE false
 
 
 
@@ -58,6 +58,10 @@ MyGLCanvas::MyGLCanvas() {
 	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 	
 	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	startButton = new Sprite(BUTTON_START, glm::vec2(mode->width / 2.0f, 7 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
+	optionsButton = new Sprite(BUTTON_OPTIONS, glm::vec2(mode->width / 2.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
+	controlsButton = new Sprite(BUTTON_QUIT, glm::vec2(mode->width / 2.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
+	quitButton = new Sprite(BUTTON_CONTROLS, glm::vec2(mode->width / 2.0f, 13 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
@@ -111,6 +115,7 @@ void MyGLCanvas::draw() {
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
 		currState = MAIN_MENU;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
 	// Clear the buffer of colors in each bit plane.
@@ -154,10 +159,29 @@ void MyGLCanvas::draw() {
 void MyGLCanvas::drawMainMenu() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
-	shaderList[SPRITE_MAIN]->useShader();
-	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_MAIN]->program, "myModelviewMatrix");
+	shaderList[BUTTON_START]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[BUTTON_START]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	startButton->draw(shaderList[BUTTON_START], plyList[BUTTON_START]);
 
+	shaderList[BUTTON_CONTROLS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_CONTROLS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	controlsButton->draw(shaderList[BUTTON_CONTROLS], plyList[BUTTON_CONTROLS]);
+
+	shaderList[BUTTON_OPTIONS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_OPTIONS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionsButton->draw(shaderList[BUTTON_OPTIONS], plyList[BUTTON_OPTIONS]);
+
+	shaderList[BUTTON_QUIT]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_QUIT]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	quitButton->draw(shaderList[BUTTON_QUIT], plyList[BUTTON_QUIT]);
+
+	shaderList[SPRITE_MAIN]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_MAIN]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 	mainMenu[0]->draw(shaderList[SPRITE_MAIN], plyList[SPRITE_MAIN]);
 }
 
@@ -625,7 +649,8 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
 		
-		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH || i == SPRITE_MAIN) {
+		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH || i == SPRITE_MAIN || i == BUTTON_START || 
+			i == BUTTON_OPTIONS || i == BUTTON_QUIT || i == BUTTON_CONTROLS) {
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
 		} else{;
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
@@ -652,36 +677,53 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager()); // health pot
 	shaderList.push_back(new ShaderManager()); // mana pot
 	shaderList.push_back(new ShaderManager()); // main menu
+	shaderList.push_back(new ShaderManager()); // start button
+	shaderList.push_back(new ShaderManager()); // options button
+	shaderList.push_back(new ShaderManager()); // quit button
+	shaderList.push_back(new ShaderManager()); // controls button
 
 	plyList.push_back(new ply("./data/blob.ply"));
 	plyList.push_back(new ply("./data/jad.ply"));
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
-	plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
+	//plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
+	//plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
 	plyList.push_back(new ply("./data/arena.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_large.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
-	plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
+	//plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
-	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
+	//plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_START]->applyTexture("./data/startButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_OPTIONS]->applyTexture("./data/optionsButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_QUIT]->applyTexture("./data/exitButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_CONTROLS]->applyTexture("./data/controlsButton.ppm");
 
 	for (int i = 1; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
 			shaderList[i]->initShader("./shaders/330/model_textured.vert", "./shaders/330/model_textured.frag");
 		} else if (i == SPRITE_UNTEXTURED) {
 			shaderList[i]->initShader("./shaders/330/sprite_untextured.vert", "./shaders/330/sprite_untextured.frag");
-		} else if (i == SPRITE_DEATH || i == SPRITE_MAIN) {
+		} else if (i == SPRITE_DEATH || i == SPRITE_MAIN || i == BUTTON_START || i == SPRITE_MAIN || i == BUTTON_START ||
+			i == BUTTON_OPTIONS || i == BUTTON_QUIT || i == BUTTON_CONTROLS) {
 			shaderList[i]->initShader("./shaders/330/sprite_textured.vert", "./shaders/330/sprite_textured.frag");
 		} else {
 			shaderList[i]->initShader("./shaders/330/model_untextured.vert", "./shaders/330/model_untextured.frag");
@@ -690,7 +732,8 @@ void MyGLCanvas::setupShaders() {
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
 		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
 
-		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH || i == SPRITE_MAIN) {
+		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH || i == SPRITE_MAIN || i == BUTTON_START || i == SPRITE_MAIN || i == BUTTON_START ||
+			i == BUTTON_OPTIONS || i == BUTTON_QUIT || i == BUTTON_CONTROLS) {
 			plyList[i]->buildArraysSprite();
 			plyList[i]->bindVBOsprites(shaderList[i]->program);
 		} else {

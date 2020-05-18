@@ -101,6 +101,11 @@ private:
 	vector<Sprite *> deathScreen;
 	vector<Sprite *> mainMenu;
 	Sprite *loadingScreen;
+	Sprite *startButton;
+	Sprite *optionsButton;
+	Sprite *quitButton;
+	Sprite *controlsButton;
+
 
 	list<Projectile *> projectileList;
 	list<Enemy *> enemyList;
