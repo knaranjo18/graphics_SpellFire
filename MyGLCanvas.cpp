@@ -321,7 +321,6 @@ void MyGLCanvas::handlePlayerCollisions() {
 	for (itE = enemyList.begin(); itE != enemyList.end(); itE++) {
 		const BoundingBox* e_box = (*itE)->getBox();
 		if (p_box->doesCollide(*e_box)) { // Gives invicibility frames after player is hit
-			int random = rand() % 3;
 			player->applyHit((*itE)->getHitFunc());
 			player->setiFrames(IFRAME_AFTER_HIT);
 			player->hurtSound();
