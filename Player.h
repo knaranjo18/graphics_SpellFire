@@ -6,10 +6,14 @@
 #include "ShaderManager.h"
 #include "ply.h"
 #include "gamedefs.h"
+#include <irrKlang/irrKlang.h>
+
+using namespace irrklang;
+
 
 class Player {
 public:
-	Player();
+	Player(ISoundEngine *engine);
 	~Player();
 
 	void restartPlayer();
@@ -26,6 +30,7 @@ public:
 	float getMana();
 	float getSpellCost(shaderType spellType);
 	glm::vec3 getPosition();
+	glm::vec3 getLookVec();
 	const BoundingBox* getBox();
 	int getiFrames();
 
@@ -41,6 +46,7 @@ public:
 	void moveSight(int x_offset, int y_offset);
 
 	void applyHit(t_hitfunc);
+	void hurtSound();
 
 	Camera *myCam;
 	shaderType spellSelected;
@@ -51,5 +57,6 @@ private:
 	float speed, mana, health, yaw, pitch;
 
 	BoundingBox* box;
+	ISoundEngine *soundEngine;
 };
 #endif

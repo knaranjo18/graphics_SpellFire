@@ -2,6 +2,7 @@
 
 #define FIREBALLSIZE 0.1f
 
+
 bool Projectile::debug_draw_hitbox = false;
 
 void fireball_hitCB(HITDATA &h) {
@@ -24,7 +25,8 @@ Projectile::Projectile() {
 	onHit = &fireball_hitCB;
 }
 
-Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired) {
+Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired, ISoundEngine *engine) {
+	ISound *sound = NULL;
 	switch (_type) {
 	case(FIREBALL):
 		speed = 0.05;
@@ -40,14 +42,18 @@ Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 direction
 		box = new BoundingBox(glm::vec4(position, 1.0f), modelSize);
 		spawnTime = time(0);
 		onHit = &fireball_hitCB;
+
+		sound = engine->play2D("./audio/fireball.mp3", false, false, true);
 		break;
 	default:
 		printf("NOT A VALID SPELL");
 		exit(1);
 		break;
 	}
-	
+	sound->setVolume(PROJECTILE_VOLUME);
+	sound->drop();
 	projectileType = _type;
+
 }
 
 void Projectile::makeFireball(shaderType _type, glm::vec3 startPos, glm::vec3 directionFired) {

@@ -13,11 +13,14 @@
 #include "ply.h"
 #include "gfxDefs.h"
 #include "gamedefs.h"
+#include <irrKlang/irrKlang.h>
+
+using namespace irrklang;
 
 class Enemy {
 public:
 	Enemy();
-	Enemy(shaderType _enemyType, glm::vec3 startPoint);
+	Enemy(shaderType _enemyType, glm::vec3 startPoint, ISoundEngine *engine);
 	~Enemy();
 
 	void setHealth(float _health);
@@ -32,6 +35,8 @@ public:
 	void moveEnemy(glm::vec3 playerPos);
 
 	void applyHit(t_hitfunc);
+	void callSound();
+	void deathSound();
 
 	bool isDead();
 
@@ -48,6 +53,7 @@ private:
 	BoundingBox *box;
 
 	t_hitfunc onHit;
+	ISoundEngine *soundEngine;
 
 	glm::mat4 transMat4;
 };

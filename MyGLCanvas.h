@@ -21,6 +21,7 @@
 #include <vector>
 #include <list>
 #include <time.h>
+#include <irrKlang/irrKlang.h>
 
 #include "Enemy.h"
 #include "Player.h"
@@ -38,6 +39,8 @@
 #include <chrono>
 #include <thread>
 
+using namespace irrklang;
+
 
 class MyGLCanvas {
 public:
@@ -51,7 +54,8 @@ private:
 	void drawScene();
 	void drawDeathScene();
 	void drawLoading();
-
+	
+	void setupSound();
 	void setupShaders();
 	void restartGame();
 	
@@ -74,6 +78,7 @@ private:
 	void applyProjectile(Projectile*, list<Enemy *>::iterator it);
 	void handleMoveCollisions(glm::vec3);
 	void handlePlayerCollisions(); 
+	void handleEnemySound();
 	list<Enemy *>::iterator findEnemyCollision(Projectile*);
 
 	void handlePickups();
@@ -104,11 +109,13 @@ private:
 	Player *player;
 	Scenery *arena;
 	Skybox* skybox;
+	ISoundEngine *soundEngine;
+	ISound *music;
 	
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
-	bool firstTime, firstMouse, fullscreen, cursorVisible;
+	bool firstTime, firstMouse, fullscreen, cursorVisible, firstDeath;
 
 	GameState currState;
 
@@ -123,6 +130,9 @@ private:
 	void pollInput();
 	void toggleFullScreen();
 	void toggleCursor();
+
+	void stopSound(ISound *sound);
 };
+
 
 #endif 
