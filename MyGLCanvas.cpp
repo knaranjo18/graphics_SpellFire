@@ -30,6 +30,8 @@
 MyGLCanvas::MyGLCanvas() {
 	setupWindow(800, 600);
 	setupSound();
+	setupSprites();
+	setupCursors();
 	srand(time(0));
 
 	currState = LOADING;
@@ -40,28 +42,6 @@ MyGLCanvas::MyGLCanvas() {
 
 	player = new Player(soundEngine);
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
-
-	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
-	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
-
-	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND));
-	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
-
-	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND));
-	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
-
-	glm::vec2 pos(mode->width / 2.0 - 2, mode->height / 2.0 + 40);
-	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-
-	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0 , 1.0), FOREGROUND));
-	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
-	
-	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	startButton = new Sprite(BUTTON_START, glm::vec2(mode->width / 2.0f, 7 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
-	optionsButton = new Sprite(BUTTON_OPTIONS, glm::vec2(mode->width / 2.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
-	controlsButton = new Sprite(BUTTON_QUIT, glm::vec2(mode->width / 2.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
-	quitButton = new Sprite(BUTTON_CONTROLS, glm::vec2(mode->width / 2.0f, 13 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 
 	// Initial Enemies
 	for (int i = 0; i < 3; i++) {
@@ -74,6 +54,29 @@ MyGLCanvas::MyGLCanvas() {
 // Makes sure to reclaim all memory taken by new
 MyGLCanvas::~MyGLCanvas() {
 	deallocate();
+}
+
+// Frees all memory that used 
+void MyGLCanvas::deallocate() {
+	delete player;
+	delete arena;
+
+	for (int i = 0; i < shaderList.size(); i++) delete shaderList[i];
+	for (int i = 0; i < plyList.size(); i++) delete plyList[i];
+	for (list<Enemy *>::iterator itE = enemyList.begin(); itE != enemyList.end(); itE++) delete (*itE);
+	for (list<Projectile *>::iterator itP = projectileList.begin(); itP != projectileList.end(); itP++) delete (*itP);
+	for (list<Pickup *>::iterator itPU = pickupList.begin(); itPU != pickupList.end(); itPU++) delete (*itPU);
+
+	for (int i = 0; i < 2; i++) delete healthBar[i];
+	for (int i = 0; i < 2; i++) delete manaBar[i];
+	for (int i = 0; i < 2; i++) delete expBar[i];
+	for (int i = 0; i < 2; i++) delete crossHair[i];
+	for (int i = 0; i < 2; i++) delete deathScreen[i];
+	for (int i = 0; i < mainMenu.size(); i++) delete mainMenu[i];
+	delete loadingScreen;
+
+	music->drop();
+	soundEngine->drop();
 }
 
 // Main game loop
@@ -162,27 +165,27 @@ void MyGLCanvas::drawMainMenu() {
 	shaderList[BUTTON_START]->useShader();
 	GLint modelView_id = glGetUniformLocation(shaderList[BUTTON_START]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	startButton->draw(shaderList[BUTTON_START], plyList[BUTTON_START]);
-
-	shaderList[BUTTON_CONTROLS]->useShader();
-	modelView_id = glGetUniformLocation(shaderList[BUTTON_CONTROLS]->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	controlsButton->draw(shaderList[BUTTON_CONTROLS], plyList[BUTTON_CONTROLS]);
+	mainMenu[0]->draw(shaderList[BUTTON_START], plyList[BUTTON_START]);
 
 	shaderList[BUTTON_OPTIONS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_OPTIONS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionsButton->draw(shaderList[BUTTON_OPTIONS], plyList[BUTTON_OPTIONS]);
+	mainMenu[1]->draw(shaderList[BUTTON_OPTIONS], plyList[BUTTON_OPTIONS]);
 
 	shaderList[BUTTON_QUIT]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_QUIT]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	quitButton->draw(shaderList[BUTTON_QUIT], plyList[BUTTON_QUIT]);
+	mainMenu[2]->draw(shaderList[BUTTON_QUIT], plyList[BUTTON_QUIT]);
+
+	shaderList[BUTTON_CONTROLS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_CONTROLS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	mainMenu[3]->draw(shaderList[BUTTON_CONTROLS], plyList[BUTTON_CONTROLS]);
 
 	shaderList[SPRITE_MAIN]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[SPRITE_MAIN]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	mainMenu[0]->draw(shaderList[SPRITE_MAIN], plyList[SPRITE_MAIN]);
+	mainMenu[4]->draw(shaderList[SPRITE_MAIN], plyList[SPRITE_MAIN]);
 }
 
 // Draws the death scene with the skull
@@ -751,6 +754,31 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(skybox->shader); // Skybox
 }
 
+// Initializes all the 2D sprites
+void MyGLCanvas::setupSprites() {
+	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
+	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+
+	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND));
+	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+
+	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND));
+	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+
+	glm::vec2 pos(mode->width / 2.0 - 2, mode->height / 2.0 + 40);
+	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
+
+	mainMenu.push_back(new Sprite(BUTTON_START, glm::vec2(mode->width / 2.0f, 7 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(BUTTON_OPTIONS, glm::vec2(mode->width / 2.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(BUTTON_QUIT, glm::vec2(mode->width / 2.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(BUTTON_CONTROLS, glm::vec2(mode->width / 2.0f, 13 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+}
+
 // Sets up everything required to draw a single image of the loading screen
 void MyGLCanvas::drawLoading() {
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
@@ -773,27 +801,6 @@ void MyGLCanvas::drawLoading() {
 	glfwSwapBuffers(window);
 }
 
-// Frees all memory that used 
-void MyGLCanvas::deallocate() {
-	delete player;
-	delete arena;
-
-	for (int i = 0; i < shaderList.size(); i++) delete shaderList[i];
-	for (int i = 0; i < plyList.size(); i++) delete plyList[i];
-	for (list<Enemy *>::iterator itE = enemyList.begin(); itE != enemyList.end(); itE++) delete (*itE);
-	for (list<Projectile *>::iterator itP = projectileList.begin(); itP != projectileList.end(); itP++) delete (*itP);
-	for (list<Pickup *>::iterator itPU = pickupList.begin(); itPU != pickupList.end(); itPU++) delete (*itPU);
-
-	for (int i = 0; i < 2; i++) delete healthBar[i];
-	for (int i = 0; i < 2; i++) delete manaBar[i];
-	for (int i = 0; i < 2; i++) delete expBar[i];
-	for (int i = 0; i < 2; i++) delete crossHair[i];
-	for (int i = 0; i < 2; i++) delete deathScreen[i];
-	delete loadingScreen;
-	music->drop();
-	soundEngine->drop();
-
-}
 
 // Callback for keyboard key
 void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods) {
@@ -859,6 +866,11 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	printf("Resizing window\n");
 	glViewport(0, 0, width, height);
+}
+
+// Sets the default and hover cursor icons
+void MyGLCanvas::setupCursors() {
+
 }
 
 // Sets up the GLFW window 

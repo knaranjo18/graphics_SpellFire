@@ -58,6 +58,8 @@ private:
 	
 	void setupSound();
 	void setupShaders();
+	void setupSprites();
+	void setupCursors();
 	void restartGame();
 	
 	void updateCamera(int width, int height);
@@ -101,10 +103,6 @@ private:
 	vector<Sprite *> deathScreen;
 	vector<Sprite *> mainMenu;
 	Sprite *loadingScreen;
-	Sprite *startButton;
-	Sprite *optionsButton;
-	Sprite *quitButton;
-	Sprite *controlsButton;
 
 
 	list<Projectile *> projectileList;
@@ -118,7 +116,6 @@ private:
 	Skybox* skybox;
 	ISoundEngine *soundEngine;
 	ISound *music;
-	
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
@@ -131,6 +128,8 @@ private:
 	GLFWwindow *window;
 	GLFWmonitor *monitor;
 	const GLFWvidmode *mode;
+	GLFWcursor *regular;
+	GLFWcursor *hover;
 	static void cursor_position_callback(GLFWwindow* window, double currX, double currY);
 	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
