@@ -693,21 +693,21 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/jad.ply"));
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
-	//plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
+	plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
+	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
 	plyList.push_back(new ply("./data/arena.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_large.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
-	//plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
+	plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
-	//plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
+	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
@@ -893,6 +893,8 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 			if (button == GLFW_MOUSE_BUTTON_LEFT) {
 				switch (c->buttonSelected) {
 				case BUTTON_START:
+					glfwSetInputMode(c->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+					c->currState = PLAYING;
 					break;
 				case BUTTON_CONTROLS:
 					break;
