@@ -148,6 +148,8 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 	- ~~Health bar~~
 	- ~~Figure out best way to add text to screen (Through textures)~~
 	- ~~Add a restart button~~
+	- ~~Cursors change while over buttons~~
+
 	- Add a start menu
 	- Add a pause screen
 	- Add collectibles menu
@@ -159,7 +161,6 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 		- Add option to change sound volume
 	- Add a way to save options locally (Maybe read a file, if empty use default values)
 	- Add cool cursors
-	- Cursors change while over buttons
 
 - **Story**
 	- Add plot

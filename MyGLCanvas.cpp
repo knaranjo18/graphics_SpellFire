@@ -22,7 +22,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE true
+#define DEBUGMODE false
 
 
 
@@ -112,10 +112,6 @@ void MyGLCanvas::draw() {
 		} else {
 			setupShaders();
 		}
-
-		stopSound(music);
-		music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
-		music->setVolume(MUSIC_VOLUME);
 
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
@@ -895,6 +891,10 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				case BUTTON_START:
 					glfwSetInputMode(c->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 					c->currState = PLAYING;
+
+					c->stopSound(c->music);
+					c->music = c->soundEngine->play2D("./audio/metal.mp3", true, false, true);
+					c->music->setVolume(MUSIC_VOLUME);
 					break;
 				case BUTTON_CONTROLS:
 					break;
