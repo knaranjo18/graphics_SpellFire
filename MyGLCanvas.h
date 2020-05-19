@@ -120,6 +120,7 @@ private:
 	glm::vec3 lightPos;
 	int prevX, prevY;
 	bool firstTime, firstMouse, fullscreen, cursorVisible, firstDeath;
+	shaderType buttonSelected;
 
 	GameState currState;
 
@@ -138,6 +139,7 @@ private:
 	void toggleCursor();
 
 	void stopSound(ISound *sound);
+	bool overButton(double x, double y, double offX, double offY, glm::vec3 pos);
 };
 
 

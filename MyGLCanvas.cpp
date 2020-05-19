@@ -22,7 +22,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE false
+#define DEBUGMODE true
 
 
 
@@ -36,6 +36,7 @@ MyGLCanvas::MyGLCanvas() {
 
 	currState = LOADING;
 	prevX = prevY = 0;
+	buttonSelected = SPRITE_MAIN;
 	firstTime = firstMouse = firstDeath = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	numBlob = numJad = numManaPot = numHealthPot = numFireball = 0;
@@ -75,6 +76,8 @@ void MyGLCanvas::deallocate() {
 	for (int i = 0; i < mainMenu.size(); i++) delete mainMenu[i];
 	delete loadingScreen;
 
+	glfwDestroyCursor(regular);
+	glfwDestroyCursor(hover);
 	music->drop();
 	soundEngine->drop();
 }
@@ -119,6 +122,7 @@ void MyGLCanvas::draw() {
 		firstTime = false;
 		currState = MAIN_MENU;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		glfwSetCursor(window, hover);
 	}
 
 	// Clear the buffer of colors in each bit plane.
@@ -773,9 +777,9 @@ void MyGLCanvas::setupSprites() {
 	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 
 	mainMenu.push_back(new Sprite(BUTTON_START, glm::vec2(mode->width / 2.0f, 7 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	mainMenu.push_back(new Sprite(BUTTON_OPTIONS, glm::vec2(mode->width / 2.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	mainMenu.push_back(new Sprite(BUTTON_QUIT, glm::vec2(mode->width / 2.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	mainMenu.push_back(new Sprite(BUTTON_CONTROLS, glm::vec2(mode->width / 2.0f, 13 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(BUTTON_OPTIONS, glm::vec2(mode->width / 2.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(BUTTON_QUIT, glm::vec2(mode->width / 2.0f, 13 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(BUTTON_CONTROLS, glm::vec2(mode->width / 2.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 }
 
@@ -801,7 +805,6 @@ void MyGLCanvas::drawLoading() {
 	glfwSwapBuffers(window);
 }
 
-
 // Callback for keyboard key
 void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods) {
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
@@ -819,22 +822,50 @@ void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int ac
 void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, double currY) {
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
-	if (c->firstMouse) {
+	if (c->currState == PLAYING) {
+		if (c->firstMouse) {
+			c->prevX = currX;
+			c->prevY = currY;
+			c->firstMouse = false;
+		}
+
+		float x_offset = currX - c->prevX;
+		float y_offset = c->prevY - currY;
+
+		x_offset *= SENSITIVITY;
+		y_offset *= SENSITIVITY;
+
 		c->prevX = currX;
 		c->prevY = currY;
-		c->firstMouse = false;
+
+		c->player->moveSight(x_offset, y_offset);
 	}
+	else if (c->currState == MAIN_MENU) {
+		glm::vec3 pos;
 
-	float x_offset = currX - c->prevX;
-	float y_offset = c->prevY - currY;
+		int width, height;
+		glfwGetWindowSize(c->window, &width, &height);
 
-	x_offset *= SENSITIVITY;
-	y_offset *= SENSITIVITY;
+		currX /= double(width);
+		currY /= double(height);
 
-	c->prevX = currX;
-	c->prevY = currY;
+		double offX = 0.1, offY = 0.045;
+		c->buttonSelected = SPRITE_MAIN;
 
-	c->player->moveSight(x_offset, y_offset);
+		for (int i = 0; i < 4; i++) {
+			pos = c->mainMenu[i]->getPosition();
+			pos.x /= c->mode->width;
+			pos.y /= c->mode->height;
+
+			if (c->overButton(currX, currY, offX, offY, pos)) {
+					c->buttonSelected = c->mainMenu[i]->spriteType;
+					glfwSetCursor(c->window, c->hover);
+					break;
+			} else {
+				glfwSetCursor(c->window, c->regular);
+			}
+		}
+	}
 }
 
 // Callback for mouse click
@@ -842,8 +873,8 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
 	if (action == GLFW_PRESS) {
-		if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-			if (c->currState == PLAYING) {
+		if (c->currState == PLAYING) {
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
 				shaderType spellAttempt = c->player->spellSelected;
 
 				if (c->player->getSpellCost(spellAttempt) <= c->player->getMana()) {
@@ -858,6 +889,22 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 					sound->drop();
 				}
 			}
+		} else if (c->currState == MAIN_MENU) {
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
+				switch (c->buttonSelected) {
+				case BUTTON_START:
+					break;
+				case BUTTON_CONTROLS:
+					break;
+				case BUTTON_OPTIONS:
+					break;
+				case BUTTON_QUIT:
+					glfwSetWindowShouldClose(_window, true);
+					break;
+				default:
+					break;
+				}
+			}
 		}
 	}
 }
@@ -870,7 +917,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 // Sets the default and hover cursor icons
 void MyGLCanvas::setupCursors() {
-
+	regular = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+	hover = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
 }
 
 // Sets up the GLFW window 
@@ -1007,4 +1055,9 @@ void MyGLCanvas::setupSound() {
 void MyGLCanvas::stopSound(ISound *sound) {
 	sound->stop();
 	sound->drop();
+}
+
+// Checks if cursor is hovering over a button
+bool MyGLCanvas::overButton(double x, double y, double offX, double offY, glm::vec3 pos) {
+	return  (pos.x - offX) <= x && x <= (pos.x + offX) && (pos.y - offY) <= y && y <= (pos.y + offY);
 }

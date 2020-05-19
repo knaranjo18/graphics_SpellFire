@@ -23,7 +23,7 @@ Player Movement - *W, A, S, D*
 
 Camera Movement - *Mouse*
 
-Shoot Fireball - *Right Mouse Button*
+Shoot Fireball - *Left Mouse Button*
 
 Restart Game - *R*
 
@@ -159,6 +159,7 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 		- Add option to change sound volume
 	- Add a way to save options locally (Maybe read a file, if empty use default values)
 	- Add cool cursors
+	- Cursors change while over buttons
 
 - **Story**
 	- Add plot
