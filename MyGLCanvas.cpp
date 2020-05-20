@@ -650,7 +650,7 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
 		
-		if (i == GOOP || i == JAD || i == FIREBALL || i == ARENA || i == HEALTHPOT || i == MANAPOT || i == SKYBOX){
+		if (i == GOOP || i == JAD || i == FIREBALL || i == ARENA || i == HEALTHPOT || i == MANAPOT || i == SKYBOX) {
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
 		} else {
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
@@ -681,6 +681,9 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager()); // options button
 	shaderList.push_back(new ShaderManager()); // quit button
 	shaderList.push_back(new ShaderManager()); // controls button
+	shaderList.push_back(new ShaderManager()); // restart button
+	shaderList.push_back(new ShaderManager()); // main button
+	shaderList.push_back(new ShaderManager()); // quit button for death menu
 
 	plyList.push_back(new ply("./data/blob.ply"));
 	plyList.push_back(new ply("./data/jad.ply"));
@@ -716,6 +719,15 @@ void MyGLCanvas::setupShaders() {
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[BUTTON_CONTROLS]->applyTexture("./data/controlsButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_RESTART]->applyTexture("./data/restartButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_MAIN]->applyTexture("./data/mainButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_QUIT2]->applyTexture("./data/exitButton2.ppm");
 
 	for (int i = 1; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
