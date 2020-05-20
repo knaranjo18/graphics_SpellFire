@@ -22,7 +22,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE true
+#define DEBUGMODE false
 
 
 
@@ -116,9 +116,8 @@ void MyGLCanvas::draw() {
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
-		currState = MAIN_MENU;
+		currState = DEAD;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		glfwSetCursor(window, hover);
 	}
 
 	// Clear the buffer of colors in each bit plane.
@@ -185,11 +184,25 @@ void MyGLCanvas::drawMainMenu() {
 void MyGLCanvas::drawDeathScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
-	shaderList[SPRITE_DEATH]->useShader();
-	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_DEATH]->program, "myModelviewMatrix");
+	shaderList[BUTTON_MAIN]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[BUTTON_MAIN]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	deathScreen[0]->draw(shaderList[BUTTON_MAIN], plyList[BUTTON_MAIN]);
 
-	deathScreen[0]->draw(shaderList[SPRITE_DEATH], plyList[SPRITE_DEATH]);
+	shaderList[BUTTON_RESTART]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_RESTART]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	deathScreen[1]->draw(shaderList[BUTTON_RESTART], plyList[BUTTON_RESTART]);
+
+	shaderList[BUTTON_QUIT2]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_QUIT2]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	deathScreen[2]->draw(shaderList[BUTTON_QUIT2], plyList[BUTTON_QUIT2]);
+
+	shaderList[SPRITE_DEATH]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_DEATH]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	deathScreen[3]->draw(shaderList[SPRITE_DEATH], plyList[SPRITE_DEATH]);
 }
 
 // Draws all the elements of the main game
@@ -697,7 +710,7 @@ void MyGLCanvas::setupShaders() {
 	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
 	plyList.push_back(new ply("./data/arena.ply"));
-	plyList[ARENA]->applyTexture("./data/arena_large.ppm");
+	//plyList[ARENA]->applyTexture("./data/arena_large.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
 	plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
@@ -706,7 +719,7 @@ void MyGLCanvas::setupShaders() {
 	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
+	//plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[BUTTON_START]->applyTexture("./data/startButton.ppm");
@@ -724,7 +737,7 @@ void MyGLCanvas::setupShaders() {
 	plyList[BUTTON_RESTART]->applyTexture("./data/restartButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_MAIN]->applyTexture("./data/mainButton.ppm");
+	plyList[BUTTON_MAIN]->applyTexture("./data/mainMenuButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[BUTTON_QUIT2]->applyTexture("./data/exitButton2.ppm");
@@ -776,15 +789,18 @@ void MyGLCanvas::setupSprites() {
 	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
-	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	
+	deathScreen.push_back(new Sprite(BUTTON_MAIN, glm::vec2(4 * mode->width / 16.0f, 14 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	deathScreen.push_back(new Sprite(BUTTON_RESTART, glm::vec2(8 * mode->width / 16.0f, 14 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	deathScreen.push_back(new Sprite(BUTTON_QUIT2, glm::vec2(12 * mode->width / 16.0f, 14 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
+
 	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 
 	mainMenu.push_back(new Sprite(BUTTON_START, glm::vec2(mode->width / 2.0f, 7 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	mainMenu.push_back(new Sprite(BUTTON_OPTIONS, glm::vec2(mode->width / 2.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	mainMenu.push_back(new Sprite(BUTTON_QUIT, glm::vec2(mode->width / 2.0f, 13 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	mainMenu.push_back(new Sprite(BUTTON_CONTROLS, glm::vec2(mode->width / 2.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
 }
 
 // Sets up everything required to draw a single image of the loading screen
