@@ -140,6 +140,7 @@ private:
 	void toggleCursor();
 
 	void stopSound(ISound *sound);
+	void playClick();
 
 	void handleButtons(std::vector<Sprite *> buttonList, int numButtons, double offX, double offY, double currX, double currY);
 	bool overButton(double x, double y, double offX, double offY, glm::vec3 pos);

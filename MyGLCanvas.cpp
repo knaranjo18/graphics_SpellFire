@@ -891,20 +891,25 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 			}
 		} else if (c->currState == MAIN_MENU) {
 			if (button == GLFW_MOUSE_BUTTON_LEFT) {
+				ISound *sound;
 				switch (c->buttonSelected) {
 				case BUTTON_START:
 					glfwSetInputMode(c->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 					c->currState = PLAYING;
+					c->playClick();
 
 					c->stopSound(c->music);
 					c->music = c->soundEngine->play2D("./audio/metal.mp3", true, false, true);
 					c->music->setVolume(MUSIC_VOLUME);
 					break;
 				case BUTTON_CONTROLS:
+					c->playClick();
 					break;
 				case BUTTON_OPTIONS:
+					c->playClick();
 					break;
 				case BUTTON_QUIT:
+					c->playClick();
 					glfwSetWindowShouldClose(_window, true);
 					break;
 				default:
@@ -915,12 +920,15 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 			if (button == GLFW_MOUSE_BUTTON_LEFT) {
 				switch (c->buttonSelected) {
 				case BUTTON_MAIN:
+					c->playClick();
 					c->restartMenu();
 					break;
 				case BUTTON_RESTART:
+					c->playClick();
 					c->restartGame();
 					break;
 				case BUTTON_QUIT2:
+					c->playClick();
 					glfwSetWindowShouldClose(_window, true);
 					break;
 				default:
@@ -1099,6 +1107,14 @@ void MyGLCanvas::setupSound() {
 // the sound pointer
 void MyGLCanvas::stopSound(ISound *sound) {
 	sound->stop();
+	sound->drop();
+}
+
+// Plays the click sound for a button
+void MyGLCanvas::playClick() {
+	ISound *sound;
+	sound = soundEngine->play2D("./audio/click.mp3", false, false, true);
+	sound->setVolume(CLICK_VOLUME);
 	sound->drop();
 }
 
