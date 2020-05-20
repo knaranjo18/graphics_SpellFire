@@ -55,18 +55,25 @@ private:
 	void drawDeathScene();
 	void drawLoading();
 	void drawMainMenu();
+	void drawPauseScreen();
 	
 	void setupSound();
 	void setupShaders();
 	void setupSprites();
 	void setupCursors();
+	
 	void restartGame();
 	void restartMenu();
+	void pauseGame();
+	void unpauseGame();
+	void gameOver();
 	
 	void updateCamera(int width, int height);
 	void deallocate();
 	void enforceFrameTime(GLint);
 	void setupWindow(int w, int h);
+
+	void doGameLogic();
 
 	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
 	void removeProjectile(list<Projectile *>::iterator &it);
@@ -87,8 +94,6 @@ private:
 
 	void handlePickups();
 
-	void doGameLogic();
-
 	void handleHealthBar();
 	void handleManaBar();
 	void handleExpBar();
@@ -103,6 +108,7 @@ private:
 	vector<Sprite *> expBar;
 	vector<Sprite *> deathScreen;
 	vector<Sprite *> mainMenu;
+	vector<Sprite *> pauseScreen;
 	Sprite *loadingScreen;
 
 
@@ -117,6 +123,7 @@ private:
 	Skybox* skybox;
 	ISoundEngine *soundEngine;
 	ISound *music;
+	ISound *pauseMusic;
 
 	glm::vec3 lightPos;
 	int prevX, prevY;

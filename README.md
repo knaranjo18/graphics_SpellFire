@@ -23,6 +23,8 @@ Player Movement - *W, A, S, D*
 
 Camera Movement - *Mouse*
 
+Pause Game - *Escape Key*
+
 Select Button in Menu - *Left Mouse Button*
 
 Shoot Fireball - *Left Mouse Button*
