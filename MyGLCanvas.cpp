@@ -22,7 +22,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE false
+#define DEBUGMODE true
 
 
 
@@ -37,7 +37,7 @@ MyGLCanvas::MyGLCanvas() {
 	currState = LOADING;
 	prevX = prevY = 0;
 	buttonSelected = SPRITE_MAIN;
-	firstTime = firstMouse = firstDeath = true;
+	firstTime = firstMouse = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	numBlob = numJad = numManaPot = numHealthPot = numFireball = 0;
 
@@ -139,13 +139,6 @@ void MyGLCanvas::draw() {
 		enforceFrameTime(query);
 		break;
 	case DEAD:
-		if (firstDeath) {
-			stopSound(music);
-			music = soundEngine->play2D("./audio/sad_dark.mp3", true, false, true);
-			music->setVolume(MUSIC_VOLUME);
-			firstDeath = false;
-		}
-
 		drawDeathScene();
 		break;
 	case MAIN_MENU:
@@ -313,7 +306,12 @@ void MyGLCanvas::doGameLogic() {
 	handleHealthBar();
 	handleExpBar();
 
-	if (player->isDead()) currState = DEAD;
+	if (player->isDead()) {
+		stopSound(music);
+		music = soundEngine->play2D("./audio/sad_dark.mp3", true, false, true);
+		music->setVolume(MUSIC_VOLUME);
+		currState = DEAD;
+	}
 
 	player->chargeMana();
 	player->tickHeal();
@@ -652,11 +650,10 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
 		
-		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH || i == SPRITE_MAIN || i == BUTTON_START || 
-			i == BUTTON_OPTIONS || i == BUTTON_QUIT || i == BUTTON_CONTROLS) {
-			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
-		} else{;
+		if (i == GOOP || i == JAD || i == FIREBALL || i == ARENA || i == HEALTHPOT || i == MANAPOT || i == SKYBOX){
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
+		} else {
+			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
 		}
 	}
 }
@@ -723,26 +720,24 @@ void MyGLCanvas::setupShaders() {
 	for (int i = 1; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
 			shaderList[i]->initShader("./shaders/330/model_textured.vert", "./shaders/330/model_textured.frag");
+			plyList[i]->buildArrays();
+			plyList[i]->bindVBO(shaderList[i]->program);
 		} else if (i == SPRITE_UNTEXTURED) {
 			shaderList[i]->initShader("./shaders/330/sprite_untextured.vert", "./shaders/330/sprite_untextured.frag");
-		} else if (i == SPRITE_DEATH || i == SPRITE_MAIN || i == BUTTON_START || i == SPRITE_MAIN || i == BUTTON_START ||
-			i == BUTTON_OPTIONS || i == BUTTON_QUIT || i == BUTTON_CONTROLS) {
-			shaderList[i]->initShader("./shaders/330/sprite_textured.vert", "./shaders/330/sprite_textured.frag");
-		} else {
+			plyList[i]->buildArraysSprite();
+			plyList[i]->bindVBOsprites(shaderList[i]->program);
+		} else if (i == GOOP || i == JAD) {
 			shaderList[i]->initShader("./shaders/330/model_untextured.vert", "./shaders/330/model_untextured.frag");
+			plyList[i]->buildArrays();
+			plyList[i]->bindVBO(shaderList[i]->program);
+		} else {
+			shaderList[i]->initShader("./shaders/330/sprite_textured.vert", "./shaders/330/sprite_textured.frag");
+			plyList[i]->buildArraysSprite();
+			plyList[i]->bindVBOsprites(shaderList[i]->program);
 		}
 
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
 		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
-
-		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH || i == SPRITE_MAIN || i == BUTTON_START || i == SPRITE_MAIN || i == BUTTON_START ||
-			i == BUTTON_OPTIONS || i == BUTTON_QUIT || i == BUTTON_CONTROLS) {
-			plyList[i]->buildArraysSprite();
-			plyList[i]->bindVBOsprites(shaderList[i]->program);
-		} else {
-			plyList[i]->buildArrays();
-			plyList[i]->bindVBO(shaderList[i]->program);
-		}
 	}
 	
 	string filenames[6] = {
@@ -770,6 +765,7 @@ void MyGLCanvas::setupSprites() {
 	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
 	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	
 	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
 
 	mainMenu.push_back(new Sprite(BUTTON_START, glm::vec2(mode->width / 2.0f, 7 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
@@ -1008,7 +1004,7 @@ void MyGLCanvas::restartGame() {
 	music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
 	music->setVolume(MUSIC_VOLUME);
 	
-	firstMouse = firstDeath = true;
+	firstMouse = true;
 	currState = PLAYING;
 	player->restartPlayer();
 }

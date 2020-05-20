@@ -119,7 +119,7 @@ private:
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
-	bool firstTime, firstMouse, fullscreen, cursorVisible, firstDeath;
+	bool firstTime, firstMouse, fullscreen, cursorVisible;
 	shaderType buttonSelected;
 
 	GameState currState;
