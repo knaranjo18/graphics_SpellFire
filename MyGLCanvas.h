@@ -61,6 +61,7 @@ private:
 	void setupSprites();
 	void setupCursors();
 	void restartGame();
+	void restartMenu();
 	
 	void updateCamera(int width, int height);
 	void deallocate();
@@ -139,6 +140,8 @@ private:
 	void toggleCursor();
 
 	void stopSound(ISound *sound);
+
+	void handleButtons(std::vector<Sprite *> buttonList, int numButtons, double offX, double offY, double currX, double currY);
 	bool overButton(double x, double y, double offX, double offY, glm::vec3 pos);
 };
 

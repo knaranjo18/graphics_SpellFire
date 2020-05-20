@@ -116,7 +116,7 @@ void MyGLCanvas::draw() {
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
-		currState = DEAD;
+		currState = MAIN_MENU;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
@@ -323,6 +323,7 @@ void MyGLCanvas::doGameLogic() {
 		stopSound(music);
 		music = soundEngine->play2D("./audio/sad_dark.mp3", true, false, true);
 		music->setVolume(MUSIC_VOLUME);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		currState = DEAD;
 	}
 
@@ -710,7 +711,7 @@ void MyGLCanvas::setupShaders() {
 	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
 	plyList.push_back(new ply("./data/arena.ply"));
-	//plyList[ARENA]->applyTexture("./data/arena_large.ppm");
+	plyList[ARENA]->applyTexture("./data/arena_large.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
 	plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
@@ -719,7 +720,7 @@ void MyGLCanvas::setupShaders() {
 	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
+	plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[BUTTON_START]->applyTexture("./data/startButton.ppm");
@@ -830,11 +831,11 @@ void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int ac
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
 	if (action == GLFW_PRESS) {
-		if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(_window, true);
-		if (key == GLFW_KEY_M) Enemy::debug_draw_hitbox = !Enemy::debug_draw_hitbox;
-		if (key == GLFW_KEY_R && c->currState == DEAD) c->restartGame();
-		if (key == GLFW_KEY_F) c->toggleFullScreen();
-		if (key == GLFW_KEY_TAB) c->toggleCursor();
+		if (DEBUGMODE) {
+			if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(_window, true);
+			if (key == GLFW_KEY_F) c->toggleFullScreen();
+			if (key == GLFW_KEY_TAB) c->toggleCursor();
+		}
 	}
 }
 
@@ -859,33 +860,12 @@ void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, dou
 		c->prevY = currY;
 
 		c->player->moveSight(x_offset, y_offset);
+	} else if (c->currState == MAIN_MENU) {
+		c->handleButtons(c->mainMenu, c->mainMenu.size() - 1, 0.1, 0.045, currX, currY);
+	} else if (c->currState == DEAD) {
+		c->handleButtons(c->deathScreen, c->deathScreen.size() - 1, 0.1, 0.048, currX, currY);
 	}
-	else if (c->currState == MAIN_MENU) {
-		glm::vec3 pos;
 
-		int width, height;
-		glfwGetWindowSize(c->window, &width, &height);
-
-		currX /= double(width);
-		currY /= double(height);
-
-		double offX = 0.1, offY = 0.045;
-		c->buttonSelected = SPRITE_MAIN;
-
-		for (int i = 0; i < 4; i++) {
-			pos = c->mainMenu[i]->getPosition();
-			pos.x /= c->mode->width;
-			pos.y /= c->mode->height;
-
-			if (c->overButton(currX, currY, offX, offY, pos)) {
-					c->buttonSelected = c->mainMenu[i]->spriteType;
-					glfwSetCursor(c->window, c->hover);
-					break;
-			} else {
-				glfwSetCursor(c->window, c->regular);
-			}
-		}
-	}
 }
 
 // Callback for mouse click
@@ -925,6 +905,22 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				case BUTTON_OPTIONS:
 					break;
 				case BUTTON_QUIT:
+					glfwSetWindowShouldClose(_window, true);
+					break;
+				default:
+					break;
+				}
+			}
+		} else if (c->currState == DEAD) {
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
+				switch (c->buttonSelected) {
+				case BUTTON_MAIN:
+					c->restartMenu();
+					break;
+				case BUTTON_RESTART:
+					c->restartGame();
+					break;
+				case BUTTON_QUIT2:
 					glfwSetWindowShouldClose(_window, true);
 					break;
 				default:
@@ -1013,6 +1009,7 @@ void MyGLCanvas::pollInput() {
 void MyGLCanvas::restartGame() {
 	printf("GAME RESTART\n");
 
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	list<Enemy *>::iterator itE = enemyList.begin();
 	while(itE != enemyList.end()) removeEnemy(itE);
 
@@ -1034,6 +1031,28 @@ void MyGLCanvas::restartGame() {
 	
 	firstMouse = true;
 	currState = PLAYING;
+	player->restartPlayer();
+}
+
+// Removes all objects from scene and goes back to main menu
+void MyGLCanvas::restartMenu() {
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	list<Enemy *>::iterator itE = enemyList.begin();
+	while (itE != enemyList.end()) removeEnemy(itE);
+
+	list<Projectile *>::iterator itP = projectileList.begin();
+	while (itP != projectileList.end()) removeProjectile(itP);
+
+	list<Pickup *>::iterator itPU = pickupList.begin();
+	while (itPU != pickupList.end()) removePickup(itPU);
+
+	stopSound(music);
+	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
+	music->setVolume(MUSIC_VOLUME);
+
+	firstMouse = true;
+	currState = MAIN_MENU;
 	player->restartPlayer();
 }
 
@@ -1083,7 +1102,37 @@ void MyGLCanvas::stopSound(ISound *sound) {
 	sound->drop();
 }
 
-// Checks if cursor is hovering over a button
+// Checks to see if the cursor is over a button
+void MyGLCanvas::handleButtons(std::vector<Sprite *> buttonList, int numButtons, double offX, double offY, double currX, double currY) {
+	glm::vec3 pos;
+
+	int width, height;
+	glfwGetWindowSize(window, &width, &height);
+
+	currX /= double(width);
+	currY /= double(height);
+
+	buttonSelected = SPRITE_MAIN;  // Acts as a NULL value TODO: Find a better value
+	//printf("----------------------------------------\n");
+	for (int i = 0; i < numButtons; i++) {
+		pos = buttonList[i]->getPosition();
+		pos.x /= mode->width;
+		pos.y /= mode->height;
+
+		if (overButton(currX, currY, offX, offY, pos)) {
+			buttonSelected = buttonList[i]->spriteType;
+			glfwSetCursor(window, hover);
+			break;
+		}
+		else {
+			glfwSetCursor(window, regular);
+		}
+
+	//	printf("CurrX: %f, CurrY: %f\n LeftPos: %f, RightPos: %f, TopPos: %f, BottomPos: %f\n\n", currX, currY, pos.x - offX, pos.x + offX, pos.y - offY, pos.y + offY);
+	}
+}
+
+// Helper function to handleButtons
 bool MyGLCanvas::overButton(double x, double y, double offX, double offY, glm::vec3 pos) {
 	return  (pos.x - offX) <= x && x <= (pos.x + offX) && (pos.y - offY) <= y && y <= (pos.y + offY);
 }

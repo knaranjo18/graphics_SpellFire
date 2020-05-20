@@ -12,7 +12,7 @@ const float EPSILON = 1e-5;
 #define NEAR_PLANE 0.01f
 #define FAR_PLANE 20.0f
 
-#define MASTER_VOLUME 0.0f
+#define MASTER_VOLUME 1.0f
 #define MUSIC_VOLUME 0.1f
 #define ENEMY_VOLUME 0.8f
 #define PROJECTILE_VOLUME 0.5f

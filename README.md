@@ -23,15 +23,9 @@ Player Movement - *W, A, S, D*
 
 Camera Movement - *Mouse*
 
+Select Button in Menu - *Left Mouse Button*
+
 Shoot Fireball - *Left Mouse Button*
-
-Restart Game - *R*
-
-Toggle Fullscreen - *F*
-
-Toggle Mouse Visibility - *Tab*
-
-Quit Game - *Escape Key*
 
 
 ## Compilation Instructions
