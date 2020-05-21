@@ -56,6 +56,8 @@ private:
 	void drawLoading();
 	void drawMainMenu();
 	void drawPauseScreen();
+	void drawOptionScreen();
+	void drawControlScreen();
 	
 	void setupSound();
 	void setupShaders();
@@ -67,6 +69,9 @@ private:
 	void pauseGame();
 	void unpauseGame();
 	void gameOver();
+	void showOptions();
+	void showControls();
+	void menuReturn();
 	
 	void updateCamera(int width, int height);
 	void deallocate();
@@ -109,6 +114,8 @@ private:
 	vector<Sprite *> deathScreen;
 	vector<Sprite *> mainMenu;
 	vector<Sprite *> pauseScreen;
+	vector<Sprite *> optionScreen;
+	Sprite *controlScreen;
 	Sprite *loadingScreen;
 
 
@@ -131,6 +138,7 @@ private:
 	shaderType buttonSelected;
 
 	GameState currState;
+	GameState prevState;
 
 	time_t startTime;
 

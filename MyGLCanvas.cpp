@@ -34,7 +34,7 @@ MyGLCanvas::MyGLCanvas() {
 	setupCursors();
 	srand(time(0));
 
-	currState = LOADING;
+	prevState = currState = LOADING;
 	prevX = prevY = 0;
 	buttonSelected = SPRITE_MAIN;
 	firstTime = firstMouse = true;
@@ -116,6 +116,7 @@ void MyGLCanvas::draw() {
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
+		prevState = currState;
 		currState = MAIN_MENU;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
@@ -145,6 +146,12 @@ void MyGLCanvas::draw() {
 		break;
 	case PAUSE:
 		drawPauseScreen();
+		break;
+	case OPTIONS:
+		drawOptionScreen();
+		break;
+	case CONTROLS:
+		drawControlScreen();
 		break;
 	default:
 		printf("INVALID GAME STATE\n");
@@ -215,6 +222,28 @@ void MyGLCanvas::drawPauseScreen() {
 	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_PAUSE]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
 	pauseScreen[0]->draw(shaderList[SPRITE_PAUSE], plyList[SPRITE_PAUSE]);
+}
+
+
+// Draws the screen for editing options
+void MyGLCanvas::drawOptionScreen() {
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+
+	shaderList[SPRITE_OPTIONS]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_OPTIONS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[0]->draw(shaderList[SPRITE_OPTIONS], plyList[SPRITE_OPTIONS]);
+}
+
+
+// Draws the screen that shows the controls for the game
+void MyGLCanvas::drawControlScreen() {
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+
+	shaderList[SPRITE_CONTROLS]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_CONTROLS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	controlScreen->draw(shaderList[SPRITE_CONTROLS], plyList[SPRITE_CONTROLS]);
 }
 
 // Draws all the elements of the main game
@@ -705,6 +734,8 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager()); // main button
 	shaderList.push_back(new ShaderManager()); // quit button for death menu
 	shaderList.push_back(new ShaderManager()); // pause screen
+	shaderList.push_back(new ShaderManager()); // controls screen
+	shaderList.push_back(new ShaderManager()); // options screen
 
 
 	plyList.push_back(new ply("./data/blob.ply"));
@@ -753,6 +784,12 @@ void MyGLCanvas::setupShaders() {
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[SPRITE_PAUSE]->applyTexture("./data/pauseScreen_small.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_CONTROLS]->applyTexture("./data/controlScreen_medium.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_OPTIONS]->applyTexture("./data/optionScreen_small.ppm");
 
 	for (int i = 1; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
@@ -815,6 +852,10 @@ void MyGLCanvas::setupSprites() {
 	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
 
 	pauseScreen.push_back(new Sprite(SPRITE_PAUSE, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
+
+	controlScreen = new Sprite(SPRITE_CONTROLS, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND);
+
+	optionScreen.push_back(new Sprite(SPRITE_OPTIONS, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
 }
 
 // Sets up everything required to draw a single image of the loading screen
@@ -850,6 +891,18 @@ void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int ac
 			break;
 		case PAUSE:
 			if (key == GLFW_KEY_ESCAPE) c->unpauseGame();
+			break;
+		case OPTIONS:
+			if (key == GLFW_KEY_ESCAPE) {
+				if (c->prevState == PAUSE) c->pauseGame(); 
+				else if (c->prevState == MAIN_MENU) c->menuReturn(); 
+			} 
+			break;
+		case CONTROLS:
+			if (key == GLFW_KEY_ESCAPE) {
+				if (c->prevState == PAUSE) c->pauseGame();
+				else if (c->prevState == MAIN_MENU) c->menuReturn();
+			}
 			break;
 		}
 	}
@@ -913,18 +966,22 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				switch (c->buttonSelected) {
 				case BUTTON_START:
 					glfwSetInputMode(c->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+					c->prevState = c->currState;
 					c->currState = PLAYING;
 					c->playClick();
 
+					c->pauseMusic->setIsPaused(true);
 					c->stopSound(c->music);
 					c->music = c->soundEngine->play2D("./audio/metal.mp3", true, false, true);
 					c->music->setVolume(MUSIC_VOLUME);
 					break;
 				case BUTTON_CONTROLS:
 					c->playClick();
+					c->showControls();
 					break;
 				case BUTTON_OPTIONS:
 					c->playClick();
+					c->showOptions();
 					break;
 				case BUTTON_QUIT:
 					c->playClick();
@@ -940,10 +997,12 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				switch (c->buttonSelected) {
 				case BUTTON_MAIN:
 					c->playClick();
+					c->prevState = DEAD;
 					c->restartMenu();
 					break;
 				case BUTTON_RESTART:
 					c->playClick();
+					c->prevState = DEAD;
 					c->restartGame();
 					break;
 				case BUTTON_QUIT2:
@@ -1060,6 +1119,7 @@ void MyGLCanvas::restartGame() {
 	music->setVolume(MUSIC_VOLUME);
 	
 	firstMouse = true;
+	prevState = currState;
 	currState = PLAYING;
 	player->restartPlayer();
 }
@@ -1088,6 +1148,7 @@ void MyGLCanvas::restartMenu() {
 	music->setVolume(MUSIC_VOLUME);
 
 	firstMouse = true;
+	prevState = currState;
 	currState = MAIN_MENU;
 	player->restartPlayer();
 }
@@ -1186,8 +1247,8 @@ bool MyGLCanvas::overButton(double x, double y, double offX, double offY, glm::v
 
 // Changes to pause screen
 void MyGLCanvas::pauseGame() {
+	prevState = currState;
 	currState = PAUSE;
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	music->setIsPaused(true);
 	pauseMusic->setIsPaused(false);
@@ -1195,6 +1256,7 @@ void MyGLCanvas::pauseGame() {
 
 // Changes to game screen
 void MyGLCanvas::unpauseGame() {
+	prevState = currState;
 	currState = PLAYING;
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -1209,6 +1271,40 @@ void MyGLCanvas::gameOver() {
 	stopSound(music);
 	music = soundEngine->play2D("./audio/sad_dark.mp3", true, false, true);
 	music->setVolume(MUSIC_VOLUME);
+
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	prevState = currState;
 	currState = DEAD;
+}
+
+// Changes to control screen
+void MyGLCanvas::showControls() {
+	prevState = currState;
+	currState = CONTROLS;
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	music->setIsPaused(true);
+	pauseMusic->setIsPaused(false);
+}
+
+// Changes to options screen
+void MyGLCanvas::showOptions() {
+	prevState = currState;
+	currState = OPTIONS;
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	music->setIsPaused(true);
+	pauseMusic->setIsPaused(false);
+}
+
+// Returns to the main menu from one of the option screens
+void MyGLCanvas::menuReturn() {
+	prevState = currState;
+	currState = MAIN_MENU;
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+
+	pauseMusic->setIsPaused(true);
+	music->setIsPaused(false);
 }

@@ -23,7 +23,7 @@ Player Movement - *W, A, S, D*
 
 Camera Movement - *Mouse*
 
-Pause Game - *Escape Key*
+Pause/Unpause - *Escape Key*
 
 Select Button in Menu - *Left Mouse Button*
 
