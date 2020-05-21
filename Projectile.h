@@ -38,6 +38,7 @@ public:
 	shaderType projectileType;
 	static bool debug_draw_hitbox;
 
+	static float volume;
 private:
 
 	float duration, speed, currAngleYaw, currAnglePitch, initialAngleYaw, initialAnglePitch, modelSize;

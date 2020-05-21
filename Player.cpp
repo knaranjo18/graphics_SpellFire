@@ -247,6 +247,6 @@ void Player::hurtSound() {
 	else if (random == 1) sound = soundEngine->play2D("./audio/player_hurt2.mp3", false, false, true);
 	else sound = soundEngine->play2D("./audio/player_hurt3.mp3", false, false, true);
 
-	sound->setVolume(PLAYER_VOLUME);
+	sound->setVolume(volume);
 	sound->drop();
 }

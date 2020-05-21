@@ -51,6 +51,8 @@ public:
 	Camera *myCam;
 	shaderType spellSelected;
 	float maxMana, maxHealth, maxPoints;
+
+	static float volume;
 private:
 	int points;
 	int iFrames; // invincibility frames after getting hit

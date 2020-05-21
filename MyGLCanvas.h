@@ -132,6 +132,8 @@ private:
 	ISound *music;
 	ISound *pauseMusic;
 
+	float miscVol, masterVol, musicVol, sensitivity;
+
 	glm::vec3 lightPos;
 	int prevX, prevY;
 	bool firstTime, firstMouse, fullscreen, cursorVisible;

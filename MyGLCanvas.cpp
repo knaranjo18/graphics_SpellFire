@@ -24,7 +24,10 @@
 
 #define DEBUGMODE false
 
-
+float Projectile::volume = 1.0f;
+float Enemy::volume = 1.0f;
+float Player::volume = 1.0f;
+float Pickup::volume = 1.0f;
 
 // Constructor to set everything up. Spawns some initial enemies
 MyGLCanvas::MyGLCanvas() {
@@ -955,7 +958,7 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 					ISound *sound;
 					// TODO: Add some visual cue
 					sound = c->soundEngine->play2D("./audio/fizzle.mp3", false, false, true);
-					sound->setVolume(PROJECTILE_VOLUME);
+					sound->setVolume(c->miscVol);
 					sound->drop();
 				}
 			}
@@ -973,7 +976,7 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 					c->pauseMusic->setIsPaused(true);
 					c->stopSound(c->music);
 					c->music = c->soundEngine->play2D("./audio/metal.mp3", true, false, true);
-					c->music->setVolume(MUSIC_VOLUME);
+					c->music->setVolume(c->musicVol);
 					break;
 				case BUTTON_CONTROLS:
 					c->playClick();
@@ -1116,7 +1119,7 @@ void MyGLCanvas::restartGame() {
 
 	stopSound(music);
 	music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
-	music->setVolume(MUSIC_VOLUME);
+	music->setVolume(musicVol);
 	
 	firstMouse = true;
 	prevState = currState;
@@ -1145,7 +1148,7 @@ void MyGLCanvas::restartMenu() {
 
 	stopSound(music);
 	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
-	music->setVolume(MUSIC_VOLUME);
+	music->setVolume(musicVol);
 
 	firstMouse = true;
 	prevState = currState;
@@ -1183,16 +1186,24 @@ void MyGLCanvas::toggleCursor() {
 
 // Setups up sound engine and initial sound options
 void MyGLCanvas::setupSound() {
+	masterVol = 1.0f;
+	musicVol = 0.05f;
+	miscVol = 1.0f;
+
+	Projectile::volume = miscVol;
+	Enemy::volume = miscVol;
+	Player::volume = miscVol;
+	Pickup::volume = miscVol;
+	
 	soundEngine = createIrrKlangDevice();
 	if (!soundEngine) exit(1);
 
-
 	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
-	music->setVolume(MUSIC_VOLUME);
-	soundEngine->setSoundVolume(MASTER_VOLUME);
+	music->setVolume(musicVol);
+	soundEngine->setSoundVolume(masterVol);
 
 	pauseMusic = soundEngine->play2D("./audio/pause.mp3", true, true, true);
-	pauseMusic->setVolume(MUSIC_VOLUME);
+	pauseMusic->setVolume(musicVol);
 }
 
 // Combines to irrKlang function calls to stop the current sound and free up
@@ -1206,7 +1217,7 @@ void MyGLCanvas::stopSound(ISound *sound) {
 void MyGLCanvas::playClick() {
 	ISound *sound;
 	sound = soundEngine->play2D("./audio/click.mp3", false, false, true);
-	sound->setVolume(CLICK_VOLUME);
+	sound->setVolume(miscVol);
 	sound->drop();
 }
 
@@ -1270,7 +1281,7 @@ void MyGLCanvas::unpauseGame() {
 void MyGLCanvas::gameOver() {
 	stopSound(music);
 	music = soundEngine->play2D("./audio/sad_dark.mp3", true, false, true);
-	music->setVolume(MUSIC_VOLUME);
+	music->setVolume(musicVol);
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 

@@ -19,15 +19,7 @@ that is a placeholder from when we used the cow and bunny ply models as the enem
 If you just want to get straight to the game, place `Spellfire.exe` in the same directory as the `data` and `shader` folders. Then simply run it to play. If you wanna compile from source, follow the instructions below.
 
 ## Controls
-Player Movement - *W, A, S, D*
-
-Camera Movement - *Mouse*
-
-Pause/Unpause - *Escape Key*
-
-Select Button in Menu - *Left Mouse Button*
-
-Shoot Fireball - *Left Mouse Button*
+See control menu
 
 
 ## Compilation Instructions
@@ -146,10 +138,10 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 	- ~~Add a restart button~~
 	- ~~Cursors change while over buttons~~
 
-	- Add a start menu
+	- ~~Add a start menu~~
 	- Add a pause screen
 	- Add collectibles menu
-	- Add button to show controls list
+	- ~~Add button to show controls list~~
 	- Add options menu
 		- Add option to let user change graphics setting (Low, medium, high texture)
 		- Add option to change mouse sensitivity

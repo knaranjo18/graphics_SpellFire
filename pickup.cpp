@@ -116,6 +116,6 @@ void Pickup::usePickupSound() {
 		break;
 	}
 
-	sound->setVolume(PICKUP_VOLUME);
+	sound->setVolume(volume);
 	sound->drop();
 }

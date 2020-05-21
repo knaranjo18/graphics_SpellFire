@@ -33,6 +33,7 @@ public:
 	t_hitfunc getHitFunc();
 	void usePickupSound();
 
+	static float volume;
 private:
 	BoundingBox* box;
 	glm::vec3 position, scale;
