@@ -21,7 +21,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE false
+#define DEBUGMODE true
 
 float Projectile::volume = 1.0f;
 float Enemy::volume = 1.0f;
@@ -113,7 +113,7 @@ void MyGLCanvas::draw() {
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
 		prevState = currState;
-		currState = MAIN_MENU;
+		currState = OPTIONS;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
@@ -250,10 +250,95 @@ void MyGLCanvas::drawPauseScreen() {
 void MyGLCanvas::drawOptionScreen() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
-	shaderList[SPRITE_OPTIONS]->useShader();
-	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_OPTIONS]->program, "myModelviewMatrix");
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[0]->draw(shaderList[SPRITE_OPTIONS], plyList[SPRITE_OPTIONS]);
+	optionScreen[0]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[1]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[BUTTON_MINUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[2]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+
+	shaderList[BUTTON_PLUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[3]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[4]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[5]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[BUTTON_MINUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[6]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+
+	shaderList[BUTTON_PLUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[7]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[8]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[9]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[BUTTON_MINUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[10]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+
+	shaderList[BUTTON_PLUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[11]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[12]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[13]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[BUTTON_MINUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[14]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+
+	shaderList[BUTTON_PLUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[15]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+	shaderList[BUTTON_FULLSCREEN]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_FULLSCREEN]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[16]->draw(shaderList[BUTTON_FULLSCREEN], plyList[BUTTON_FULLSCREEN]);
+
+	shaderList[SPRITE_OPTIONS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_OPTIONS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[17]->draw(shaderList[SPRITE_OPTIONS], plyList[SPRITE_OPTIONS]);
 }
 
 
@@ -763,75 +848,86 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager()); // options button for pause screen
 	shaderList.push_back(new ShaderManager()); // quit button for pause screen
 	shaderList.push_back(new ShaderManager()); // controls button for pause screen
-
+	shaderList.push_back(new ShaderManager()); // fullscreen button for options screen
+	shaderList.push_back(new ShaderManager()); // plus button for options screen
+	shaderList.push_back(new ShaderManager()); // minus button for options screen
 
 	plyList.push_back(new ply("./data/blob.ply"));
 	plyList.push_back(new ply("./data/jad.ply"));
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
-	plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
+	//plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
 
 	plyList.push_back(new ply("./data/arena.ply"));
-	plyList[ARENA]->applyTexture("./data/arena_large.ppm");
+	//plyList[ARENA]->applyTexture("./data/arena_large.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
-	plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
+	//plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
-	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
+	//plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
+	//plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
+	//plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_START]->applyTexture("./data/startButton.ppm");
+	//plyList[BUTTON_START]->applyTexture("./data/startButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_OPTIONS]->applyTexture("./data/optionsButton.ppm");
+//	plyList[BUTTON_OPTIONS]->applyTexture("./data/optionsButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_QUIT]->applyTexture("./data/exitButton.ppm");
+	//plyList[BUTTON_QUIT]->applyTexture("./data/exitButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_CONTROLS]->applyTexture("./data/controlsButton.ppm");
+	//plyList[BUTTON_CONTROLS]->applyTexture("./data/controlsButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_RESTART]->applyTexture("./data/restartButton.ppm");
+	//plyList[BUTTON_RESTART]->applyTexture("./data/restartButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_MAIN]->applyTexture("./data/mainMenuButton.ppm");
+	//plyList[BUTTON_MAIN]->applyTexture("./data/mainMenuButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_QUIT2]->applyTexture("./data/exitButton2.ppm");
+	//plyList[BUTTON_QUIT2]->applyTexture("./data/exitButton2.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE_PAUSE]->applyTexture("./data/pauseScreen_small.ppm");
+	//plyList[SPRITE_PAUSE]->applyTexture("./data/pauseScreen_small.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE_CONTROLS]->applyTexture("./data/controlScreen_medium.ppm");
+//	plyList[SPRITE_CONTROLS]->applyTexture("./data/controlScreen_medium.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[SPRITE_OPTIONS]->applyTexture("./data/optionScreen_small.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_RESUME]->applyTexture("./data/resumeButton.ppm");
+	//plyList[BUTTON_RESUME]->applyTexture("./data/resumeButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_MAIN2]->applyTexture("./data/mainMenuButton2.ppm");
+	//plyList[BUTTON_MAIN2]->applyTexture("./data/mainMenuButton2.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_OPTIONS2]->applyTexture("./data/optionsButton2.ppm");
+	//plyList[BUTTON_OPTIONS2]->applyTexture("./data/optionsButton2.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_QUIT3]->applyTexture("./data/exitButton3.ppm");
+	//plyList[BUTTON_QUIT3]->applyTexture("./data/exitButton3.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[BUTTON_CONTROLS2]->applyTexture("./data/controlsButton2.ppm");
+	//plyList[BUTTON_CONTROLS2]->applyTexture("./data/controlsButton2.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_FULLSCREEN]->applyTexture("./data/fullscreenButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_PLUS]->applyTexture("./data/plusButton.ppm");
+	
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_MINUS]->applyTexture("./data/minusButton.ppm");
 
 	for (int i = 1; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
@@ -902,6 +998,36 @@ void MyGLCanvas::setupSprites() {
 
 	controlScreen = new Sprite(SPRITE_CONTROLS, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND);
 
+	// Master volume bar
+	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	
+	optionScreen.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionScreen.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+
+	// Music volume bar
+	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+
+	optionScreen.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionScreen.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+	// Misc volume bar
+	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+
+	optionScreen.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionScreen.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+	// Sensitivity bar
+	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(13.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(13.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+
+	optionScreen.push_back(new Sprite(BUTTON_MINUS, glm::vec2(10.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionScreen.push_back(new Sprite(BUTTON_PLUS, glm::vec2(16.2 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+	optionScreen.push_back(new Sprite(BUTTON_FULLSCREEN, glm::vec2(13.5 * mode->width / 20.0f, 12 * mode->height / 20.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	optionScreen.push_back(new Sprite(SPRITE_OPTIONS, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
 }
 

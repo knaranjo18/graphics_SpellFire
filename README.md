@@ -92,9 +92,9 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 	- ~~Add points for player~~
 	- ~~Add mana restricton for player~~
 	- Add sounds
-	 	- Add start menu music
-	 	- Add pause screen music
-	 	- Add click sounds to buttons
+	 	- ~~Add start menu music~~
+	 	- ~~Add pause screen music~~
+	 	- ~~Add click sounds to buttons~~
 	 	- ~~Add loading screen music~~	
 		- ~~Add music over game~~
 		- ~~Add enemy sound when hit for each enemy~~
@@ -138,7 +138,7 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 	- ~~Cursors change while over buttons~~
 
 	- ~~Add a start menu~~
-	- Add a pause screen
+	- ~Add a pause screen~~
 	- Add collectibles menu
 	- ~~Add button to show controls list~~
 	- Add options menu
