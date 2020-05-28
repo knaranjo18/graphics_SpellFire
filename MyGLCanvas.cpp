@@ -1124,7 +1124,8 @@ void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, dou
 	} else if (c->currState == PAUSE) {
 		c->handleButtons(c->pauseScreen, c->pauseScreen.size() - 1, 0.095, 0.05, currX, currY);
 	} else if (c->currState == OPTIONS) {
-		c->handleButtons(c->optionScreen, c->optionScreen.size() - 1, 0.095, 0.05, currX, currY);
+		c->handleButtons(c->optionPlusMinus, c->optionPlusMinus.size(), 0.0125, 0.02, currX, currY);
+		if (c->optionSelected == NONE) c->handleButtons(c->optionScreen, c->optionScreen.size() - 1, 0.095, 0.05, currX, currY);
 	}
 
 }
@@ -1229,6 +1230,48 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				case BUTTON_FULLSCREEN:
 					c->playClick();
 					c->toggleFullScreen();
+					break;
+				case BUTTON_PLUS:
+					c->playClick();
+					switch (c->optionSelected) {
+					case MASTER_VOL:
+						c->masterVol += 0.05;
+						c->soundEngine->setSoundVolume(c->masterVol);
+						break;
+					case MUSIC_VOL:
+						c->musicVol += 0.01;
+						c->music->setVolume(c->musicVol);
+						c->pauseMusic->setVolume(c->musicVol);
+						break;
+					case MISC_VOL:
+						c->miscVol += 0.05;
+						printf("miscVol: %f\n", c->miscVol);
+						break;
+					case SENSITIVITY:
+						c->sensitivity += 0.01;
+						break;
+					}
+					break;
+				case BUTTON_MINUS:
+					c->playClick();
+					switch (c->optionSelected) {
+					case MASTER_VOL:
+						c->masterVol -= 0.05;
+						c->soundEngine->setSoundVolume(c->masterVol);
+						break;
+					case MUSIC_VOL:
+						c->musicVol -= 0.01;
+						c->music->setVolume(c->musicVol);
+						c->pauseMusic->setVolume(c->musicVol);
+						break;
+					case MISC_VOL:
+						c->miscVol -= 0.05;
+						printf("miscVol: %f\n", c->miscVol);
+						break;
+					case SENSITIVITY:
+						c->sensitivity -= 0.01;
+						break;
+					}
 					break;
 				}
 			}
@@ -1437,7 +1480,9 @@ void MyGLCanvas::handleButtons(std::vector<Sprite *> buttonList, int numButtons,
 	currX /= double(width);
 	currY /= double(height);
 
+	optionSelected = NONE;
 	buttonSelected = SPRITE_MAIN;  // Acts as a NULL value TODO: Find a better value
+
 	//printf("----------------------------------------\n");
 	for (int i = 0; i < numButtons; i++) {
 		pos = buttonList[i]->getPosition();
@@ -1447,6 +1492,8 @@ void MyGLCanvas::handleButtons(std::vector<Sprite *> buttonList, int numButtons,
 		if (overButton(currX, currY, offX, offY, pos)) {
 			buttonSelected = buttonList[i]->spriteType;
 			glfwSetCursor(window, hover);
+
+			if (buttonSelected == BUTTON_PLUS || buttonSelected == BUTTON_MINUS) optionSelected = (optionType)(i / 2);
 			break;
 		}
 		else {
@@ -1455,6 +1502,8 @@ void MyGLCanvas::handleButtons(std::vector<Sprite *> buttonList, int numButtons,
 
 	//printf("CurrX: %f, CurrY: %f\n LeftPos: %f, RightPos: %f, TopPos: %f, BottomPos: %f\n\n", currX, currY, pos.x - offX, pos.x + offX, pos.y - offY, pos.y + offY);
 	}
+
+
 }
 
 // Helper function to handleButtons
