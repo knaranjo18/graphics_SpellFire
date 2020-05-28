@@ -46,13 +46,6 @@ MyGLCanvas::MyGLCanvas() {
 
 	player = new Player(soundEngine);
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
-
-	// Initial Enemies
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++)
-			spawnEnemy(GOOP);
-		spawnEnemy(JAD);
-	}
 }
 
 // Makes sure to reclaim all memory taken by new
@@ -221,10 +214,35 @@ void MyGLCanvas::drawDeathScene() {
 void MyGLCanvas::drawPauseScreen() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
-	shaderList[SPRITE_PAUSE]->useShader();
-	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_PAUSE]->program, "myModelviewMatrix");
+	shaderList[BUTTON_RESUME]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[BUTTON_RESUME]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	pauseScreen[0]->draw(shaderList[SPRITE_PAUSE], plyList[SPRITE_PAUSE]);
+	pauseScreen[0]->draw(shaderList[BUTTON_RESUME], plyList[BUTTON_RESUME]);
+
+	shaderList[BUTTON_CONTROLS2]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_CONTROLS2]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[1]->draw(shaderList[BUTTON_CONTROLS2], plyList[BUTTON_CONTROLS2]);
+
+	shaderList[BUTTON_OPTIONS2]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_OPTIONS2]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[2]->draw(shaderList[BUTTON_OPTIONS2], plyList[BUTTON_OPTIONS2]);
+
+	shaderList[BUTTON_MAIN2]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MAIN2]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[3]->draw(shaderList[BUTTON_MAIN2], plyList[BUTTON_MAIN2]);
+
+	shaderList[BUTTON_QUIT3]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_QUIT3]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[4]->draw(shaderList[BUTTON_QUIT3], plyList[BUTTON_QUIT3]);
+
+	shaderList[SPRITE_PAUSE]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_PAUSE]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[5]->draw(shaderList[SPRITE_PAUSE], plyList[SPRITE_PAUSE]);
 }
 
 
@@ -723,22 +741,28 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager()); // goop
 	shaderList.push_back(new ShaderManager()); // jad
 	shaderList.push_back(new ShaderManager()); // fireball
-	shaderList.push_back(new ShaderManager()); // sprite
-	shaderList.push_back(new ShaderManager()); // death
 	shaderList.push_back(new ShaderManager()); // arena
 	shaderList.push_back(new ShaderManager()); // health pot
 	shaderList.push_back(new ShaderManager()); // mana pot
-	shaderList.push_back(new ShaderManager()); // main menu
-	shaderList.push_back(new ShaderManager()); // start button
-	shaderList.push_back(new ShaderManager()); // options button
-	shaderList.push_back(new ShaderManager()); // quit button
-	shaderList.push_back(new ShaderManager()); // controls button
-	shaderList.push_back(new ShaderManager()); // restart button
-	shaderList.push_back(new ShaderManager()); // main button
+
+	shaderList.push_back(new ShaderManager()); // sprite untextured
+	shaderList.push_back(new ShaderManager()); // death screen
+	shaderList.push_back(new ShaderManager()); // main menu screen
+	shaderList.push_back(new ShaderManager()); // start button for main menu
+	shaderList.push_back(new ShaderManager()); // options button for main menu
+	shaderList.push_back(new ShaderManager()); // quit button for main menu
+	shaderList.push_back(new ShaderManager()); // controls button for main menu
+	shaderList.push_back(new ShaderManager()); // restart button for death menu
+	shaderList.push_back(new ShaderManager()); // main menu button for death menu
 	shaderList.push_back(new ShaderManager()); // quit button for death menu
 	shaderList.push_back(new ShaderManager()); // pause screen
 	shaderList.push_back(new ShaderManager()); // controls screen
 	shaderList.push_back(new ShaderManager()); // options screen
+	shaderList.push_back(new ShaderManager()); // resume button for pause screen
+	shaderList.push_back(new ShaderManager()); // main menu button for pause screen
+	shaderList.push_back(new ShaderManager()); // options button for pause screen
+	shaderList.push_back(new ShaderManager()); // quit button for pause screen
+	shaderList.push_back(new ShaderManager()); // controls button for pause screen
 
 
 	plyList.push_back(new ply("./data/blob.ply"));
@@ -746,11 +770,6 @@ void MyGLCanvas::setupShaders() {
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
 	plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
-
-	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-
-	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
 	plyList.push_back(new ply("./data/arena.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_large.ppm");
@@ -760,6 +779,11 @@ void MyGLCanvas::setupShaders() {
 
 	plyList.push_back(new ply("./data/potion.ply"));
 	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
@@ -793,6 +817,21 @@ void MyGLCanvas::setupShaders() {
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[SPRITE_OPTIONS]->applyTexture("./data/optionScreen_small.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_RESUME]->applyTexture("./data/resumeButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_MAIN2]->applyTexture("./data/mainMenuButton2.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_OPTIONS2]->applyTexture("./data/optionsButton2.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_QUIT3]->applyTexture("./data/exitButton3.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_CONTROLS2]->applyTexture("./data/controlsButton2.ppm");
 
 	for (int i = 1; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
@@ -854,6 +893,11 @@ void MyGLCanvas::setupSprites() {
 	mainMenu.push_back(new Sprite(BUTTON_CONTROLS, glm::vec2(mode->width / 2.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
 
+	pauseScreen.push_back(new Sprite(BUTTON_RESUME, glm::vec2(5 * mode->width / 18.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	pauseScreen.push_back(new Sprite(BUTTON_CONTROLS2, glm::vec2(9 * mode->width / 18.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	pauseScreen.push_back(new Sprite(BUTTON_OPTIONS2, glm::vec2(13 * mode->width / 18.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	pauseScreen.push_back(new Sprite(BUTTON_MAIN2, glm::vec2(6 * mode->width / 16.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	pauseScreen.push_back(new Sprite(BUTTON_QUIT3, glm::vec2(10 * mode->width / 16.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	pauseScreen.push_back(new Sprite(SPRITE_PAUSE, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
 
 	controlScreen = new Sprite(SPRITE_CONTROLS, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND);
@@ -935,7 +979,9 @@ void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, dou
 	} else if (c->currState == MAIN_MENU) {
 		c->handleButtons(c->mainMenu, c->mainMenu.size() - 1, 0.1, 0.045, currX, currY);
 	} else if (c->currState == DEAD) {
-		c->handleButtons(c->deathScreen, c->deathScreen.size() - 1, 0.1, 0.048, currX, currY);
+		c->handleButtons(c->deathScreen, c->deathScreen.size() - 1, 0.1, 0.045, currX, currY);
+	} else if (c->currState == PAUSE) {
+		c->handleButtons(c->pauseScreen, c->pauseScreen.size() - 1, 0.095, 0.05, currX, currY);
 	}
 
 }
@@ -993,12 +1039,10 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				switch (c->buttonSelected) {
 				case BUTTON_MAIN:
 					c->playClick();
-					c->prevState = DEAD;
 					c->showMenu();
 					break;
 				case BUTTON_RESTART:
 					c->playClick();
-					c->prevState = DEAD;
 					c->startGame();
 					break;
 				case BUTTON_QUIT2:
@@ -1006,6 +1050,32 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 					glfwSetWindowShouldClose(_window, true);
 					break;
 				default:
+					break;
+				}
+			}
+			break;
+		case PAUSE:
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
+				switch (c->buttonSelected) {
+				case BUTTON_RESUME:
+					c->playClick();
+					c->unpauseGame();
+					break;
+				case BUTTON_CONTROLS2:
+					c->playClick();
+					c->showControls();
+					break;
+				case BUTTON_OPTIONS2:
+					c->playClick();
+					c->showOptions();
+					break;
+				case BUTTON_MAIN2:
+					c->playClick();
+					c->showMenu();
+					break;
+				case BUTTON_QUIT3:
+					c->playClick();
+					glfwSetWindowShouldClose(_window, true);
 					break;
 				}
 			}
@@ -1230,7 +1300,7 @@ void MyGLCanvas::handleButtons(std::vector<Sprite *> buttonList, int numButtons,
 			glfwSetCursor(window, regular);
 		}
 
-	//	printf("CurrX: %f, CurrY: %f\n LeftPos: %f, RightPos: %f, TopPos: %f, BottomPos: %f\n\n", currX, currY, pos.x - offX, pos.x + offX, pos.y - offY, pos.y + offY);
+	//printf("CurrX: %f, CurrY: %f\n LeftPos: %f, RightPos: %f, TopPos: %f, BottomPos: %f\n\n", currX, currY, pos.x - offX, pos.x + offX, pos.y - offY, pos.y + offY);
 	}
 }
 
@@ -1241,6 +1311,7 @@ bool MyGLCanvas::overButton(double x, double y, double offX, double offY, glm::v
 
 // Changes to pause screen
 void MyGLCanvas::pauseGame() {
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	prevState = currState;
 	currState = PAUSE;
 
