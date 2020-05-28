@@ -1,6 +1,5 @@
  #include "MyGLCanvas.h"
 
-#define SENSITIVITY 0.5f
 
 #define IFRAME_AFTER_HIT 60
 #define MAX_ENEMIES 20
@@ -37,6 +36,7 @@ MyGLCanvas::MyGLCanvas() {
 	setupCursors();
 	srand(time(0));
 
+	sensitivity = 0.5f;
 	prevState = currState = LOADING;
 	prevX = prevY = 0;
 	buttonSelected = SPRITE_MAIN;
@@ -925,8 +925,8 @@ void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, dou
 		float x_offset = currX - c->prevX;
 		float y_offset = c->prevY - currY;
 
-		x_offset *= SENSITIVITY;
-		y_offset *= SENSITIVITY;
+		x_offset *= c->sensitivity;
+		y_offset *= c->sensitivity;
 
 		c->prevX = currX;
 		c->prevY = currY;
@@ -968,15 +968,8 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				ISound *sound;
 				switch (c->buttonSelected) {
 				case BUTTON_START:
-					glfwSetInputMode(c->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-					c->prevState = c->currState;
-					c->currState = PLAYING;
 					c->playClick();
-
-					c->pauseMusic->setIsPaused(true);
-					c->stopSound(c->music);
-					c->music = c->soundEngine->play2D("./audio/metal.mp3", true, false, true);
-					c->music->setVolume(c->musicVol);
+					c->startGame();
 					break;
 				case BUTTON_CONTROLS:
 					c->playClick();
@@ -1001,12 +994,12 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				case BUTTON_MAIN:
 					c->playClick();
 					c->prevState = DEAD;
-					c->restartMenu();
+					c->showMenu();
 					break;
 				case BUTTON_RESTART:
 					c->playClick();
 					c->prevState = DEAD;
-					c->restartGame();
+					c->startGame();
 					break;
 				case BUTTON_QUIT2:
 					c->playClick();
@@ -1098,9 +1091,7 @@ void MyGLCanvas::pollInput() {
 }
 
 // Removes all objects from scene and start initial enemies. Places player back at start.
-void MyGLCanvas::restartGame() {
-	printf("GAME RESTART\n");
-
+void MyGLCanvas::startGame() {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	list<Enemy *>::iterator itE = enemyList.begin();
 	while(itE != enemyList.end()) removeEnemy(itE);
@@ -1128,7 +1119,7 @@ void MyGLCanvas::restartGame() {
 }
 
 // Removes all objects from scene and goes back to main menu
-void MyGLCanvas::restartMenu() {
+void MyGLCanvas::showMenu() {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	list<Enemy *>::iterator itE = enemyList.begin();
@@ -1140,20 +1131,12 @@ void MyGLCanvas::restartMenu() {
 	list<Pickup *>::iterator itPU = pickupList.begin();
 	while (itPU != pickupList.end()) removePickup(itPU);
 
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++)
-			spawnEnemy(GOOP);
-		spawnEnemy(JAD);
-	}
-
 	stopSound(music);
 	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
 	music->setVolume(musicVol);
 
-	firstMouse = true;
 	prevState = currState;
 	currState = MAIN_MENU;
-	player->restartPlayer();
 }
 
 // Checks if an item is expired based on it's duration and spawn time

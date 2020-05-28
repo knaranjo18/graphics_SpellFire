@@ -9,8 +9,7 @@ items to restore your stats.  See how long you can last!
 The majority of the focus of SpellFire was on rendering all aspects of the game
 using GLSL shaders and VBOs.  We modified the ply reader to parse normal data and 
 texture coordinates from ply models we exported from 3D modeling tools (along with
-their textures).  The code refers to COWs and BUNNYs as the two types of enemies; 
-that is a placeholder from when we used the cow and bunny ply models as the enemies.
+their textures).
 
 ## Demo
 ![Spellfire Demo](data/demo.gif)

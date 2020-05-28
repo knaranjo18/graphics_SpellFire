@@ -64,8 +64,8 @@ private:
 	void setupSprites();
 	void setupCursors();
 	
-	void restartGame();
-	void restartMenu();
+	void startGame();
+	void showMenu();
 	void pauseGame();
 	void unpauseGame();
 	void gameOver();
