@@ -102,6 +102,7 @@ private:
 	void handleHealthBar();
 	void handleManaBar();
 	void handleExpBar();
+	void handleOptionBars();
 
 	bool isExpired(time_t spawnTime, float duration);
 
@@ -115,6 +116,8 @@ private:
 	vector<Sprite *> mainMenu;
 	vector<Sprite *> pauseScreen;
 	vector<Sprite *> optionScreen;
+	vector<Sprite *> optionBars;
+	vector<Sprite *> optionPlusMinus;
 	Sprite *controlScreen;
 	Sprite *loadingScreen;
 
@@ -133,6 +136,7 @@ private:
 	ISound *pauseMusic;
 
 	float miscVol, masterVol, musicVol, sensitivity;
+	optionType optionSelected;
 
 	glm::vec3 lightPos;
 	int prevX, prevY;

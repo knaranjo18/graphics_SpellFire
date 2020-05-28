@@ -4,6 +4,9 @@
 #define IFRAME_AFTER_HIT 60
 #define MAX_ENEMIES 20
 
+#define MAX_VOLUME 10
+#define MAX_SENSITIVITY 2
+
 #define HEALTHBAR_START 260.0
 #define HEALTHBAR_LENGTH 500.0
 
@@ -40,6 +43,7 @@ MyGLCanvas::MyGLCanvas() {
 	prevState = currState = LOADING;
 	prevX = prevY = 0;
 	buttonSelected = SPRITE_MAIN;
+	optionSelected = NONE;
 	firstTime = firstMouse = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	numBlob = numJad = numManaPot = numHealthPot = numFireball = 0;
@@ -144,6 +148,7 @@ void MyGLCanvas::draw() {
 		drawPauseScreen();
 		break;
 	case OPTIONS:
+		handleOptionBars();
 		drawOptionScreen();
 		break;
 	case CONTROLS:
@@ -250,95 +255,104 @@ void MyGLCanvas::drawPauseScreen() {
 void MyGLCanvas::drawOptionScreen() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
+	// Draws Master volume option
 	shaderList[SPRITE_UNTEXTURED]->useShader();
 	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[0]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+	optionBars[0]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 
 	shaderList[SPRITE_UNTEXTURED]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[1]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+	optionBars[1]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 
 	shaderList[BUTTON_MINUS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[2]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+	optionPlusMinus[0]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
 
 	shaderList[BUTTON_PLUS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[3]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+	optionPlusMinus[1]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+	// Draws Music volume option
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[2]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 
 	shaderList[SPRITE_UNTEXTURED]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[4]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
-
-	shaderList[SPRITE_UNTEXTURED]->useShader();
-	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[5]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+	optionBars[3]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 
 	shaderList[BUTTON_MINUS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[6]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+	optionPlusMinus[2]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
 
 	shaderList[BUTTON_PLUS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[7]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+	optionPlusMinus[3]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+
+
+	// Draws Misc volume option
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[4]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 
 	shaderList[SPRITE_UNTEXTURED]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[8]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
-
-	shaderList[SPRITE_UNTEXTURED]->useShader();
-	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[9]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+	optionBars[5]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 
 	shaderList[BUTTON_MINUS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[10]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+	optionPlusMinus[4]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
 
 	shaderList[BUTTON_PLUS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[11]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+	optionPlusMinus[5]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+
+	// Draws sensitivity option
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[6]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 
 	shaderList[SPRITE_UNTEXTURED]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[12]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
-
-	shaderList[SPRITE_UNTEXTURED]->useShader();
-	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
-	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[13]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+	optionBars[7]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
 
 	shaderList[BUTTON_MINUS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[14]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+	optionPlusMinus[6]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
 
 	shaderList[BUTTON_PLUS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[15]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+	optionPlusMinus[7]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
 
+
+	// Draws buttons and background
 	shaderList[BUTTON_FULLSCREEN]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[BUTTON_FULLSCREEN]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[16]->draw(shaderList[BUTTON_FULLSCREEN], plyList[BUTTON_FULLSCREEN]);
+	optionScreen[0]->draw(shaderList[BUTTON_FULLSCREEN], plyList[BUTTON_FULLSCREEN]);
 
 	shaderList[SPRITE_OPTIONS]->useShader();
 	modelView_id = glGetUniformLocation(shaderList[SPRITE_OPTIONS]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
-	optionScreen[17]->draw(shaderList[SPRITE_OPTIONS], plyList[SPRITE_OPTIONS]);
+	optionScreen[1]->draw(shaderList[SPRITE_OPTIONS], plyList[SPRITE_OPTIONS]);
 }
 
 
@@ -625,6 +639,11 @@ void MyGLCanvas::handleManaBar() {
 
 	manaBar[0]->setPosition(pos);
 	manaBar[0]->setScale(scale);
+}
+
+// Calculate option bar sprites
+void MyGLCanvas::handleOptionBars() {
+	//TODO fill this in
 }
 
 // Move projectiles, delete if they expire, figure out collisions with enemies
@@ -999,33 +1018,29 @@ void MyGLCanvas::setupSprites() {
 	controlScreen = new Sprite(SPRITE_CONTROLS, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND);
 
 	// Master volume bar
-	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
-	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
-	
-	optionScreen.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	optionScreen.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
 	// Music volume bar
-	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
-	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
-
-	optionScreen.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	optionScreen.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
 	// Misc volume bar
-	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
-	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
-
-	optionScreen.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	optionScreen.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
 	// Sensitivity bar
-	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(13.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
-	optionScreen.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(13.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(13.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(13.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_MINUS, glm::vec2(10.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_PLUS, glm::vec2(16.2 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
-	optionScreen.push_back(new Sprite(BUTTON_MINUS, glm::vec2(10.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	optionScreen.push_back(new Sprite(BUTTON_PLUS, glm::vec2(16.2 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 
 	optionScreen.push_back(new Sprite(BUTTON_FULLSCREEN, glm::vec2(13.5 * mode->width / 20.0f, 12 * mode->height / 20.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
 	optionScreen.push_back(new Sprite(SPRITE_OPTIONS, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
@@ -1108,6 +1123,8 @@ void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, dou
 		c->handleButtons(c->deathScreen, c->deathScreen.size() - 1, 0.1, 0.045, currX, currY);
 	} else if (c->currState == PAUSE) {
 		c->handleButtons(c->pauseScreen, c->pauseScreen.size() - 1, 0.095, 0.05, currX, currY);
+	} else if (c->currState == OPTIONS) {
+		c->handleButtons(c->optionScreen, c->optionScreen.size() - 1, 0.095, 0.05, currX, currY);
 	}
 
 }
@@ -1206,7 +1223,17 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 				}
 			}
 			break;
-		}
+		case OPTIONS:
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
+				switch (c->buttonSelected) {
+				case BUTTON_FULLSCREEN:
+					c->playClick();
+					c->toggleFullScreen();
+					break;
+				}
+			}
+			break;
+		} 
 	}
 }
 
@@ -1347,7 +1374,7 @@ void MyGLCanvas::toggleFullScreen() {
 	if (fullscreen) {
 		glfwSetWindowMonitor(window, monitor, NULL, NULL, mode->width, mode->height, mode->refreshRate);
 	} else {
-		glfwSetWindowMonitor(window, NULL, 300, 300, 800, 600, NULL);
+		glfwSetWindowMonitor(window, NULL, 200, 100, 1000, 800, NULL);
 	}
 }
 
