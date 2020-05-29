@@ -4,8 +4,8 @@
 #define IFRAME_AFTER_HIT 60
 #define MAX_ENEMIES 20
 
-#define MAX_VOLUME 10
-#define MAX_SENSITIVITY 2
+#define MAX_VOLUME 1.0f
+#define MAX_SENSITIVITY 1.0f
 
 #define HEALTHBAR_START 260.0
 #define HEALTHBAR_LENGTH 500.0
@@ -24,7 +24,7 @@
 
 #define NANOPERSEC 1000000000
 
-#define DEBUGMODE true
+#define DEBUGMODE false
 
 float Projectile::volume = 1.0f;
 float Enemy::volume = 1.0f;
@@ -39,7 +39,7 @@ MyGLCanvas::MyGLCanvas() {
 	setupCursors();
 	srand(time(0));
 
-	sensitivity = 0.5f;
+	sensitivity = 0.3f;
 	prevState = currState = LOADING;
 	prevX = prevY = 0;
 	buttonSelected = SPRITE_MAIN;
@@ -117,7 +117,7 @@ void MyGLCanvas::draw() {
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
 		prevState = currState;
-		currState = OPTIONS;
+		currState = MAIN_MENU;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
@@ -643,7 +643,30 @@ void MyGLCanvas::handleManaBar() {
 
 // Calculate option bar sprites
 void MyGLCanvas::handleOptionBars() {
-	//TODO fill this in
+	float ratio, length;
+	Sprite *currSprite;
+
+	for (int i = 0; i < 8; i += 2) {	
+		switch ((optionType)(i / 2)) {
+		case MASTER_VOL:
+			ratio = masterVol / MAX_VOLUME;
+			break;
+		case MUSIC_VOL:
+			ratio = musicVol / MAX_VOLUME;
+			break;
+		case MISC_VOL:
+			ratio = miscVol / MAX_VOLUME;
+			break;
+		case SENSITIVITY:
+			ratio = sensitivity / MAX_SENSITIVITY;
+			break;
+		}
+
+		length = mode->width / 4.75;
+		glm::vec2 scale(length * ratio, mode->height / 25.5);
+
+		optionBars[i]->setScale(scale);
+	}
 }
 
 // Move projectiles, delete if they expire, figure out collisions with enemies
@@ -875,69 +898,69 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/jad.ply"));
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
-	//plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
+	plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
 
 	plyList.push_back(new ply("./data/arena.ply"));
-	//plyList[ARENA]->applyTexture("./data/arena_large.ppm");
+	plyList[ARENA]->applyTexture("./data/arena_large.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
-	//plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
+	plyList[HEALTHPOT]->applyTexture("./data/healthPot.ppm");
 
 	plyList.push_back(new ply("./data/potion.ply"));
-	//plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
+	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
+	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
+	plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_START]->applyTexture("./data/startButton.ppm");
+	plyList[BUTTON_START]->applyTexture("./data/startButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-//	plyList[BUTTON_OPTIONS]->applyTexture("./data/optionsButton.ppm");
+	plyList[BUTTON_OPTIONS]->applyTexture("./data/optionsButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_QUIT]->applyTexture("./data/exitButton.ppm");
+	plyList[BUTTON_QUIT]->applyTexture("./data/exitButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_CONTROLS]->applyTexture("./data/controlsButton.ppm");
+	plyList[BUTTON_CONTROLS]->applyTexture("./data/controlsButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_RESTART]->applyTexture("./data/restartButton.ppm");
+	plyList[BUTTON_RESTART]->applyTexture("./data/restartButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_MAIN]->applyTexture("./data/mainMenuButton.ppm");
+	plyList[BUTTON_MAIN]->applyTexture("./data/mainMenuButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_QUIT2]->applyTexture("./data/exitButton2.ppm");
+	plyList[BUTTON_QUIT2]->applyTexture("./data/exitButton2.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[SPRITE_PAUSE]->applyTexture("./data/pauseScreen_small.ppm");
+	plyList[SPRITE_PAUSE]->applyTexture("./data/pauseScreen_small.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-//	plyList[SPRITE_CONTROLS]->applyTexture("./data/controlScreen_medium.ppm");
+	plyList[SPRITE_CONTROLS]->applyTexture("./data/controlScreen_medium.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[SPRITE_OPTIONS]->applyTexture("./data/optionScreen_small.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_RESUME]->applyTexture("./data/resumeButton.ppm");
+	plyList[BUTTON_RESUME]->applyTexture("./data/resumeButton.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_MAIN2]->applyTexture("./data/mainMenuButton2.ppm");
+	plyList[BUTTON_MAIN2]->applyTexture("./data/mainMenuButton2.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_OPTIONS2]->applyTexture("./data/optionsButton2.ppm");
+	plyList[BUTTON_OPTIONS2]->applyTexture("./data/optionsButton2.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_QUIT3]->applyTexture("./data/exitButton3.ppm");
+	plyList[BUTTON_QUIT3]->applyTexture("./data/exitButton3.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	//plyList[BUTTON_CONTROLS2]->applyTexture("./data/controlsButton2.ppm");
+	plyList[BUTTON_CONTROLS2]->applyTexture("./data/controlsButton2.ppm");
 
 	plyList.push_back(new ply("./data/spriteTemplate.ply"));
 	plyList[BUTTON_FULLSCREEN]->applyTexture("./data/fullscreenButton.ppm");
@@ -1235,20 +1258,23 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 					c->playClick();
 					switch (c->optionSelected) {
 					case MASTER_VOL:
-						c->masterVol += 0.05;
+						c->masterVol = min(MAX_VOLUME, c->masterVol + 0.05);
 						c->soundEngine->setSoundVolume(c->masterVol);
 						break;
 					case MUSIC_VOL:
-						c->musicVol += 0.01;
+						c->musicVol = min(MAX_VOLUME, c->musicVol + 0.01);
 						c->music->setVolume(c->musicVol);
 						c->pauseMusic->setVolume(c->musicVol);
 						break;
 					case MISC_VOL:
-						c->miscVol += 0.05;
-						printf("miscVol: %f\n", c->miscVol);
+						c->miscVol = min(MAX_VOLUME, c->miscVol + 0.05);
+						Projectile::volume = c->miscVol;
+						Enemy::volume = c->miscVol;
+						Player::volume = c->miscVol;
+						Pickup::volume = c->miscVol;
 						break;
 					case SENSITIVITY:
-						c->sensitivity += 0.01;
+						c->sensitivity = min(MAX_SENSITIVITY, c->sensitivity + 0.025);
 						break;
 					}
 					break;
@@ -1256,20 +1282,23 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 					c->playClick();
 					switch (c->optionSelected) {
 					case MASTER_VOL:
-						c->masterVol -= 0.05;
+						c->masterVol = max(0, c->masterVol - 0.05);
 						c->soundEngine->setSoundVolume(c->masterVol);
 						break;
 					case MUSIC_VOL:
-						c->musicVol -= 0.01;
+						c->musicVol = max(0, c->musicVol - 0.01);
 						c->music->setVolume(c->musicVol);
 						c->pauseMusic->setVolume(c->musicVol);
 						break;
 					case MISC_VOL:
-						c->miscVol -= 0.05;
-						printf("miscVol: %f\n", c->miscVol);
+						c->miscVol = max(0, c->miscVol - 0.05);
+						Projectile::volume = c->miscVol;
+						Enemy::volume = c->miscVol;
+						Player::volume = c->miscVol;
+						Pickup::volume = c->miscVol;
 						break;
 					case SENSITIVITY:
-						c->sensitivity -= 0.01;
+						c->sensitivity = max(0, c->sensitivity - 0.025);
 						break;
 					}
 					break;
@@ -1397,6 +1426,8 @@ void MyGLCanvas::showMenu() {
 	list<Pickup *>::iterator itPU = pickupList.begin();
 	while (itPU != pickupList.end()) removePickup(itPU);
 
+	pauseMusic->setIsPaused(true);
+
 	stopSound(music);
 	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
 	music->setVolume(musicVol);
@@ -1436,8 +1467,8 @@ void MyGLCanvas::toggleCursor() {
 // Setups up sound engine and initial sound options
 void MyGLCanvas::setupSound() {
 	masterVol = 1.0f;
-	musicVol = 0.05f;
-	miscVol = 1.0f;
+	musicVol = 0.1f;
+	miscVol = 0.7f;
 
 	Projectile::volume = miscVol;
 	Enemy::volume = miscVol;
@@ -1570,7 +1601,6 @@ void MyGLCanvas::menuReturn() {
 	prevState = currState;
 	currState = MAIN_MENU;
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
 
 	pauseMusic->setIsPaused(true);
 	music->setIsPaused(false);

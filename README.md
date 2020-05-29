@@ -143,9 +143,10 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 	- ~~Add button to show controls list~~
 	- Add options menu
 		- Add option to let user change graphics setting (Low, medium, high texture)
-		- Add option to change mouse sensitivity
+		- ~~Add option to change mouse sensitivity~~
 		- Add option to change brightness
-		- Add option to change sound volume
+		- ~~Add option to change sound volume~~
+		- ~~Add option to toggle fullscreen~~
 	- Add a way to save options locally (Maybe read a file, if empty use default values)
 	- Add cool cursors
 
