@@ -9,29 +9,16 @@ items to restore your stats.  See how long you can last!
 The majority of the focus of SpellFire was on rendering all aspects of the game
 using GLSL shaders and VBOs.  We modified the ply reader to parse normal data and 
 texture coordinates from ply models we exported from 3D modeling tools (along with
-their textures).  The code refers to COWs and BUNNYs as the two types of enemies; 
-that is a placeholder from when we used the cow and bunny ply models as the enemies.
+their textures).
 
 ## Demo
 ![Spellfire Demo](data/demo.gif)
 
 ## How to Start
-If you just want to get straight to the game, place `Spellfire.exe` in the same directory as the `data` and `shader` folders. Then simply run it to play. If you wanna compile from source, follow the instructions below.
+If you just want to get straight to the game, run `Spellfire.exe`. Do not move it from its folder. 
 
 ## Controls
-Player Movement - *W, A, S, D*
-
-Camera Movement - *Mouse*
-
-Shoot Fireball - *Right Mouse Button*
-
-Restart Game - *R*
-
-Toggle Fullscreen - *F*
-
-Toggle Mouse Visibility - *Tab*
-
-Quit Game - *Escape Key*
+See control menu
 
 
 ## Compilation Instructions
@@ -105,8 +92,9 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 	- ~~Add points for player~~
 	- ~~Add mana restricton for player~~
 	- Add sounds
-	 	- Add start menu music
-	 	- Add pause screen music
+	 	- ~~Add start menu music~~
+	 	- ~~Add pause screen music~~
+	 	- ~~Add click sounds to buttons~~
 	 	- ~~Add loading screen music~~	
 		- ~~Add music over game~~
 		- ~~Add enemy sound when hit for each enemy~~
@@ -147,15 +135,20 @@ Music and effects from https://www.bensound.com and https://www.zapsplat.com/mus
 	- ~~Health bar~~
 	- ~~Figure out best way to add text to screen (Through textures)~~
 	- ~~Add a restart button~~
-	- Add a start menu
-	- Add a pause screen
+	- ~~Cursors change while over buttons~~
+
+	- ~~Add a start menu~~
+	- ~~Add a pause screen~~
 	- Add collectibles menu
-	- Add button to show controls list
+	- ~~Add button to show controls list~~
 	- Add options menu
 		- Add option to let user change graphics setting (Low, medium, high texture)
-		- Add option to change mouse sensitivity
+		- ~~Add option to change mouse sensitivity~~
 		- Add option to change brightness
-		- Add option to change sound volume
+		- ~~Add option to change sound volume~~
+		- ~~Add option to toggle fullscreen~~
+	- Add a way to save options locally (Maybe read a file, if empty use default values)
+	- Add cool cursors
 
 - **Story**
 	- Add plot

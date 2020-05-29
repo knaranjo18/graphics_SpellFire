@@ -46,6 +46,7 @@ public:
 	int pointValue;
 
 	static bool debug_draw_hitbox;
+	static float volume;
 private:
 	float health, speed, initialAngle, currAngle, angularSpeed, modelSize;
 	glm::vec3 position, lookVector, scaleSize;

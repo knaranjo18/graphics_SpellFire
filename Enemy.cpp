@@ -186,7 +186,7 @@ void Enemy::callSound() {
 		sound = soundEngine->play3D("./audio/jad_call.mp3", TO_VEC3(position), false, false, true);
 		break;
 	}
-	sound->setVolume(ENEMY_VOLUME);
+	sound->setVolume(volume);
 	sound->setMinDistance(0.25f);
 	sound->drop();
 }
@@ -206,7 +206,7 @@ void Enemy::deathSound() {
 		break;
 	}
 
-	sound->setVolume(ENEMY_VOLUME);
+	sound->setVolume(volume);
 	sound->setMinDistance(0.25f);
 	sound->drop();
 }

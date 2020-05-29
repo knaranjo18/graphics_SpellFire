@@ -28,6 +28,8 @@ public:
 	void setAngle(float _angle);
 	void setColor(glm::vec3 _color);
 
+	glm::vec3 getPosition();
+
 	shaderType spriteType;
 	groundType ground_type;
 private:

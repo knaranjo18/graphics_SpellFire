@@ -54,15 +54,31 @@ private:
 	void drawScene();
 	void drawDeathScene();
 	void drawLoading();
+	void drawMainMenu();
+	void drawPauseScreen();
+	void drawOptionScreen();
+	void drawControlScreen();
 	
 	void setupSound();
 	void setupShaders();
-	void restartGame();
+	void setupSprites();
+	void setupCursors();
+	
+	void startGame();
+	void showMenu();
+	void pauseGame();
+	void unpauseGame();
+	void gameOver();
+	void showOptions();
+	void showControls();
+	void menuReturn();
 	
 	void updateCamera(int width, int height);
 	void deallocate();
 	void enforceFrameTime(GLint);
 	void setupWindow(int w, int h);
+
+	void doGameLogic();
 
 	void fireProjectile(shaderType projectileType, glm::vec3 originPoint, glm::vec3 directionFired);
 	void removeProjectile(list<Projectile *>::iterator &it);
@@ -83,11 +99,10 @@ private:
 
 	void handlePickups();
 
-	void doGameLogic();
-
 	void handleHealthBar();
 	void handleManaBar();
 	void handleExpBar();
+	void handleOptionBars();
 
 	bool isExpired(time_t spawnTime, float duration);
 
@@ -98,7 +113,14 @@ private:
 	vector<Sprite *> manaBar;
 	vector<Sprite *> expBar;
 	vector<Sprite *> deathScreen;
+	vector<Sprite *> mainMenu;
+	vector<Sprite *> pauseScreen;
+	vector<Sprite *> optionScreen;
+	vector<Sprite *> optionBars;
+	vector<Sprite *> optionPlusMinus;
+	Sprite *controlScreen;
 	Sprite *loadingScreen;
+
 
 	list<Projectile *> projectileList;
 	list<Enemy *> enemyList;
@@ -111,19 +133,26 @@ private:
 	Skybox* skybox;
 	ISoundEngine *soundEngine;
 	ISound *music;
-	
+	ISound *pauseMusic;
+
+	float miscVol, masterVol, musicVol, sensitivity;
+	optionType optionSelected;
 
 	glm::vec3 lightPos;
 	int prevX, prevY;
-	bool firstTime, firstMouse, fullscreen, cursorVisible, firstDeath;
+	bool firstTime, firstMouse, fullscreen, cursorVisible;
+	shaderType buttonSelected;
 
 	GameState currState;
+	GameState prevState;
 
 	time_t startTime;
 
 	GLFWwindow *window;
 	GLFWmonitor *monitor;
 	const GLFWvidmode *mode;
+	GLFWcursor *regular;
+	GLFWcursor *hover;
 	static void cursor_position_callback(GLFWwindow* window, double currX, double currY);
 	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -132,6 +161,10 @@ private:
 	void toggleCursor();
 
 	void stopSound(ISound *sound);
+	void playClick();
+
+	void handleButtons(std::vector<Sprite *> buttonList, int numButtons, double offX, double offY, double currX, double currY);
+	bool overButton(double x, double y, double offX, double offY, glm::vec3 pos);
 };
 
 

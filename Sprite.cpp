@@ -78,3 +78,7 @@ void Sprite::setEverything(shaderType _spriteType, glm::vec2 _position, glm::vec
 	color = _color;
 	ground_type = type;
 }
+
+glm::vec3 Sprite::getPosition() {
+	return position;
+}

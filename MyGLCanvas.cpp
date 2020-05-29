@@ -1,9 +1,11 @@
  #include "MyGLCanvas.h"
 
-#define SENSITIVITY 0.5f
 
 #define IFRAME_AFTER_HIT 60
 #define MAX_ENEMIES 20
+
+#define MAX_VOLUME 1.0f
+#define MAX_SENSITIVITY 1.0f
 
 #define HEALTHBAR_START 260.0
 #define HEALTHBAR_LENGTH 500.0
@@ -24,50 +26,60 @@
 
 #define DEBUGMODE false
 
-
+float Projectile::volume = 1.0f;
+float Enemy::volume = 1.0f;
+float Player::volume = 1.0f;
+float Pickup::volume = 1.0f;
 
 // Constructor to set everything up. Spawns some initial enemies
 MyGLCanvas::MyGLCanvas() {
 	setupWindow(800, 600);
 	setupSound();
+	setupSprites();
+	setupCursors();
 	srand(time(0));
 
-	currState = LOADING;
+	sensitivity = 0.3f;
+	prevState = currState = LOADING;
 	prevX = prevY = 0;
-	firstTime = firstMouse = firstDeath = true;
+	buttonSelected = SPRITE_MAIN;
+	optionSelected = NONE;
+	firstTime = firstMouse = true;
 	lightPos = glm::vec3(0.0, 10, 0.0);
 	numBlob = numJad = numManaPot = numHealthPot = numFireball = 0;
 
 	player = new Player(soundEngine);
 	arena = new Scenery(ARENA, glm::vec3(0.0, 1.1, 0.0), glm::vec3(9, 9, 9), 0.0);
-
-	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
-	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
-
-	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND));
-	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
-
-	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND));
-	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
-
-	glm::vec2 pos(mode->width / 2.0 - 2, mode->height / 2.0 + 40);
-	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
-
-	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0 , 1.0), FOREGROUND));
-	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
-	
-	// Initial Enemies
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++)
-			spawnEnemy(GOOP);
-		spawnEnemy(JAD);
-	}
 }
 
 // Makes sure to reclaim all memory taken by new
 MyGLCanvas::~MyGLCanvas() {
 	deallocate();
+}
+
+// Frees all memory that used 
+void MyGLCanvas::deallocate() {
+	delete player;
+	delete arena;
+
+	for (int i = 0; i < shaderList.size(); i++) delete shaderList[i];
+	for (int i = 0; i < plyList.size(); i++) delete plyList[i];
+	for (list<Enemy *>::iterator itE = enemyList.begin(); itE != enemyList.end(); itE++) delete (*itE);
+	for (list<Projectile *>::iterator itP = projectileList.begin(); itP != projectileList.end(); itP++) delete (*itP);
+	for (list<Pickup *>::iterator itPU = pickupList.begin(); itPU != pickupList.end(); itPU++) delete (*itPU);
+
+	for (int i = 0; i < 2; i++) delete healthBar[i];
+	for (int i = 0; i < 2; i++) delete manaBar[i];
+	for (int i = 0; i < 2; i++) delete expBar[i];
+	for (int i = 0; i < 2; i++) delete crossHair[i];
+	for (int i = 0; i < 2; i++) delete deathScreen[i];
+	for (int i = 0; i < mainMenu.size(); i++) delete mainMenu[i];
+	delete loadingScreen;
+
+	glfwDestroyCursor(regular);
+	glfwDestroyCursor(hover);
+	music->drop();
+	soundEngine->drop();
 }
 
 // Main game loop
@@ -101,14 +113,12 @@ void MyGLCanvas::draw() {
 			setupShaders();
 		}
 
-		stopSound(music);
-		music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
-		music->setVolume(MUSIC_VOLUME);
-
 		// needs to be after so that shaders can setup
 		updateCamera(mode->width, mode->height);
 		firstTime = false;
-		currState = PLAYING;
+		prevState = currState;
+		currState = MAIN_MENU;
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
 	// Clear the buffer of colors in each bit plane.
@@ -129,17 +139,20 @@ void MyGLCanvas::draw() {
 		enforceFrameTime(query);
 		break;
 	case DEAD:
-		if (firstDeath) {
-			stopSound(music);
-			music = soundEngine->play2D("./audio/sad_dark.mp3", true, false, true);
-			music->setVolume(MUSIC_VOLUME);
-			firstDeath = false;
-		}
-
 		drawDeathScene();
 		break;
-	case START:
-		//TODO
+	case MAIN_MENU:
+		drawMainMenu();
+		break;
+	case PAUSE:
+		drawPauseScreen();
+		break;
+	case OPTIONS:
+		handleOptionBars();
+		drawOptionScreen();
+		break;
+	case CONTROLS:
+		drawControlScreen();
 		break;
 	default:
 		printf("INVALID GAME STATE\n");
@@ -147,15 +160,210 @@ void MyGLCanvas::draw() {
 	}
 }
 
+// Draw start screen
+void MyGLCanvas::drawMainMenu() {
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+
+	shaderList[BUTTON_START]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[BUTTON_START]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	mainMenu[0]->draw(shaderList[BUTTON_START], plyList[BUTTON_START]);
+
+	shaderList[BUTTON_OPTIONS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_OPTIONS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	mainMenu[1]->draw(shaderList[BUTTON_OPTIONS], plyList[BUTTON_OPTIONS]);
+
+	shaderList[BUTTON_QUIT]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_QUIT]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	mainMenu[2]->draw(shaderList[BUTTON_QUIT], plyList[BUTTON_QUIT]);
+
+	shaderList[BUTTON_CONTROLS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_CONTROLS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	mainMenu[3]->draw(shaderList[BUTTON_CONTROLS], plyList[BUTTON_CONTROLS]);
+
+	shaderList[SPRITE_MAIN]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_MAIN]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	mainMenu[4]->draw(shaderList[SPRITE_MAIN], plyList[SPRITE_MAIN]);
+}
+
 // Draws the death scene with the skull
 void MyGLCanvas::drawDeathScene() {
 	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
 
-	shaderList[SPRITE_DEATH]->useShader();
-	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_DEATH]->program, "myModelviewMatrix");
+	shaderList[BUTTON_MAIN]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[BUTTON_MAIN]->program, "myModelviewMatrix");
 	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	deathScreen[0]->draw(shaderList[BUTTON_MAIN], plyList[BUTTON_MAIN]);
 
-	deathScreen[0]->draw(shaderList[SPRITE_DEATH], plyList[SPRITE_DEATH]);
+	shaderList[BUTTON_RESTART]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_RESTART]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	deathScreen[1]->draw(shaderList[BUTTON_RESTART], plyList[BUTTON_RESTART]);
+
+	shaderList[BUTTON_QUIT2]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_QUIT2]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	deathScreen[2]->draw(shaderList[BUTTON_QUIT2], plyList[BUTTON_QUIT2]);
+
+	shaderList[SPRITE_DEATH]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_DEATH]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	deathScreen[3]->draw(shaderList[SPRITE_DEATH], plyList[SPRITE_DEATH]);
+}
+
+// Draws the screen when the game is paused
+void MyGLCanvas::drawPauseScreen() {
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+
+	shaderList[BUTTON_RESUME]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[BUTTON_RESUME]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[0]->draw(shaderList[BUTTON_RESUME], plyList[BUTTON_RESUME]);
+
+	shaderList[BUTTON_CONTROLS2]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_CONTROLS2]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[1]->draw(shaderList[BUTTON_CONTROLS2], plyList[BUTTON_CONTROLS2]);
+
+	shaderList[BUTTON_OPTIONS2]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_OPTIONS2]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[2]->draw(shaderList[BUTTON_OPTIONS2], plyList[BUTTON_OPTIONS2]);
+
+	shaderList[BUTTON_MAIN2]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MAIN2]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[3]->draw(shaderList[BUTTON_MAIN2], plyList[BUTTON_MAIN2]);
+
+	shaderList[BUTTON_QUIT3]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_QUIT3]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[4]->draw(shaderList[BUTTON_QUIT3], plyList[BUTTON_QUIT3]);
+
+	shaderList[SPRITE_PAUSE]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_PAUSE]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	pauseScreen[5]->draw(shaderList[SPRITE_PAUSE], plyList[SPRITE_PAUSE]);
+}
+
+
+// Draws the screen for editing options
+void MyGLCanvas::drawOptionScreen() {
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+
+	// Draws Master volume option
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[0]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[1]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[BUTTON_MINUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionPlusMinus[0]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+
+	shaderList[BUTTON_PLUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionPlusMinus[1]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+	// Draws Music volume option
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[2]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[3]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[BUTTON_MINUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionPlusMinus[2]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+
+	shaderList[BUTTON_PLUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionPlusMinus[3]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+
+
+	// Draws Misc volume option
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[4]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[5]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[BUTTON_MINUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionPlusMinus[4]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+
+	shaderList[BUTTON_PLUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionPlusMinus[5]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+
+	// Draws sensitivity option
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[6]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[SPRITE_UNTEXTURED]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_UNTEXTURED]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionBars[7]->draw(shaderList[SPRITE_UNTEXTURED], plyList[SPRITE_UNTEXTURED]);
+
+	shaderList[BUTTON_MINUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_MINUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionPlusMinus[6]->draw(shaderList[BUTTON_MINUS], plyList[BUTTON_MINUS]);
+
+	shaderList[BUTTON_PLUS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_PLUS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionPlusMinus[7]->draw(shaderList[BUTTON_PLUS], plyList[BUTTON_PLUS]);
+
+
+	// Draws buttons and background
+	shaderList[BUTTON_FULLSCREEN]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[BUTTON_FULLSCREEN]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[0]->draw(shaderList[BUTTON_FULLSCREEN], plyList[BUTTON_FULLSCREEN]);
+
+	shaderList[SPRITE_OPTIONS]->useShader();
+	modelView_id = glGetUniformLocation(shaderList[SPRITE_OPTIONS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	optionScreen[1]->draw(shaderList[SPRITE_OPTIONS], plyList[SPRITE_OPTIONS]);
+}
+
+
+// Draws the screen that shows the controls for the game
+void MyGLCanvas::drawControlScreen() {
+	glm::mat4 modelViewMatrix = player->myCam->getModelViewMatrix();
+
+	shaderList[SPRITE_CONTROLS]->useShader();
+	GLint modelView_id = glGetUniformLocation(shaderList[SPRITE_CONTROLS]->program, "myModelviewMatrix");
+	glUniformMatrix4fv(modelView_id, 1, false, glm::value_ptr(modelViewMatrix));
+	controlScreen->draw(shaderList[SPRITE_CONTROLS], plyList[SPRITE_CONTROLS]);
 }
 
 // Draws all the elements of the main game
@@ -272,7 +480,7 @@ void MyGLCanvas::doGameLogic() {
 	handleHealthBar();
 	handleExpBar();
 
-	if (player->isDead()) currState = DEAD;
+	if (player->isDead()) gameOver();
 
 	player->chargeMana();
 	player->tickHeal();
@@ -431,6 +639,34 @@ void MyGLCanvas::handleManaBar() {
 
 	manaBar[0]->setPosition(pos);
 	manaBar[0]->setScale(scale);
+}
+
+// Calculate option bar sprites
+void MyGLCanvas::handleOptionBars() {
+	float ratio, length;
+	Sprite *currSprite;
+
+	for (int i = 0; i < 8; i += 2) {	
+		switch ((optionType)(i / 2)) {
+		case MASTER_VOL:
+			ratio = masterVol / MAX_VOLUME;
+			break;
+		case MUSIC_VOL:
+			ratio = musicVol / MAX_VOLUME;
+			break;
+		case MISC_VOL:
+			ratio = miscVol / MAX_VOLUME;
+			break;
+		case SENSITIVITY:
+			ratio = sensitivity / MAX_SENSITIVITY;
+			break;
+		}
+
+		length = mode->width / 4.75;
+		glm::vec2 scale(length * ratio, mode->height / 25.5);
+
+		optionBars[i]->setScale(scale);
+	}
 }
 
 // Move projectiles, delete if they expire, figure out collisions with enemies
@@ -611,15 +847,16 @@ void MyGLCanvas::updateCamera(int width, int height) {
 		shaderList[i]->useShader();
 		projection_id = glGetUniformLocation(shaderList[i]->program, "myProjectionMatrix");
 		
-		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH) {
-			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
-		} else{;
+		if (i == GOOP || i == JAD || i == FIREBALL || i == ARENA || i == HEALTHPOT || i == MANAPOT || i == SKYBOX) {
 			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(perspectiveMatrix));
+		} else {
+			glUniformMatrix4fv(projection_id, 1, false, glm::value_ptr(orthoMatrix));
 		}
 	}
 }
 
 // Initializes all the shaderes with their ply files and textures
+// They have to be in the same order as the shaderType enum in gfxDefs.h
 void MyGLCanvas::setupShaders() {	
 	#ifndef __APPLE__
 		printf("Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
@@ -631,21 +868,37 @@ void MyGLCanvas::setupShaders() {
 	shaderList.push_back(new ShaderManager()); // goop
 	shaderList.push_back(new ShaderManager()); // jad
 	shaderList.push_back(new ShaderManager()); // fireball
-	shaderList.push_back(new ShaderManager()); // sprite
-	shaderList.push_back(new ShaderManager()); // death
 	shaderList.push_back(new ShaderManager()); // arena
 	shaderList.push_back(new ShaderManager()); // health pot
 	shaderList.push_back(new ShaderManager()); // mana pot
+
+	shaderList.push_back(new ShaderManager()); // sprite untextured
+	shaderList.push_back(new ShaderManager()); // death screen
+	shaderList.push_back(new ShaderManager()); // main menu screen
+	shaderList.push_back(new ShaderManager()); // start button for main menu
+	shaderList.push_back(new ShaderManager()); // options button for main menu
+	shaderList.push_back(new ShaderManager()); // quit button for main menu
+	shaderList.push_back(new ShaderManager()); // controls button for main menu
+	shaderList.push_back(new ShaderManager()); // restart button for death menu
+	shaderList.push_back(new ShaderManager()); // main menu button for death menu
+	shaderList.push_back(new ShaderManager()); // quit button for death menu
+	shaderList.push_back(new ShaderManager()); // pause screen
+	shaderList.push_back(new ShaderManager()); // controls screen
+	shaderList.push_back(new ShaderManager()); // options screen
+	shaderList.push_back(new ShaderManager()); // resume button for pause screen
+	shaderList.push_back(new ShaderManager()); // main menu button for pause screen
+	shaderList.push_back(new ShaderManager()); // options button for pause screen
+	shaderList.push_back(new ShaderManager()); // quit button for pause screen
+	shaderList.push_back(new ShaderManager()); // controls button for pause screen
+	shaderList.push_back(new ShaderManager()); // fullscreen button for options screen
+	shaderList.push_back(new ShaderManager()); // plus button for options screen
+	shaderList.push_back(new ShaderManager()); // minus button for options screen
+
 	plyList.push_back(new ply("./data/blob.ply"));
 	plyList.push_back(new ply("./data/jad.ply"));
 	
 	plyList.push_back(new ply("./data/fireball.ply"));
 	plyList[FIREBALL]->applyTexture("./data/fireball.ppm");
-
-	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-
-	plyList.push_back(new ply("./data/spriteTemplate.ply"));
-	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
 
 	plyList.push_back(new ply("./data/arena.ply"));
 	plyList[ARENA]->applyTexture("./data/arena_large.ppm");
@@ -656,27 +909,89 @@ void MyGLCanvas::setupShaders() {
 	plyList.push_back(new ply("./data/potion.ply"));
 	plyList[MANAPOT]->applyTexture("./data/manaPot.ppm");
 
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_DEATH]->applyTexture("./data/skull_medium.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_MAIN]->applyTexture("./data/startScreen_small.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_START]->applyTexture("./data/startButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_OPTIONS]->applyTexture("./data/optionsButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_QUIT]->applyTexture("./data/exitButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_CONTROLS]->applyTexture("./data/controlsButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_RESTART]->applyTexture("./data/restartButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_MAIN]->applyTexture("./data/mainMenuButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_QUIT2]->applyTexture("./data/exitButton2.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_PAUSE]->applyTexture("./data/pauseScreen_small.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_CONTROLS]->applyTexture("./data/controlScreen_medium.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[SPRITE_OPTIONS]->applyTexture("./data/optionScreen_small.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_RESUME]->applyTexture("./data/resumeButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_MAIN2]->applyTexture("./data/mainMenuButton2.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_OPTIONS2]->applyTexture("./data/optionsButton2.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_QUIT3]->applyTexture("./data/exitButton3.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_CONTROLS2]->applyTexture("./data/controlsButton2.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_FULLSCREEN]->applyTexture("./data/fullscreenButton.ppm");
+
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_PLUS]->applyTexture("./data/plusButton.ppm");
+	
+	plyList.push_back(new ply("./data/spriteTemplate.ply"));
+	plyList[BUTTON_MINUS]->applyTexture("./data/minusButton.ppm");
+
 	for (int i = 1; i < shaderList.size(); i++) {
 		if (i == ARENA || i == FIREBALL || i == HEALTHPOT || i == MANAPOT) {
 			shaderList[i]->initShader("./shaders/330/model_textured.vert", "./shaders/330/model_textured.frag");
+			plyList[i]->buildArrays();
+			plyList[i]->bindVBO(shaderList[i]->program);
 		} else if (i == SPRITE_UNTEXTURED) {
 			shaderList[i]->initShader("./shaders/330/sprite_untextured.vert", "./shaders/330/sprite_untextured.frag");
-		} else if (i == SPRITE_DEATH) {
-			shaderList[i]->initShader("./shaders/330/sprite_textured.vert", "./shaders/330/sprite_textured.frag");
-		} else {
+			plyList[i]->buildArraysSprite();
+			plyList[i]->bindVBOsprites(shaderList[i]->program);
+		} else if (i == GOOP || i == JAD) {
 			shaderList[i]->initShader("./shaders/330/model_untextured.vert", "./shaders/330/model_untextured.frag");
+			plyList[i]->buildArrays();
+			plyList[i]->bindVBO(shaderList[i]->program);
+		} else {
+			shaderList[i]->initShader("./shaders/330/sprite_textured.vert", "./shaders/330/sprite_textured.frag");
+			plyList[i]->buildArraysSprite();
+			plyList[i]->bindVBOsprites(shaderList[i]->program);
 		}
 
 		GLint light_id = glGetUniformLocation(shaderList[i]->program, "lightPos");
 		glUniform3f(light_id, lightPos.x, lightPos.y, lightPos.z);
-
-		if (i == SPRITE_UNTEXTURED || i == SPRITE_DEATH) {
-			plyList[i]->buildArraysSprite();
-			plyList[i]->bindVBOsprites(shaderList[i]->program);
-		} else {
-			plyList[i]->buildArrays();
-			plyList[i]->bindVBO(shaderList[i]->program);
-		}
 	}
 	
 	string filenames[6] = {
@@ -686,6 +1001,72 @@ void MyGLCanvas::setupShaders() {
 
 	skybox = new Skybox(filenames);
 	shaderList.push_back(skybox->shader); // Skybox
+}
+
+// Initializes all the 2D sprites
+void MyGLCanvas::setupSprites() {
+	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 1.0, 0.0), FOREGROUND));
+	healthBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(HEALTHBAR_START, mode->height - BAR_HEIGHT), glm::vec2(HEALTHBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+
+	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.0, 0.0, 1.0), FOREGROUND));
+	manaBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width - MANABAR_START, mode->height - BAR_HEIGHT), glm::vec2(MANABAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), BACKGROUND));
+
+	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(1.0, 1.0, 0.0), FOREGROUND));
+	expBar.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(mode->width / 2, mode->height - BAR_HEIGHT), glm::vec2(EXPBAR_LENGTH, BAR_WIDTH), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+
+	glm::vec2 pos(mode->width / 2.0 - 2, mode->height / 2.0 + 40);
+	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(2.0, 30.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	crossHair.push_back(new Sprite(SPRITE_UNTEXTURED, pos, glm::vec2(30.0, 2.0), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+	deathScreen.push_back(new Sprite(BUTTON_MAIN, glm::vec2(4 * mode->width / 16.0f, 14 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	deathScreen.push_back(new Sprite(BUTTON_RESTART, glm::vec2(8 * mode->width / 16.0f, 14 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	deathScreen.push_back(new Sprite(BUTTON_QUIT2, glm::vec2(12 * mode->width / 16.0f, 14 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	deathScreen.push_back(new Sprite(SPRITE_DEATH, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
+
+	loadingScreen = new Sprite(SPRITE_LOADING, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND);
+
+	mainMenu.push_back(new Sprite(BUTTON_START, glm::vec2(mode->width / 2.0f, 7 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(BUTTON_OPTIONS, glm::vec2(mode->width / 2.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(BUTTON_QUIT, glm::vec2(mode->width / 2.0f, 13 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(BUTTON_CONTROLS, glm::vec2(mode->width / 2.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.0f, mode->height / 10.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	mainMenu.push_back(new Sprite(SPRITE_MAIN, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
+
+	pauseScreen.push_back(new Sprite(BUTTON_RESUME, glm::vec2(5 * mode->width / 18.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	pauseScreen.push_back(new Sprite(BUTTON_CONTROLS2, glm::vec2(9 * mode->width / 18.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	pauseScreen.push_back(new Sprite(BUTTON_OPTIONS2, glm::vec2(13 * mode->width / 18.0f, 9 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	pauseScreen.push_back(new Sprite(BUTTON_MAIN2, glm::vec2(6 * mode->width / 16.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	pauseScreen.push_back(new Sprite(BUTTON_QUIT3, glm::vec2(10 * mode->width / 16.0f, 11 * mode->height / 15.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	pauseScreen.push_back(new Sprite(SPRITE_PAUSE, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
+
+	controlScreen = new Sprite(SPRITE_CONTROLS, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND);
+
+	// Master volume bar
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+	// Music volume bar
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 11.55 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+	// Misc volume bar
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(6.8 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_MINUS, glm::vec2(4.1 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_PLUS, glm::vec2(9.5 * mode->width / 20.0, 15 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+	// Sensitivity bar
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(13.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.8, 0.0, 0.0), FOREGROUND));
+	optionBars.push_back(new Sprite(SPRITE_UNTEXTURED, glm::vec2(13.5 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 4.75f, mode->height / 25.5f), 0, glm::vec3(0.5, 0.5, 0.5), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_MINUS, glm::vec2(10.8 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionPlusMinus.push_back(new Sprite(BUTTON_PLUS, glm::vec2(16.2 * mode->width / 20.0, 8 * mode->height / 20.0), glm::vec2(mode->width / 40.0f, mode->height / 25.0f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+
+
+	optionScreen.push_back(new Sprite(BUTTON_FULLSCREEN, glm::vec2(13.5 * mode->width / 20.0f, 12 * mode->height / 20.0f), glm::vec2(mode->width / 5.25f, mode->height / 10.5f), 0, glm::vec3(1.0, 1.0, 1.0), FOREGROUND));
+	optionScreen.push_back(new Sprite(SPRITE_OPTIONS, glm::vec2(mode->width / 2.0f, mode->height / 2.0f), glm::vec2(mode->width, mode->height), 0, glm::vec3(1.0, 1.0, 1.0), BACKGROUND));
 }
 
 // Sets up everything required to draw a single image of the loading screen
@@ -710,38 +1091,31 @@ void MyGLCanvas::drawLoading() {
 	glfwSwapBuffers(window);
 }
 
-// Frees all memory that used 
-void MyGLCanvas::deallocate() {
-	delete player;
-	delete arena;
-
-	for (int i = 0; i < shaderList.size(); i++) delete shaderList[i];
-	for (int i = 0; i < plyList.size(); i++) delete plyList[i];
-	for (list<Enemy *>::iterator itE = enemyList.begin(); itE != enemyList.end(); itE++) delete (*itE);
-	for (list<Projectile *>::iterator itP = projectileList.begin(); itP != projectileList.end(); itP++) delete (*itP);
-	for (list<Pickup *>::iterator itPU = pickupList.begin(); itPU != pickupList.end(); itPU++) delete (*itPU);
-
-	for (int i = 0; i < 2; i++) delete healthBar[i];
-	for (int i = 0; i < 2; i++) delete manaBar[i];
-	for (int i = 0; i < 2; i++) delete expBar[i];
-	for (int i = 0; i < 2; i++) delete crossHair[i];
-	for (int i = 0; i < 2; i++) delete deathScreen[i];
-	delete loadingScreen;
-	music->drop();
-	soundEngine->drop();
-
-}
-
 // Callback for keyboard key
 void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods) {
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
 	if (action == GLFW_PRESS) {
-		if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(_window, true);
-		if (key == GLFW_KEY_M) Enemy::debug_draw_hitbox = !Enemy::debug_draw_hitbox;
-		if (key == GLFW_KEY_R && c->currState == DEAD) c->restartGame();
-		if (key == GLFW_KEY_F) c->toggleFullScreen();
-		if (key == GLFW_KEY_TAB) c->toggleCursor();
+		switch(c->currState) {
+		case PLAYING:
+			if (key == GLFW_KEY_ESCAPE) c->pauseGame();
+			break;
+		case PAUSE:
+			if (key == GLFW_KEY_ESCAPE) c->unpauseGame();
+			break;
+		case OPTIONS:
+			if (key == GLFW_KEY_ESCAPE) {
+				if (c->prevState == PAUSE) c->pauseGame(); 
+				else if (c->prevState == MAIN_MENU) c->menuReturn(); 
+			} 
+			break;
+		case CONTROLS:
+			if (key == GLFW_KEY_ESCAPE) {
+				if (c->prevState == PAUSE) c->pauseGame();
+				else if (c->prevState == MAIN_MENU) c->menuReturn();
+			}
+			break;
+		}
 	}
 }
 
@@ -749,22 +1123,34 @@ void MyGLCanvas::key_callback(GLFWwindow* _window, int key, int scancode, int ac
 void MyGLCanvas::cursor_position_callback(GLFWwindow* _window, double currX, double currY) {
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
-	if (c->firstMouse) {
+	if (c->currState == PLAYING) {
+		if (c->firstMouse) {
+			c->prevX = currX;
+			c->prevY = currY;
+			c->firstMouse = false;
+		}
+
+		float x_offset = currX - c->prevX;
+		float y_offset = c->prevY - currY;
+
+		x_offset *= c->sensitivity;
+		y_offset *= c->sensitivity;
+
 		c->prevX = currX;
 		c->prevY = currY;
-		c->firstMouse = false;
+
+		c->player->moveSight(x_offset, y_offset);
+	} else if (c->currState == MAIN_MENU) {
+		c->handleButtons(c->mainMenu, c->mainMenu.size() - 1, 0.1, 0.045, currX, currY);
+	} else if (c->currState == DEAD) {
+		c->handleButtons(c->deathScreen, c->deathScreen.size() - 1, 0.1, 0.045, currX, currY);
+	} else if (c->currState == PAUSE) {
+		c->handleButtons(c->pauseScreen, c->pauseScreen.size() - 1, 0.095, 0.05, currX, currY);
+	} else if (c->currState == OPTIONS) {
+		c->handleButtons(c->optionPlusMinus, c->optionPlusMinus.size(), 0.0125, 0.02, currX, currY);
+		if (c->optionSelected == NONE) c->handleButtons(c->optionScreen, c->optionScreen.size() - 1, 0.095, 0.05, currX, currY);
 	}
 
-	float x_offset = currX - c->prevX;
-	float y_offset = c->prevY - currY;
-
-	x_offset *= SENSITIVITY;
-	y_offset *= SENSITIVITY;
-
-	c->prevX = currX;
-	c->prevY = currY;
-
-	c->player->moveSight(x_offset, y_offset);
 }
 
 // Callback for mouse click
@@ -772,8 +1158,9 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 	MyGLCanvas *c = (MyGLCanvas *)glfwGetWindowUserPointer(_window);
 
 	if (action == GLFW_PRESS) {
-		if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-			if (c->currState == PLAYING) {
+		switch(c->currState) {
+		case PLAYING:
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
 				shaderType spellAttempt = c->player->spellSelected;
 
 				if (c->player->getSpellCost(spellAttempt) <= c->player->getMana()) {
@@ -784,11 +1171,141 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 					ISound *sound;
 					// TODO: Add some visual cue
 					sound = c->soundEngine->play2D("./audio/fizzle.mp3", false, false, true);
-					sound->setVolume(PROJECTILE_VOLUME);
+					sound->setVolume(c->miscVol);
 					sound->drop();
 				}
 			}
-		}
+			break;
+		case MAIN_MENU:
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
+				ISound *sound;
+				switch (c->buttonSelected) {
+				case BUTTON_START:
+					c->playClick();
+					c->startGame();
+					break;
+				case BUTTON_CONTROLS:
+					c->playClick();
+					c->showControls();
+					break;
+				case BUTTON_OPTIONS:
+					c->playClick();
+					c->showOptions();
+					break;
+				case BUTTON_QUIT:
+					c->playClick();
+					glfwSetWindowShouldClose(_window, true);
+					break;
+				default:
+					break;
+				}
+			}
+			break;
+		case DEAD:
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
+				switch (c->buttonSelected) {
+				case BUTTON_MAIN:
+					c->playClick();
+					c->showMenu();
+					break;
+				case BUTTON_RESTART:
+					c->playClick();
+					c->startGame();
+					break;
+				case BUTTON_QUIT2:
+					c->playClick();
+					glfwSetWindowShouldClose(_window, true);
+					break;
+				default:
+					break;
+				}
+			}
+			break;
+		case PAUSE:
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
+				switch (c->buttonSelected) {
+				case BUTTON_RESUME:
+					c->playClick();
+					c->unpauseGame();
+					break;
+				case BUTTON_CONTROLS2:
+					c->playClick();
+					c->showControls();
+					break;
+				case BUTTON_OPTIONS2:
+					c->playClick();
+					c->showOptions();
+					break;
+				case BUTTON_MAIN2:
+					c->playClick();
+					c->showMenu();
+					break;
+				case BUTTON_QUIT3:
+					c->playClick();
+					glfwSetWindowShouldClose(_window, true);
+					break;
+				}
+			}
+			break;
+		case OPTIONS:
+			if (button == GLFW_MOUSE_BUTTON_LEFT) {
+				switch (c->buttonSelected) {
+				case BUTTON_FULLSCREEN:
+					c->playClick();
+					c->toggleFullScreen();
+					break;
+				case BUTTON_PLUS:
+					c->playClick();
+					switch (c->optionSelected) {
+					case MASTER_VOL:
+						c->masterVol = min(MAX_VOLUME, c->masterVol + 0.05);
+						c->soundEngine->setSoundVolume(c->masterVol);
+						break;
+					case MUSIC_VOL:
+						c->musicVol = min(MAX_VOLUME, c->musicVol + 0.01);
+						c->music->setVolume(c->musicVol);
+						c->pauseMusic->setVolume(c->musicVol);
+						break;
+					case MISC_VOL:
+						c->miscVol = min(MAX_VOLUME, c->miscVol + 0.05);
+						Projectile::volume = c->miscVol;
+						Enemy::volume = c->miscVol;
+						Player::volume = c->miscVol;
+						Pickup::volume = c->miscVol;
+						break;
+					case SENSITIVITY:
+						c->sensitivity = min(MAX_SENSITIVITY, c->sensitivity + 0.025);
+						break;
+					}
+					break;
+				case BUTTON_MINUS:
+					c->playClick();
+					switch (c->optionSelected) {
+					case MASTER_VOL:
+						c->masterVol = max(0, c->masterVol - 0.05);
+						c->soundEngine->setSoundVolume(c->masterVol);
+						break;
+					case MUSIC_VOL:
+						c->musicVol = max(0, c->musicVol - 0.01);
+						c->music->setVolume(c->musicVol);
+						c->pauseMusic->setVolume(c->musicVol);
+						break;
+					case MISC_VOL:
+						c->miscVol = max(0, c->miscVol - 0.05);
+						Projectile::volume = c->miscVol;
+						Enemy::volume = c->miscVol;
+						Player::volume = c->miscVol;
+						Pickup::volume = c->miscVol;
+						break;
+					case SENSITIVITY:
+						c->sensitivity = max(0, c->sensitivity - 0.025);
+						break;
+					}
+					break;
+				}
+			}
+			break;
+		} 
 	}
 }
 
@@ -796,6 +1313,12 @@ void MyGLCanvas::mouse_button_callback(GLFWwindow* _window, int button, int acti
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	printf("Resizing window\n");
 	glViewport(0, 0, width, height);
+}
+
+// Sets the default and hover cursor icons
+void MyGLCanvas::setupCursors() {
+	regular = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+	hover = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
 }
 
 // Sets up the GLFW window 
@@ -854,16 +1377,17 @@ void MyGLCanvas::setupWindow(int w, int h) {
 
 // Checks keyboard input. Works best for movement using WASD
 void MyGLCanvas::pollInput() {
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) player->moveForward();
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) player->moveLeft();
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) player->moveBackward();
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) player->moveRight();
+	if (currState == PLAYING) {
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) player->moveForward();
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) player->moveLeft();
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) player->moveBackward();
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) player->moveRight();
+	}
 }
 
 // Removes all objects from scene and start initial enemies. Places player back at start.
-void MyGLCanvas::restartGame() {
-	printf("GAME RESTART\n");
-
+void MyGLCanvas::startGame() {
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	list<Enemy *>::iterator itE = enemyList.begin();
 	while(itE != enemyList.end()) removeEnemy(itE);
 
@@ -881,11 +1405,35 @@ void MyGLCanvas::restartGame() {
 
 	stopSound(music);
 	music = soundEngine->play2D("./audio/metal.mp3", true, false, true);
-	music->setVolume(MUSIC_VOLUME);
+	music->setVolume(musicVol);
 	
-	firstMouse = firstDeath = true;
+	firstMouse = true;
+	prevState = currState;
 	currState = PLAYING;
 	player->restartPlayer();
+}
+
+// Removes all objects from scene and goes back to main menu
+void MyGLCanvas::showMenu() {
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	list<Enemy *>::iterator itE = enemyList.begin();
+	while (itE != enemyList.end()) removeEnemy(itE);
+
+	list<Projectile *>::iterator itP = projectileList.begin();
+	while (itP != projectileList.end()) removeProjectile(itP);
+
+	list<Pickup *>::iterator itPU = pickupList.begin();
+	while (itPU != pickupList.end()) removePickup(itPU);
+
+	pauseMusic->setIsPaused(true);
+
+	stopSound(music);
+	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
+	music->setVolume(musicVol);
+
+	prevState = currState;
+	currState = MAIN_MENU;
 }
 
 // Checks if an item is expired based on it's duration and spawn time
@@ -900,7 +1448,7 @@ void MyGLCanvas::toggleFullScreen() {
 	if (fullscreen) {
 		glfwSetWindowMonitor(window, monitor, NULL, NULL, mode->width, mode->height, mode->refreshRate);
 	} else {
-		glfwSetWindowMonitor(window, NULL, 300, 300, 800, 600, NULL);
+		glfwSetWindowMonitor(window, NULL, 200, 100, 1000, 800, NULL);
 	}
 }
 
@@ -918,13 +1466,24 @@ void MyGLCanvas::toggleCursor() {
 
 // Setups up sound engine and initial sound options
 void MyGLCanvas::setupSound() {
+	masterVol = 1.0f;
+	musicVol = 0.1f;
+	miscVol = 0.7f;
+
+	Projectile::volume = miscVol;
+	Enemy::volume = miscVol;
+	Player::volume = miscVol;
+	Pickup::volume = miscVol;
+	
 	soundEngine = createIrrKlangDevice();
 	if (!soundEngine) exit(1);
 
-
 	music = soundEngine->play2D("./audio/epic.mp3", true, false, true);
-	music->setVolume(MUSIC_VOLUME);
-	soundEngine->setSoundVolume(MASTER_VOLUME);
+	music->setVolume(musicVol);
+	soundEngine->setSoundVolume(masterVol);
+
+	pauseMusic = soundEngine->play2D("./audio/pause.mp3", true, true, true);
+	pauseMusic->setVolume(musicVol);
 }
 
 // Combines to irrKlang function calls to stop the current sound and free up
@@ -932,4 +1491,117 @@ void MyGLCanvas::setupSound() {
 void MyGLCanvas::stopSound(ISound *sound) {
 	sound->stop();
 	sound->drop();
+}
+
+// Plays the click sound for a button
+void MyGLCanvas::playClick() {
+	ISound *sound;
+	sound = soundEngine->play2D("./audio/click.mp3", false, false, true);
+	sound->setVolume(miscVol);
+	sound->drop();
+}
+
+// Checks to see if the cursor is over a button
+void MyGLCanvas::handleButtons(std::vector<Sprite *> buttonList, int numButtons, double offX, double offY, double currX, double currY) {
+	glm::vec3 pos;
+
+	int width, height;
+	glfwGetWindowSize(window, &width, &height);
+
+	currX /= double(width);
+	currY /= double(height);
+
+	optionSelected = NONE;
+	buttonSelected = SPRITE_MAIN;  // Acts as a NULL value TODO: Find a better value
+
+	//printf("----------------------------------------\n");
+	for (int i = 0; i < numButtons; i++) {
+		pos = buttonList[i]->getPosition();
+		pos.x /= mode->width;
+		pos.y /= mode->height;
+
+		if (overButton(currX, currY, offX, offY, pos)) {
+			buttonSelected = buttonList[i]->spriteType;
+			glfwSetCursor(window, hover);
+
+			if (buttonSelected == BUTTON_PLUS || buttonSelected == BUTTON_MINUS) optionSelected = (optionType)(i / 2);
+			break;
+		}
+		else {
+			glfwSetCursor(window, regular);
+		}
+
+	//printf("CurrX: %f, CurrY: %f\n LeftPos: %f, RightPos: %f, TopPos: %f, BottomPos: %f\n\n", currX, currY, pos.x - offX, pos.x + offX, pos.y - offY, pos.y + offY);
+	}
+
+
+}
+
+// Helper function to handleButtons
+bool MyGLCanvas::overButton(double x, double y, double offX, double offY, glm::vec3 pos) {
+	return  (pos.x - offX) <= x && x <= (pos.x + offX) && (pos.y - offY) <= y && y <= (pos.y + offY);
+}
+
+// Changes to pause screen
+void MyGLCanvas::pauseGame() {
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	prevState = currState;
+	currState = PAUSE;
+
+	music->setIsPaused(true);
+	pauseMusic->setIsPaused(false);
+}
+
+// Changes to game screen
+void MyGLCanvas::unpauseGame() {
+	prevState = currState;
+	currState = PLAYING;
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	pauseMusic->setIsPaused(true);
+	music->setIsPaused(false);
+
+	firstMouse = true;
+}
+
+// Changes to death screen
+void MyGLCanvas::gameOver() {
+	stopSound(music);
+	music = soundEngine->play2D("./audio/sad_dark.mp3", true, false, true);
+	music->setVolume(musicVol);
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	prevState = currState;
+	currState = DEAD;
+}
+
+// Changes to control screen
+void MyGLCanvas::showControls() {
+	prevState = currState;
+	currState = CONTROLS;
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	music->setIsPaused(true);
+	pauseMusic->setIsPaused(false);
+}
+
+// Changes to options screen
+void MyGLCanvas::showOptions() {
+	prevState = currState;
+	currState = OPTIONS;
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	music->setIsPaused(true);
+	pauseMusic->setIsPaused(false);
+}
+
+// Returns to the main menu from one of the option screens
+void MyGLCanvas::menuReturn() {
+	prevState = currState;
+	currState = MAIN_MENU;
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+	pauseMusic->setIsPaused(true);
+	music->setIsPaused(false);
 }

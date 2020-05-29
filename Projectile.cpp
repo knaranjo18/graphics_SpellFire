@@ -50,7 +50,7 @@ Projectile::Projectile(shaderType _type, glm::vec3 startPos, glm::vec3 direction
 		exit(1);
 		break;
 	}
-	sound->setVolume(PROJECTILE_VOLUME);
+	sound->setVolume(volume);
 	sound->drop();
 	projectileType = _type;
 
